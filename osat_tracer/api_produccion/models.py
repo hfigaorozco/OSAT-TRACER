@@ -57,7 +57,7 @@ class Paso(models.Model):
 
 class Orden(models.Model):
     numero = models.AutoField(primary_key=True)
-    horaIni = models.DateTimeField(_auto_now=False, auto_now_add=False)
+    horaIni = models.DateTimeField(auto_now=False, auto_now_add=False)
     horaFin = models.DateTimeField(auto_now=False, auto_now_add=False)
     fechaReg = models.DateTimeField(auto_now=False, auto_now_add=True)
     proceso = models.CharField(default=(""), max_length=5)
@@ -115,11 +115,10 @@ class MaquinaPaso(models.Model):
     def __str__(self):
         return self.num 
     
-    
-    
+
 class Paso_Realizado(models.Model):
     numero = models.AutoField(primary_key=True)
-    hora = models.TimeField(_auto_now=False, auto_now_add=True)
+    hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
     paso = models.CharField(default=(""), max_length=5)
     estado = models.CharField(default=(""), max_length=5)
@@ -129,3 +128,10 @@ class Paso_Realizado(models.Model):
     
     def __str__(self):
         return self.numero 
+
+class Estado_Paso(models.Model):
+    codigo = models.CharField(default="", max_length=5)
+    descripcion = models.CharField(default="", max_length=15)
+    
+    def __str__(self):
+        return self.descripcion
