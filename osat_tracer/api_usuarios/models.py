@@ -32,9 +32,9 @@ class Empleado(models.Model):
     rfc = models.CharField(unique=True, max_length=13)
     email = models.EmailField(unique=True, max_length=50)
     fechaReg = models.DateField(auto_now_add=True)
-    estado = models.ForeignKey(Estado_Empleado, on_delete=models.CASCADE, related_name='empleado')
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE, related_name='empleado')
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='empleado')
+    estado = models.ForeignKey(Estado_Empleado, on_delete=models.RESTRICT, related_name='empleado')
+    rol = models.ForeignKey(Rol, on_delete=models.RESTRICT, related_name='empleado')
+    usuario = models.OneToOneField(User, on_delete=models.RESTRICT, related_name='empleado')
 
     class Meta:
         db_table = 'empleado'

@@ -96,9 +96,9 @@ class Orden(models.Model):
     horaIni = models.DateTimeField(auto_now=False, auto_now_add=False)
     horaFin = models.DateTimeField(auto_now=False, auto_now_add=False)
     fechaReg = models.DateTimeField(auto_now=False, auto_now_add=True)
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='orden')
-    estado = models.ForeignKey(Estado_Orden, on_delete=models.CASCADE, related_name='orden')
-    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='orden')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='orden')
+    estado = models.ForeignKey(Estado_Orden, on_delete=models.RESTRICT, related_name='orden')
+    empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='orden')
 
     class Meta:
         db_table = 'orden' 
@@ -110,9 +110,9 @@ class Orden(models.Model):
 class Oblea(models.Model):
     numero = models.AutoField(primary_key=True)
     diesGenerados = models.IntegerField(default=(0))
-    orden = models.ForeignKey(Orden, on_delete=models.CASCADE, related_name='oblea')
-    estado = models.ForeignKey(Estado_Oblea, on_delete=models.CASCADE, related_name='oblea')
-    tipo = models.ForeignKey(Tipo_Oblea, on_delete=models.CASCADE, related_name='oblea')
+    orden = models.ForeignKey(Orden, on_delete=models.RESTRICT, related_name='oblea')
+    estado = models.ForeignKey(Estado_Oblea, on_delete=models.RESTRICT, related_name='oblea')
+    tipo = models.ForeignKey(Tipo_Oblea, on_delete=models.RESTRICT, related_name='oblea')
 
     class Meta:
         db_table = 'oblea' 
@@ -122,8 +122,8 @@ class Oblea(models.Model):
     
     
 class LineaProceso(models.Model):
-    linea = models.ForeignKey(Linea, on_delete=models.CASCADE, related_name='linea-proceso')
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='linea-proceso')
+    linea = models.ForeignKey(Linea, on_delete=models.RESTRICT, related_name='linea-proceso')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='linea-proceso')
 
     class Meta:
         db_table = 'linea-proceso'
@@ -139,8 +139,8 @@ class LineaProceso(models.Model):
 
     
 class PasoProceso(models.Model):
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='paso')
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='paso')
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='paso')
     orden = models.IntegerField(default=(0))
 
     class Meta:
@@ -157,8 +157,8 @@ class PasoProceso(models.Model):
     
     
 class ProcesoPieza(models.Model):
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso-pieza')
-    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso-pieza')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='proceso-pieza')
+    pieza = models.ForeignKey(Pieza, on_delete=models.RESTRICT, related_name='proceso-pieza')
     cantPiezas = models.IntegerField(default=(0))
 
     class Meta:
@@ -175,8 +175,8 @@ class ProcesoPieza(models.Model):
     
     
 class MaquinaPaso(models.Model):
-    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina-paso')
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina-paso')
+    maquina = models.ForeignKey(Maquina, on_delete=models.RESTRICT, related_name='maquina-paso')
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='maquina-paso')
 
     class Meta:
         db_table = 'maquina-paso' 
@@ -185,17 +185,17 @@ class MaquinaPaso(models.Model):
         return f"{self.maquina} - {self.paso}"
     
 
-class Paso_Realizado(models.Model):
+'''class Paso_Realizado(models.Model):
     numero = models.AutoField(primary_key=True)
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='paso_realizado')
-    estado = models.ForeignKey(Estado_Paso, on_delete=models.CASCADE, related_name='paso_realizado')
-    oblea = models.ForeignKey(Oblea, on_delete=models.CASCADE, related_name='paso_realizado')
-    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE, related_name='paso_realizado') # Falta crear modelo de alerta
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
+    estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
+    oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado') # Falta crear modelo de alerta
 
     class Meta:
         db_table = 'paso_realizado' 
         
     def __str__(self):
-        return self.numero 
+        return self.numero '''
