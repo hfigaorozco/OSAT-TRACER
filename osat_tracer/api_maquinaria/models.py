@@ -1,6 +1,5 @@
 from django.db import models
 from api_usuarios.models import Empleado
-from api_produccion.models import Linea
 
 # Create your models here.
 class Tipo_Maquina(models.Model):
@@ -29,10 +28,10 @@ class Maquina(models.Model):
     numSerie = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(default="Máquina genérica", unique=True, max_length=30)
     fechaReg = models.TimeField(auto_now=False, auto_now_add=True)
-    tipoMaquina = models.ForeignKey(Tipo_Maquina, on_delete=models.RESTRICT, related_name='maquina')
-    estado = models.ForeignKey(Estado_Maquina, on_delete=models.RESTRICT, related_name='maquina')
-    empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='maquina')
-    linea = models.ForeignKey(Linea, on_delete=models.RESTRICT, related_name='maquina')
+    tipoMaquina = models.ForeignKey(Tipo_Maquina, on_delete=models.CASCADE, related_name='maquina')
+    estado = models.ForeignKey(Estado_Maquina, on_delete=models.CASCADE, related_name='maquina')
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='maquina')
+    linea = models.ForeignKey('api_produccion.Linea', on_delete=models.CASCADE, related_name='maquina')
     
     class Meta: 
         db_table = 'maquina'
