@@ -122,8 +122,8 @@ class Oblea(models.Model):
     
     
 class LineaProceso(models.Model):
-    linea = models.ForeignKey(Linea, on_delete=models.CASCADE, related_name='linea-proceso')
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='linea-proceso')
+    linea = models.ForeignKey(Linea, on_delete=models.CASCADE, related_name='linea_proceso')
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='linea_proceso')
 
     class Meta:
         db_table = 'linea-proceso'
@@ -157,8 +157,8 @@ class PasoProceso(models.Model):
     
     
 class ProcesoPieza(models.Model):
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso-pieza')
-    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso-pieza')
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso_pieza')
+    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso_pieza')
     cantPiezas = models.IntegerField(default=(0))
 
     class Meta:
@@ -175,8 +175,8 @@ class ProcesoPieza(models.Model):
     
     
 class MaquinaPaso(models.Model):
-    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina-paso')
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina-paso')
+    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina_paso')
+    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina_paso')
 
     class Meta:
         db_table = 'maquina-paso' 
@@ -192,7 +192,7 @@ class Paso_Realizado(models.Model):
     paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.CASCADE, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.CASCADE, related_name='paso_realizado')
-    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE, related_name='paso_realizado') # Falta crear modelo de alerta
+    #alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE, related_name='paso_realizado') # Falta crear modelo de alerta
 
     class Meta:
         db_table = 'paso_realizado' 
