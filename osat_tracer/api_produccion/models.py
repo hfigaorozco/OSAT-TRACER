@@ -157,8 +157,8 @@ class PasoProceso(models.Model):
     
     
 class ProcesoPieza(models.Model):
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso-pieza')
-    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso-pieza')
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso_pieza')
+    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso_pieza')
     cantPiezas = models.IntegerField(default=(0))
 
     class Meta:
@@ -175,8 +175,8 @@ class ProcesoPieza(models.Model):
     
     
 class MaquinaPaso(models.Model):
-    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina-paso')
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina-paso')
+    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina_paso')
+    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina_paso')
 
     class Meta:
         db_table = 'maquina-paso' 
