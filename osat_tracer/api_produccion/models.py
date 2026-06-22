@@ -2,8 +2,20 @@ from django.db import models
 from api_usuarios.models import Empleado
 from api_inventario.models import Pieza
 from api_maquinaria.models import Maquina
+from api_kpi.models import Alerta
 
 # Create your models here.
+class Defecto(models.Model):
+    codigo = models.CharField(primary_key=True, max_length=5)
+    descripcion = models.CharField(max_length=50)
+    
+    class Meta:
+        db_table = 'defecto'
+    
+    def __str__(self):
+        return self.codigo
+    
+    
 class Tipo_Oblea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(max_length=25)
@@ -39,17 +51,6 @@ class Estado_Oblea(models.Model):
     class Meta:
         db_table = 'estado_oblea'
     
-    def __str__(self):
-        return self.descripcion
-    
-    
-class Semaforo(models.Model):
-    codigo = models.CharField(primary_key=True, max_length=5)
-    descripcion = models.CharField(unique=True, max_length=10)
-    
-    class Meta:
-        db_table = 'semaforo'
-        
     def __str__(self):
         return self.descripcion
 
@@ -122,8 +123,8 @@ class Oblea(models.Model):
     
     
 class LineaProceso(models.Model):
-    linea = models.ForeignKey(Linea, on_delete=models.CASCADE, related_name='linea_proceso')
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='linea_proceso')
+    linea = models.ForeignKey(Linea, on_delete=models.RESTRICT, related_name='linea_proceso')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='linea_proceso')
 
     class Meta:
         db_table = 'linea-proceso'
@@ -157,8 +158,8 @@ class PasoProceso(models.Model):
     
     
 class ProcesoPieza(models.Model):
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='proceso_pieza')
-    pieza = models.ForeignKey(Pieza, on_delete=models.CASCADE, related_name='proceso_pieza')
+    proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='proceso_pieza')
+    pieza = models.ForeignKey(Pieza, on_delete=models.RESTRICT, related_name='proceso_pieza')
     cantPiezas = models.IntegerField(default=(0))
 
     class Meta:
@@ -175,27 +176,50 @@ class ProcesoPieza(models.Model):
     
     
 class MaquinaPaso(models.Model):
-    maquina = models.ForeignKey(Maquina, on_delete=models.CASCADE, related_name='maquina_paso')
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='maquina_paso')
+    maquina = models.ForeignKey(Maquina, on_delete=models.RESTRICT, related_name='maquina_paso')
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='maquina_paso')
 
     class Meta:
         db_table = 'maquina-paso' 
+        constraints = [
+            models.UniqueConstraint(
+                fields=['maquina', 'paso'],
+                name='uk_maquina_paso'
+            )
+        ] 
         
     def __str__(self):
         return f"{self.maquina} - {self.paso}"
     
 
-'''class Paso_Realizado(models.Model):
+class Paso_Realizado(models.Model):
     numero = models.AutoField(primary_key=True)
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
-    paso = models.ForeignKey(Paso, on_delete=models.CASCADE, related_name='paso_realizado')
-    estado = models.ForeignKey(Estado_Paso, on_delete=models.CASCADE, related_name='paso_realizado')
-    oblea = models.ForeignKey(Oblea, on_delete=models.CASCADE, related_name='paso_realizado')
-    alerta = models.ForeignKey(Alerta, on_delete=models.CASCADE, related_name='paso_realizado') # Falta crear modelo de alerta
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
+    estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
+    oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado')
 
     class Meta:
         db_table = 'paso_realizado' 
         
     def __str__(self):
-        return self.numero '''
+        return self.numero 
+    
+
+class Historial_Defectos(models.Model):
+    defecto = models.ForeignKey(Defecto, on_delete=models.RESTRICT, related_name='historial_defectos') 
+    pasoRealizado = models.ForeignKey(Paso_Realizado, on_delete=models.RESTRICT, related_name='historial_defectos') 
+    
+    class Meta:
+        db_table = 'historial_defectos' 
+        constraints = [
+            models.UniqueConstraint(
+                fields=['defecto', 'pasoRealizado'],
+                name='uk_defecto_pasoRealizado'
+            )
+        ] 
+        
+    def __str__(self):
+        return f"{self.defecto} - {self.pasoRealizado}"
