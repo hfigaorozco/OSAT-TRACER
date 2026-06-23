@@ -1,0 +1,34 @@
+{% extends "supervisor/layout.html" %}
+{% load static %}
+{% block page_title %}Inventario{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Inventario de materiales</h1><p class="page-subtitle">Consulta de existencias y registro de entradas</p></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="openModal('modal-entrada-sup')">+ Registrar entrada</button></div>
+</div>
+<div class="filter-bar">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="#B0BEC5" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" name="q" class="form-control" placeholder="Código o nombre…" value="{{ request.GET.q }}"></div>
+    <select name="estado" class="form-control" style="width:160px;"><option value="">Todos los estados</option><option value="ok">OK</option><option value="bajo">Bajo mínimo</option><option value="critico">Crítico</option></select>
+    <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
+    {% if request.GET.q or request.GET.estado %}<a href="{% url 'supervisor_inventario' %}" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
+  </form>
+</div>
+<div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:right;">Stock</th><th style="text-align:right;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{% for pieza in piezas %}<tr {% if pieza.stock == 0 %}style="background:rgba(239,83,80,.06);"{% elif pieza.stock < pieza.stock_minimo %}style="background:rgba(245,166,35,.06);"{% endif %}><td style="font-family:monospace;font-weight:600;">{{ pieza.codigo }}</td><td style="font-weight:500;">{{ pieza.nombre }}</td><td style="text-align:right;font-weight:600;{% if pieza.stock == 0 %}color:#EF5350;{% elif pieza.stock < pieza.stock_minimo %}color:#F5A623;{% else %}color:#16A85E;{% endif %}">{{ pieza.stock }}</td><td style="text-align:right;color:#718096;">{{ pieza.stock_minimo }}</td><td>{% if pieza.stock == 0 %}<span class="badge badge-critico">Crítico</span>{% elif pieza.stock < pieza.stock_minimo %}<span class="badge badge-bajo">Bajo</span>{% else %}<span class="badge badge-ok">OK</span>{% endif %}</td><td class="table-actions"><button class="action-btn" title="Kardex" onclick="openModal('modal-kardex-{{ pieza.pk }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-btn" title="Entrada" onclick="document.getElementById('ent-sup-pieza').value='{{ pieza.pk }}';document.getElementById('ent-sup-nombre').value='{{ pieza.nombre }}';document.getElementById('ent-sup-stock').value='{{ pieza.stock }}';openModal('modal-entrada-sup')"><svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button></td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><p>No se encontraron materiales</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+
+<div class="modal-overlay" id="modal-entrada-sup" style="display:none;" onclick="if(event.target===this)closeModal('modal-entrada-sup')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Registrar entrada</h2><button class="modal-close" onclick="closeModal('modal-entrada-sup')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_inventario_entrada' %}">{% csrf_token %}
+      <input type="hidden" name="tipo_mov" value="entrada"><input type="hidden" name="pieza_id" id="ent-sup-pieza">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Material</label><input type="text" id="ent-sup-nombre" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
+        <div class="form-group"><label class="form-label">Stock actual</label><input type="text" id="ent-sup-stock" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
+        <div class="form-group"><label class="form-label">Cantidad a ingresar <span class="required">*</span></label><input type="number" name="cantidad" class="form-control" min="1" required></div>
+        <div class="form-group"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="2" placeholder="Número de orden de compra, proveedor, etc."></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-entrada-sup')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar entrada</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

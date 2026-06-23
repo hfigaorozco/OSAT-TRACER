@@ -1,0 +1,130 @@
+{% extends "supervisor/layout.html" %}
+{% load static %}
+{% block page_title %}Lote {{ lote.folio }}{% endblock %}
+{% block content %}
+<nav class="breadcrumb"><a href="{% url 'supervisor_ordenes' %}" class="breadcrumb-link">Órdenes</a><span class="breadcrumb-sep">/</span>{% if lote.orden %}<a href="{% url 'supervisor_orden_detalle' lote.orden.pk %}" class="breadcrumb-link">{{ lote.orden.numero }}</a><span class="breadcrumb-sep">/</span>{% endif %}<span class="breadcrumb-current">{{ lote.folio }}</span></nav>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <h1 style="font-size:24px;font-weight:700;color:#1A202C;font-family:monospace;">{{ lote.folio }}</h1>
+    {% if lote.orden %}<span class="badge" style="background:#009EAF15;color:#007A89;">{{ lote.orden.numero }}</span>{% endif %}
+    {% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% elif lote.estado.nombre == 'Rechazado' %}<span class="badge badge-rechazado">Rechazado</span>{% else %}<span class="badge">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-warning btn-sm" onclick="openModal('modal-hold')">Poner en Hold</button>
+    <button class="btn btn-outline btn-sm" style="border-color:#EF5350;color:#EF5350;" onclick="openModal('modal-scrap')">Registrar scrap</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+  <div class="card kpi-card"><div class="kpi-label">Dies iniciales</div><div class="kpi-value">{{ lote.dies_iniciales|default:"—" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Dies activos</div><div class="kpi-value">{{ lote.dies_activos|default:"—" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Scrap total</div><div class="kpi-value" style="color:#EF5350;">{{ lote.scrap_total|default:"0" }}</div></div>
+  <div class="card kpi-card">
+    <div class="kpi-label">Yield</div>
+    {% with y=lote.yield_pct|default:0 %}
+    <div class="kpi-value" style="color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>
+    {% endwith %}
+  </div>
+</div>
+
+<!-- Stepper + Detalle -->
+<div style="display:flex;gap:24px;align-items:flex-start;">
+  <!-- Stepper -->
+  <div style="width:260px;flex-shrink:0;">
+    <div class="card" style="padding:16px;">
+      <h3 style="font-weight:600;font-size:14px;margin:0 0 16px;">Pasos del proceso</h3>
+      <div class="stepper">
+        {% for etapa in lote.etapas %}
+        <div class="stepper-item {% if etapa.completado %}completed{% elif etapa.activo %}active{% else %}pending{% endif %}">
+          <div class="step-circle {% if etapa.completado %}done{% elif etapa.activo %}current{% else %}todo{% endif %}">
+            {% if etapa.completado %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% elif etapa.activo %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>
+            {% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div style="flex:1;padding-left:10px;">
+            <div style="font-size:13px;font-weight:{% if etapa.activo %}600{% else %}400{% endif %};color:{% if etapa.completado %}#16A85E{% elif etapa.activo %}#1A202C{% else %}#718096{% endif %};">{{ etapa.nombre }}</div>
+            {% if etapa.completado %}<div style="font-size:11px;color:#718096;">{{ etapa.operador_nombre|default:"" }}{% if etapa.completado_en %} · {{ etapa.completado_en|date:"d/m H:i" }}{% endif %}</div>{% endif %}
+            {% if etapa.activo %}<div style="font-size:11px;color:#009EAF;">En curso</div>{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        {% for i in "1,2,3,4,5,6,7,8,9,10,11,12"|split:"," %}
+        <div class="stepper-item {% if forloop.counter <= 3 %}completed{% elif forloop.counter == 4 %}active{% else %}pending{% endif %}">
+          <div class="step-circle {% if forloop.counter <= 3 %}done{% elif forloop.counter == 4 %}current{% else %}todo{% endif %}">
+            {% if forloop.counter <= 3 %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{% elif forloop.counter == 4 %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>{% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div style="flex:1;padding-left:10px;"><div style="font-size:13px;color:{% if forloop.counter <= 3 %}#16A85E{% elif forloop.counter == 4 %}#1A202C{% else %}#718096{% endif %};">Etapa {{ forloop.counter }}</div></div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle -->
+  <div style="flex:1;min-width:0;">
+    {% if lote.etapa_activa %}
+      {% if lote.etapa_activa.completado %}
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span class="badge badge-aprobado">Completado</span><h3 style="font-weight:600;margin:0;">{{ lote.etapa_activa.nombre }}</h3></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+          <div><span style="font-size:12px;color:#718096;">Operador</span><div style="font-weight:500;">{{ lote.etapa_activa.operador_nombre|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Inicio</span><div style="font-weight:500;">{{ lote.etapa_activa.iniciado_en|date:"d/m/Y H:i"|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Fin</span><div style="font-weight:500;">{{ lote.etapa_activa.completado_en|date:"d/m/Y H:i"|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Máquina</span><div style="font-weight:500;">{{ lote.etapa_activa.maquina|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Scrap</span><div style="font-weight:500;color:#EF5350;">{{ lote.etapa_activa.scrap|default:"0" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Yield etapa</span><div style="font-weight:500;color:#16A85E;">{{ lote.etapa_activa.yield_pct|floatformat:1|default:"—" }}%</div></div>
+        </div>
+        {% if lote.etapa_activa.notas %}<div style="margin-top:16px;"><span style="font-size:12px;color:#718096;">Notas</span><div style="margin-top:4px;padding:12px;background:#F4F6F9;border-radius:6px;font-size:13px;color:#4A5568;">{{ lote.etapa_activa.notas }}</div></div>{% endif %}
+      </div>
+      {% else %}
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span class="badge badge-en-proceso">En curso</span><h3 style="font-weight:600;margin:0;">{{ lote.etapa_activa.nombre }}</h3></div>
+        <p style="font-size:13px;color:#4A5568;margin-bottom:12px;">{{ lote.etapa_activa.descripcion|default:"Sin descripción." }}</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+          <div><span style="font-size:12px;color:#718096;">Tipo de máquina</span><div style="font-weight:500;">{{ lote.etapa_activa.tipo_maquina|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Inicio</span><div style="font-weight:500;">{{ lote.etapa_activa.iniciado_en|date:"d/m H:i"|default:"—" }}</div></div>
+          <div><span style="font-size:12px;color:#718096;">Operador</span><div style="font-weight:500;">{{ lote.etapa_activa.operador_nombre|default:"—" }}</div></div>
+        </div>
+      </div>
+      <div class="readonly-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>El registro de esta etapa se realiza desde la app móvil con escaneo QR.</div>
+      {% endif %}
+    {% else %}
+    <div class="card"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Etapa pendiente de inicio</p><span style="font-size:13px;color:#718096;">El operador inicia desde la app móvil.</span></div></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal Hold -->
+<div class="modal-overlay" id="modal-hold" style="display:none;" onclick="if(event.target===this)closeModal('modal-hold')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Poner lote en Hold</h2><button class="modal-close" onclick="closeModal('modal-hold')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_lote_hold' lote.pk %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="banner banner-warning" style="margin-bottom:16px;">El lote <strong>{{ lote.folio }}</strong> quedará suspendido y el operador recibirá una notificación.</div>
+        <div class="form-group"><label class="form-label">Motivo <span class="required">*</span></label><textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo…" required></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-hold')">Cancelar</button><button type="submit" class="btn btn-warning">Confirmar Hold</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Scrap -->
+<div class="modal-overlay" id="modal-scrap" style="display:none;" onclick="if(event.target===this)closeModal('modal-scrap')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Registrar scrap</h2><button class="modal-close" onclick="closeModal('modal-scrap')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_lote_scrap' lote.pk %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Cantidad de dies <span class="required">*</span></label><input type="number" name="cantidad" class="form-control" min="1" max="{{ lote.dies_activos }}" required><span class="form-hint">Máximo: {{ lote.dies_activos|default:"N/A" }}</span></div>
+          <div class="form-group"><label class="form-label">Causa <span class="required">*</span></label><select name="causa" class="form-control" required><option value="">Seleccionar…</option>{% for d in tipos_defecto %}<option value="{{ d.pk }}">{{ d.nombre }}</option>{% endfor %}<option value="otro">Otro</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">Notas</label><textarea name="notas" class="form-control" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-scrap')">Cancelar</button><button type="submit" class="btn btn-danger">Registrar scrap</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

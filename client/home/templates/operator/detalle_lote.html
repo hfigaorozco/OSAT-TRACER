@@ -1,0 +1,77 @@
+{% extends "operator/layout.html" %}
+{% load static %}
+{% block page_title %}Lote {{ lote.folio }}{% endblock %}
+{% block content %}
+<nav class="breadcrumb"><a href="{% url 'operator_mis_lotes' %}" class="breadcrumb-link">Mis lotes</a><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">{{ lote.folio }}</span></nav>
+
+<div class="readonly-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>El avance de pasos se registra desde la app móvil con escaneo QR</div>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+  <h1 style="font-size:22px;font-weight:700;font-family:monospace;color:#1A202C;">{{ lote.folio }}</h1>
+  {% if lote.orden %}<span class="badge" style="background:#009EAF15;color:#007A89;">{{ lote.orden.numero }}</span>{% endif %}
+  {% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% else %}<span class="badge">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
+</div>
+
+{% if lote.estado.nombre == 'Hold' %}
+<div class="banner banner-warning" style="margin-bottom:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><div><div class="banner-title">Lote en Hold</div><div class="banner-desc">{{ lote.hold_motivo|default:"Contacta al supervisor para más información." }}</div></div></div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+  <div class="card kpi-card"><div class="kpi-label">Dies iniciales</div><div class="kpi-value">{{ lote.dies_iniciales|default:"—" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Dies activos</div><div class="kpi-value">{{ lote.dies_activos|default:"—" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Scrap</div><div class="kpi-value" style="color:#EF5350;">{{ lote.scrap_total|default:"0" }}</div></div>
+  <div class="card kpi-card">{% with y=lote.yield_pct|default:0 %}<div class="kpi-label">Yield</div><div class="kpi-value" style="color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>{% endwith %}</div>
+</div>
+
+<div style="display:flex;gap:24px;">
+  <div style="width:260px;flex-shrink:0;">
+    <div class="card" style="padding:16px;">
+      <h3 style="font-weight:600;font-size:14px;margin:0 0 16px;">Progreso del proceso</h3>
+      <div class="stepper">
+        {% for etapa in lote.etapas %}
+        <div class="stepper-item {% if etapa.completado %}completed{% elif etapa.activo %}active{% else %}pending{% endif %}">
+          <div class="step-circle {% if etapa.completado %}done{% elif etapa.activo %}current{% else %}todo{% endif %}">
+            {% if etapa.completado %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{% elif etapa.activo %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>{% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div style="flex:1;padding-left:10px;">
+            <div style="font-size:13px;font-weight:{% if etapa.activo %}600{% else %}400{% endif %};color:{% if etapa.completado %}#16A85E{% elif etapa.activo %}#1A202C{% else %}#718096{% endif %};">{{ etapa.nombre }}</div>
+            {% if etapa.completado %}<div style="font-size:11px;color:#718096;">{{ etapa.operador_nombre|default:"" }}{% if etapa.completado_en %} · {{ etapa.completado_en|date:"d/m H:i" }}{% endif %}</div>{% endif %}
+            {% if etapa.activo %}<div style="font-size:11px;color:#009EAF;">En curso</div>{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        {% for i in "1,2,3,4,5,6,7,8,9,10,11,12"|split:"," %}
+        <div class="stepper-item {% if forloop.counter <= 3 %}completed{% elif forloop.counter == 4 %}active{% else %}pending{% endif %}">
+          <div class="step-circle {% if forloop.counter <= 3 %}done{% elif forloop.counter == 4 %}current{% else %}todo{% endif %}">{% if forloop.counter <= 3 %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{% elif forloop.counter == 4 %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>{% else %}{{ forloop.counter }}{% endif %}</div>
+          <div style="flex:1;padding-left:10px;"><div style="font-size:13px;color:{% if forloop.counter <= 3 %}#16A85E{% elif forloop.counter == 4 %}#1A202C{% else %}#718096{% endif %};">Etapa {{ forloop.counter }}</div></div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;min-width:0;">
+    <div class="card">
+      <h3 style="font-weight:600;font-size:14px;margin:0 0 16px;">Historial de etapas completadas</h3>
+      {% if lote.etapas %}
+        {% for etapa in lote.etapas %}{% if etapa.completado %}
+        <div style="border:1px solid #E2E8F0;border-radius:8px;padding:14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="badge badge-aprobado">Completado</span><strong style="font-size:14px;">{{ etapa.nombre }}</strong></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;font-size:13px;">
+            <div><span style="color:#718096;">Operador</span><div style="font-weight:500;">{{ etapa.operador_nombre|default:"—" }}</div></div>
+            <div><span style="color:#718096;">Máquina</span><div style="font-weight:500;">{{ etapa.maquina|default:"—" }}</div></div>
+            <div><span style="color:#718096;">Inicio</span><div style="font-weight:500;">{{ etapa.iniciado_en|date:"d/m H:i"|default:"—" }}</div></div>
+            <div><span style="color:#718096;">Fin</span><div style="font-weight:500;">{{ etapa.completado_en|date:"d/m H:i"|default:"—" }}</div></div>
+            <div><span style="color:#718096;">Scrap</span><div style="font-weight:500;color:#EF5350;">{{ etapa.scrap|default:"0" }}</div></div>
+            <div><span style="color:#718096;">Yield</span><div style="font-weight:500;color:#16A85E;">{{ etapa.yield_pct|floatformat:1|default:"—" }}%</div></div>
+          </div>
+          {% if etapa.notas %}<div style="margin-top:10px;font-size:13px;"><span style="color:#718096;">Notas: </span>{{ etapa.notas }}</div>{% endif %}
+        </div>
+        {% endif %}{% endfor %}
+      {% else %}
+        <div class="empty-state"><p>No hay etapas completadas aún</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

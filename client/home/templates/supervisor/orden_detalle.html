@@ -1,0 +1,72 @@
+{% extends "supervisor/layout.html" %}
+{% load static %}
+{% block page_title %}Orden {{ orden.numero }}{% endblock %}
+{% block content %}
+<nav class="breadcrumb"><a href="{% url 'supervisor_ordenes' %}" class="breadcrumb-link">Órdenes</a><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">{{ orden.numero }}</span></nav>
+<div class="page-header">
+  <div>
+    <h1 class="page-title" style="font-family:monospace;">{{ orden.numero }}</h1>
+    <p class="page-subtitle">{{ orden.proceso.nombre|default:"—" }}</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" onclick="openModal('modal-registrar-lote')">+ Registrar lote / oblea</button>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+  <div class="card kpi-card"><div class="kpi-label">Total lotes</div><div class="kpi-value">{{ orden.total_lotes|default:"0" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Completados</div><div class="kpi-value" style="color:#16A85E;">{{ orden.lotes_completados|default:"0" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">En proceso</div><div class="kpi-value" style="color:#F5A623;">{{ orden.lotes_en_proceso|default:"0" }}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Estado</div><div style="margin-top:8px;">{% if orden.estado == 'activa' %}<span class="badge badge-en-proceso">Activa</span>{% elif orden.estado == 'completada' %}<span class="badge badge-aprobado">Completada</span>{% else %}<span class="badge badge-inactivo">Cancelada</span>{% endif %}</div></div>
+</div>
+
+<div class="card" style="padding:0;">
+  <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="font-weight:600;font-size:14px;margin:0;">Lotes de esta orden</h3></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Folio QR</th><th>Número oblea</th><th>Dies buenos</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for lote in lotes %}
+        <tr>
+          <td style="font-family:monospace;font-weight:600;">{{ lote.folio }}</td>
+          <td>{{ lote.numero_oblea|default:"—" }}</td>
+          <td>{{ lote.dies_buenos|default:"—" }}</td>
+          <td>{{ lote.etapa_actual.nombre|default:"—" }}</td>
+          <td>{% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% elif lote.estado.nombre == 'Scrapped' %}<span class="badge badge-critico">Scrapped</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</td>
+          <td style="text-align:right;font-weight:600;color:{% if lote.yield_pct >= 90 %}#16A85E{% elif lote.yield_pct >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{% if lote.yield_pct is not None %}{{ lote.yield_pct|floatformat:1 }}%{% else %}—{% endif %}</td>
+          <td class="table-actions"><a href="{% url 'supervisor_lote_detalle' lote.pk %}" class="action-btn" title="Ver trazabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><p>No hay lotes registrados en esta orden</p><button class="btn btn-primary btn-sm" onclick="openModal('modal-registrar-lote')">Registrar primer lote</button></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-registrar-lote" style="display:none;" onclick="if(event.target===this)closeModal('modal-registrar-lote')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Registrar oblea / lote</h2><button class="modal-close" onclick="closeModal('modal-registrar-lote')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_lote_registrar' %}">{% csrf_token %}
+      <input type="hidden" name="orden_id" value="{{ orden.pk }}">
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Número de oblea <span class="required">*</span></label><input type="text" name="numero_oblea" class="form-control" placeholder="Del foundry" required></div>
+          <div class="form-group"><label class="form-label">Tecnología / nodo</label><input type="text" name="tecnologia" class="form-control" placeholder="Ej. 28nm"></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Total dies en oblea</label><input type="number" name="total_dies" class="form-control" min="1"></div>
+          <div class="form-group"><label class="form-label">Dies buenos (wafer sort) <span class="required">*</span></label><input type="number" name="dies_buenos" class="form-control" min="1" required></div>
+        </div>
+        <div class="form-group"><label class="form-label">Condición de recepción</label><select name="condicion" class="form-control"><option value="ok">OK</option><option value="danada">Dañada</option></select></div>
+        <div class="form-group">
+          <label class="form-label">Código QR</label>
+          <input type="text" class="form-control" value="(Autogenerado)" readonly style="background:#F4F6F9;color:#718096;">
+          <span class="form-hint">Se generará automáticamente al registrar el lote.</span>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-registrar-lote')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar lote</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

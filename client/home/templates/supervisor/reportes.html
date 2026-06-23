@@ -1,0 +1,103 @@
+{% extends "supervisor/layout.html" %}
+{% load static %}
+{% block page_title %}Reportes{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Reportes</h1><p class="page-subtitle">Informes de producción, inventario y KPIs</p></div></div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchReportTab('tab-orden',this)">Por orden</button>
+  <button class="tab-btn" onclick="switchReportTab('tab-inventario',this)">Inventario</button>
+  <button class="tab-btn" onclick="switchReportTab('tab-kpi',this)">Historial KPI</button>
+  <button class="tab-btn" onclick="switchReportTab('tab-alertas',this)">Alertas</button>
+</div>
+
+<!-- Por orden -->
+<div id="tab-orden" class="tab-pane">
+  <div class="card" style="margin-bottom:16px;">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="tab" value="orden">
+      <div style="flex:2;min-width:200px;"><label class="form-label" style="margin-bottom:4px;">Orden</label><select name="orden_id" class="form-control"><option value="">Seleccionar…</option>{% for o in ordenes %}<option value="{{ o.pk }}" {% if request.GET.orden_id == o.pk|stringformat:"s" %}selected{% endif %}>{{ o.numero }} — {{ o.proceso.nombre }}</option>{% endfor %}</select></div>
+      <div><label class="form-label" style="margin-bottom:4px;">Desde</label><input type="date" name="desde" class="form-control" value="{{ request.GET.desde }}"></div>
+      <div><label class="form-label" style="margin-bottom:4px;">Hasta</label><input type="date" name="hasta" class="form-control" value="{{ request.GET.hasta }}"></div>
+      <div style="display:flex;gap:8px;align-self:flex-end;">
+        <button type="submit" class="btn btn-primary btn-sm">Generar</button>
+        {% if reporte_orden %}<button type="button" class="btn btn-outline btn-sm" onclick="window.print()">Exportar PDF</button>{% endif %}
+      </div>
+    </form>
+  </div>
+  {% if reporte_orden %}
+  <div class="card" style="padding:0;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="margin:0;font-weight:600;">Orden {{ reporte_orden.numero }}</h3><span style="font-size:13px;color:#718096;">{{ reporte_orden.fecha_inicio|date:"d/m/Y" }} al {{ reporte_orden.fecha_fin|date:"d/m/Y" }}</span></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Lote</th><th>Operador</th><th>Dies iniciales</th><th>Dies finales</th><th>Scrap</th><th>Yield</th><th>Estado</th></tr></thead>
+        <tbody>
+          {% for fila in reporte_orden.filas %}
+          <tr>
+            <td style="font-family:monospace;font-weight:600;">{{ fila.folio }}</td>
+            <td>{{ fila.operador }}</td>
+            <td style="text-align:right;">{{ fila.dies_iniciales }}</td>
+            <td style="text-align:right;">{{ fila.dies_finales }}</td>
+            <td style="text-align:right;color:#EF5350;">{{ fila.scrap }}</td>
+            <td style="text-align:right;color:{% if fila.yield >= 90 %}#16A85E{% elif fila.yield >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ fila.yield|floatformat:1 }}%</td>
+            <td><span class="badge badge-{{ fila.estado_class }}">{{ fila.estado }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr style="font-weight:700;background:#F4F6F9;"><td colspan="2">TOTALES</td><td style="text-align:right;">{{ reporte_orden.total_dies_iniciales }}</td><td style="text-align:right;">{{ reporte_orden.total_dies_finales }}</td><td style="text-align:right;color:#EF5350;">{{ reporte_orden.total_scrap }}</td><td style="text-align:right;color:{% if reporte_orden.yield_global >= 90 %}#16A85E{% else %}#F5A623{% endif %};">{{ reporte_orden.yield_global|floatformat:1 }}%</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Selecciona una orden y genera el reporte</p></div>
+  {% endif %}
+</div>
+
+<!-- Inventario -->
+<div id="tab-inventario" class="tab-pane" style="display:none;">
+  <div class="card" style="margin-bottom:16px;">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="tab" value="inventario">
+      <div><label class="form-label" style="margin-bottom:4px;">Desde</label><input type="date" name="inv_desde" class="form-control" value="{{ request.GET.inv_desde }}"></div>
+      <div><label class="form-label" style="margin-bottom:4px;">Hasta</label><input type="date" name="inv_hasta" class="form-control" value="{{ request.GET.inv_hasta }}"></div>
+      <div style="display:flex;gap:8px;align-self:flex-end;"><button type="submit" class="btn btn-primary btn-sm">Generar</button><button type="button" class="btn btn-outline btn-sm">PDF</button><button type="button" class="btn btn-outline btn-sm">Excel</button></div>
+    </form>
+  </div>
+  <div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Material</th><th>Stock inicial</th><th>Entradas</th><th>Salidas</th><th>Stock final</th><th>Estado</th></tr></thead><tbody>{% for item in reporte_inventario %}<tr {% if item.stock_final < item.minimo %}style="background:rgba(245,166,35,.07);"{% endif %}><td style="font-family:monospace;">{{ item.codigo }}</td><td>{{ item.nombre }}</td><td style="text-align:right;">{{ item.stock_inicial }}</td><td style="text-align:right;color:#16A85E;">+{{ item.entradas }}</td><td style="text-align:right;color:#EF5350;">-{{ item.salidas }}</td><td style="text-align:right;font-weight:600;">{{ item.stock_final }}</td><td>{% if item.stock_final == 0 %}<span class="badge badge-critico">Crítico</span>{% elif item.stock_final < item.minimo %}<span class="badge badge-bajo">Bajo</span>{% else %}<span class="badge badge-ok">OK</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="7"><div class="empty-state"><p>Genera el reporte para ver los datos</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+
+<!-- KPI -->
+<div id="tab-kpi" class="tab-pane" style="display:none;">
+  <div class="card" style="margin-bottom:16px;">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="tab" value="kpi">
+      <div><label class="form-label" style="margin-bottom:4px;">Indicador</label><select name="kpi_tipo" class="form-control" style="width:140px;"><option value="yield">Yield</option><option value="throughput">Throughput</option><option value="oee">OEE</option></select></div>
+      <div><label class="form-label" style="margin-bottom:4px;">Desde</label><input type="date" name="kpi_desde" class="form-control"></div>
+      <div><label class="form-label" style="margin-bottom:4px;">Hasta</label><input type="date" name="kpi_hasta" class="form-control"></div>
+      <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end;">Generar</button>
+    </form>
+  </div>
+  <div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Orden</th><th>Valor</th><th>Objetivo</th><th>Variación</th></tr></thead><tbody>{% for fila in reporte_kpi %}<tr><td>{{ fila.fecha|date:"d/m/Y" }}</td><td style="font-family:monospace;">{{ fila.orden }}</td><td style="font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor|floatformat:1 }}{% if fila.unidad == 'pct' %}%{% endif %}</td><td style="color:#718096;">{{ fila.objetivo|floatformat:1 }}{% if fila.unidad == 'pct' %}%{% endif %}</td><td style="color:{% if fila.variacion >= 0 %}#16A85E{% else %}#EF5350{% endif %};">{% if fila.variacion >= 0 %}+{% endif %}{{ fila.variacion|floatformat:1 }}</td></tr>{% empty %}<tr><td colspan="5"><div class="empty-state"><p>Genera el reporte para ver el historial</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+
+<!-- Alertas -->
+<div id="tab-alertas" class="tab-pane" style="display:none;">
+  <div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Descripción</th><th>Referencia</th><th>Creada</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{% for alerta in todas_alertas %}<tr {% if alerta.resuelta %}style="opacity:.55;"{% endif %}><td>{% if alerta.tipo == 'critico' %}<span class="badge badge-critico">Crítica</span>{% else %}<span class="badge badge-hold">Advertencia</span>{% endif %}</td><td>{{ alerta.descripcion }}</td><td style="font-family:monospace;font-size:13px;">{{ alerta.referencia|default:"—" }}</td><td>{{ alerta.creada_en|date:"d/m/Y H:i" }}</td><td>{% if alerta.resuelta %}<span class="badge badge-aprobado">Resuelta</span>{% else %}<span class="badge badge-en-proceso">Activa</span>{% endif %}</td><td class="table-actions">{% if not alerta.resuelta %}<button class="action-btn" style="color:#16A85E;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>{% endif %}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><p>Sin alertas registradas</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+
+{% block extra_js %}
+<script>
+function switchReportTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.style.display='none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).style.display = 'block';
+  btn.classList.add('active');
+}
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var tab = params.get('tab');
+  var map = {orden:'tab-orden',inventario:'tab-inventario',kpi:'tab-kpi',alertas:'tab-alertas'};
+  if(tab && map[tab]){var btn=document.querySelector('[onclick*="'+map[tab]+'"]');if(btn)switchReportTab(map[tab],btn);}
+})();
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "operator/layout.html" %}
+{% load static %}
+{% block page_title %}Mis lotes{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Mis lotes activos</h1><p class="page-subtitle">Lotes asignados a tu cuenta en este turno</p></div></div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="filterLotes('todos',this)">Todos {% if lotes_count.total %}<span class="badge" style="background:#E2E8F0;color:#4A5568;margin-left:4px;">{{ lotes_count.total }}</span>{% endif %}</button>
+  <button class="tab-btn" onclick="filterLotes('en-proceso',this)">En proceso {% if lotes_count.en_proceso %}<span class="badge badge-en-proceso" style="margin-left:4px;">{{ lotes_count.en_proceso }}</span>{% endif %}</button>
+  <button class="tab-btn" onclick="filterLotes('hold',this)">En Hold {% if lotes_count.hold %}<span class="badge badge-hold" style="margin-left:4px;">{{ lotes_count.hold }}</span>{% endif %}</button>
+  <button class="tab-btn" onclick="filterLotes('completados',this)">Completados</button>
+</div>
+<div class="card" style="padding:0;">
+  <div class="table-wrap">
+    <table class="data-table" id="lotes-table">
+      <thead><tr><th>Folio</th><th>Orden</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Última actividad</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for lote in mis_lotes %}
+        <tr class="lote-row" data-estado="{% if lote.estado.nombre == 'En proceso' %}en-proceso{% elif lote.estado.nombre == 'Hold' %}hold{% elif lote.estado.nombre == 'Completado' %}completados{% else %}otros{% endif %}">
+          <td><a href="{% url 'operator_detalle_lote' lote.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ lote.folio }}</a></td>
+          <td>{{ lote.orden.numero|default:"—" }}</td>
+          <td>{{ lote.etapa_actual.nombre|default:"—" }}</td>
+          <td>{% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% else %}<span class="badge">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}</td>
+          <td style="text-align:right;font-weight:600;color:{% if lote.yield_pct >= 90 %}#16A85E{% elif lote.yield_pct >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{% if lote.yield_pct is not None %}{{ lote.yield_pct|floatformat:1 }}%{% else %}—{% endif %}</td>
+          <td style="font-size:12px;color:#718096;">{{ lote.ultima_actividad|timesince|default:"—" }} atrás</td>
+          <td class="table-actions"><a href="{% url 'operator_detalle_lote' lote.pk %}" class="action-btn" title="Ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>No tienes lotes asignados en este turno</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% block extra_js %}
+<script>
+function filterLotes(estado, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  var rows = document.querySelectorAll('.lote-row');
+  var visible = 0;
+  rows.forEach(row => { var show = estado === 'todos' || row.dataset.estado === estado; row.style.display = show ? '' : 'none'; if(show) visible++; });
+  var empty = document.getElementById('filter-empty-row');
+  if(empty) empty.remove();
+  if(visible === 0 && rows.length > 0) { var tbody = document.querySelector('#lotes-table tbody'); var tr = document.createElement('tr'); tr.id='filter-empty-row'; tr.innerHTML='<td colspan="7"><div class="empty-state" style="padding:24px;"><p style="color:#718096;">Sin lotes en esta categoría</p></div></td>'; tbody.appendChild(tr); }
+}
+</script>
+{% endblock %}
+{% endblock %}

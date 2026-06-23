@@ -1,0 +1,72 @@
+{% extends "operator/layout.html" %}
+{% load static %}
+{% block page_title %}Notificaciones{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Centro de notificaciones</h1><p class="page-subtitle">{% if unread_count %}<strong>{{ unread_count }}</strong> sin leer{% else %}Todas al día{% endif %}</p></div>
+  <div class="page-actions">{% if unread_count %}<a href="{% url 'operator_marcar_todas_leidas' %}" class="btn btn-ghost btn-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Marcar todas leídas</a>{% endif %}</div>
+</div>
+<div style="display:flex;gap:20px;align-items:flex-start;">
+  <!-- Lista -->
+  <div style="width:320px;flex-shrink:0;">
+    <div class="card" style="padding:0;">
+      <div style="display:flex;border-bottom:1px solid #E2E8F0;">
+        <button class="tab-btn active" style="flex:1;border-radius:0;border:none;" onclick="filterNotifs('todas',this)">Todas</button>
+        <button class="tab-btn" style="flex:1;border-radius:0;border:none;" onclick="filterNotifs('no-leidas',this)">No leídas</button>
+        <button class="tab-btn" style="flex:1;border-radius:0;border:none;" onclick="filterNotifs('alertas',this)">Alertas</button>
+      </div>
+      <div id="notif-list" style="max-height:600px;overflow-y:auto;">
+        {% for notif in notificaciones %}
+        <div class="notif-item {% if not notif.leida %}unread{% endif %}" id="notif-{{ notif.pk }}" data-tipo="{{ notif.tipo }}" onclick="showNotif({{ notif.pk }})" style="border-left:3px solid {% if notif.tipo == 'alerta' or notif.tipo == 'hold' %}#F5A623{% elif notif.tipo == 'critico' %}#EF5350{% elif notif.tipo == 'exito' %}#16A85E{% else %}#009EAF{% endif %};{% if not notif.leida %}background:#F0FBF6;{% endif %}">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;">
+            <div style="flex-shrink:0;margin-top:2px;">
+              {% if notif.tipo == 'hold' or notif.tipo == 'alerta' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              {% elif notif.tipo == 'critico' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              {% elif notif.tipo == 'exito' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              {% else %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>{% endif %}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:{% if not notif.leida %}600{% else %}400{% endif %};color:#1A202C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ notif.titulo }}</div>
+              <div style="font-size:11px;color:#718096;margin-top:2px;">{{ notif.creada_en|timesince }} atrás</div>
+            </div>
+            {% if not notif.leida %}<div style="width:8px;height:8px;border-radius:50%;background:#16A85E;flex-shrink:0;margin-top:4px;"></div>{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding:48px 16px;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p style="font-size:13px;color:#718096;margin:8px 0 0;">Sin notificaciones</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <!-- Detalle -->
+  <div style="flex:1;min-width:0;" id="notif-detail">
+    <div class="card"><div class="empty-state" style="padding:64px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p style="color:#CBD5E0;">Selecciona una notificación</p></div></div>
+  </div>
+</div>
+{% block extra_js %}
+<script>
+var notifData = { {% for n in notificaciones %}{{ n.pk }}: { pk: {{ n.pk }}, titulo: "{{ n.titulo|escapejs }}", cuerpo: "{{ n.cuerpo|escapejs }}", tipo: "{{ n.tipo }}", fecha: "{{ n.creada_en|date:'d/m/Y H:i' }}", ref_tipo: "{{ n.referencia_tipo|default:'' }}", ref_val: "{{ n.referencia_valor|default:'' }}", accion_url: "{{ n.accion_url|default:'' }}", accion_label: "{{ n.accion_label|default:'' }}", leida: {{ n.leida|yesno:"true,false" }} }{% if not forloop.last %},{% endif %}{% endfor %} };
+var colors = {alerta:'#F5A623',hold:'#F5A623',critico:'#EF5350',exito:'#16A85E',info:'#009EAF'};
+function showNotif(pk) {
+  var n = notifData[pk]; if(!n) return;
+  var c = colors[n.tipo] || '#009EAF';
+  var icons = {alerta:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',hold:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>',critico:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>',exito:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'};
+  var icon = icons[n.tipo] || icons.alerta;
+  var ref = n.ref_val ? '<div style="padding:12px 16px;background:#F4F6F9;border-radius:8px;border:1px solid #E2E8F0;margin-bottom:16px;"><div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">'+(n.ref_tipo||'Referencia')+'</div><div style="font-weight:600;font-family:monospace;">'+n.ref_val+'</div></div>' : '';
+  var btn = n.accion_url && n.accion_label ? '<a href="'+n.accion_url+'" class="btn btn-primary btn-sm" style="margin-bottom:8px;">'+n.accion_label+'</a> ' : '';
+  var mark = !n.leida ? '<button class="btn btn-ghost btn-sm" onclick="marcarLeida('+pk+')">Marcar como leída</button>' : '';
+  document.getElementById('notif-detail').innerHTML = '<div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;"><div style="width:48px;height:48px;border-radius:50%;background:'+c+'15;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+icon+'</div><div><h3 style="font-size:15px;font-weight:700;color:#1A202C;margin:0 0 4px;">'+n.titulo+'</h3><div style="font-size:12px;color:#718096;">'+n.fecha+'</div></div></div><p style="font-size:14px;color:#4A5568;line-height:1.6;margin-bottom:16px;">'+n.cuerpo+'</p>'+ref+'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+btn+mark+'</div></div>';
+  document.querySelectorAll('.notif-item').forEach(el => el.style.background = '');
+  var item = document.getElementById('notif-'+pk);
+  if(item) item.style.background = '#EEF8F4';
+}
+function marcarLeida(pk) {
+  fetch('/operator/notificaciones/'+pk+'/marcar-leida/', {method:'POST',headers:{'X-CSRFToken':document.cookie.match(/csrftoken=([^;]+)/)?.[1]||''}}).then(() => { var item = document.getElementById('notif-'+pk); if(item){item.classList.remove('unread');item.style.background='';} if(notifData[pk]) notifData[pk].leida=true; document.getElementById('notif-detail').querySelector('.btn-ghost')?.remove(); });
+}
+function filterNotifs(tipo, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('.notif-item').forEach(item => { var show = tipo==='todas'||(tipo==='no-leidas'&&item.classList.contains('unread'))||(tipo==='alertas'&&(item.dataset.tipo==='alerta'||item.dataset.tipo==='hold'||item.dataset.tipo==='critico')); item.style.display = show?'':'none'; });
+}
+</script>
+{% endblock %}
+{% endblock %}

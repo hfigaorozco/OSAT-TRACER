@@ -1,0 +1,576 @@
+{% extends "admin/layout.html" %}
+{% load static %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Inventario</h1>
+  </div>
+</div>
+
+<!-- Filtros + chips + botón -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+  <!-- Search -->
+  <div style="position:relative;">
+    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="inv-search" placeholder="Search..." oninput="filterInventario()"
+      style="height:38px;padding:0 12px 0 34px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+  </div>
+  <!-- Estado select -->
+  <div style="position:relative;">
+    <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+    <select id="inv-estado" onchange="filterInventario()"
+      style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+      <option value="">Select</option>
+      <option value="ok">OK</option>
+      <option value="bajo">Bajo mínimo</option>
+      <option value="critico">Crítico</option>
+    </select>
+  </div>
+  <!-- Chips de categoría -->
+  <div id="chips-container" style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% for cat in categorias %}
+    <button class="chip-cat {% if forloop.first %}active{% endif %}"
+            data-cat="{{ cat.pk }}" onclick="selectChip(this, '{{ cat.pk }}')">
+      {{ cat.nombre }}
+    </button>
+    {% empty %}
+    <button class="chip-cat active" data-cat="" onclick="selectChip(this,'')">Todas</button>
+    <button class="chip-cat" data-cat="1" onclick="selectChip(this,'1')">Pieza 1</button>
+    <button class="chip-cat" data-cat="2" onclick="selectChip(this,'2')">Pieza 2</button>
+    <button class="chip-cat" data-cat="3" onclick="selectChip(this,'3')">Pieza 3</button>
+    <button class="chip-cat" data-cat="4" onclick="selectChip(this,'4')">Pieza 4</button>
+    {% endfor %}
+  </div>
+  <!-- Botón -->
+  <div style="margin-left:auto;">
+    <button class="btn btn-primary" onclick="openModal('modal-nueva-pieza')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Pieza
+    </button>
+  </div>
+</div>
+
+<!-- Tabla -->
+<div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+  <table style="width:100%;border-collapse:collapse;font-size:13.5px;" id="inv-table">
+    <thead>
+      <tr style="background:#F7FAFC;">
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">ID</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tipo de máquina</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Línea</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Operador asignado</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha registro</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="inv-tbody">
+      {% for pieza in piezas %}
+      <tr class="inv-row" data-nombre="{{ pieza.nombre|lower }}" data-codigo="{{ pieza.codigo|lower }}"
+          data-estado="{% if pieza.stock == 0 %}critico{% elif pieza.stock < pieza.stock_minimo %}bajo{% else %}ok{% endif %}"
+          style="cursor:pointer;transition:background .12s;"
+          onclick="openDetalle({{ pieza.pk }}, '{{ pieza.nombre }}', '{{ pieza.descripcion|default:'' }}', {{ pieza.stock }}, {{ pieza.stock_minimo }}, '{% if pieza.stock == 0 %}Crítico{% elif pieza.stock < pieza.stock_minimo %}Bajo{% else %}OK{% endif %}')"
+          onmouseover="this.style.background='#F0FBF6'" onmouseout="this.style.background=''">
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">{{ pieza.codigo }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.nombre }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ pieza.linea|default:"Línea A" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+          {% if pieza.stock == 0 %}
+            <span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Activo</span>
+          {% elif pieza.stock < pieza.stock_minimo %}
+            <span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Bajo</span>
+          {% else %}
+            <span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Activo</span>
+          {% endif %}
+        </td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.operador|default:"Sin asignar" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#718096;">{{ pieza.fecha_registro|date:"Y-m-d"|default:"2024-01-10" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+          <button onclick="event.stopPropagation();openDetalle({{ pieza.pk }}, '{{ pieza.nombre }}', '{{ pieza.descripcion|default:'' }}', {{ pieza.stock }}, {{ pieza.stock_minimo }}, 'OK')"
+                  style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" style="padding:48px;text-align:center;color:#718096;font-size:14px;">
+          No hay materiales en inventario
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Paginación -->
+<div style="display:flex;justify-content:center;gap:4px;margin-top:28px;">
+  <button class="pag-btn disabled">‹</button>
+  <button class="pag-btn active">1</button>
+  <button class="pag-btn">2</button>
+  <button class="pag-btn">3</button>
+  <button class="pag-btn">4</button>
+  <button class="pag-btn">›</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL DETALLE DE PIEZA
+═══════════════════════════════════════════ -->
+<div id="modal-detalle-pieza" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:560px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 id="det-titulo" style="font-size:15px;font-weight:600;color:#1A202C;margin:0;"></h2>
+      <button onclick="document.getElementById('modal-detalle-pieza').style.display='none';"
+              style="width:28px;height:28px;border-radius:6px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Info de la pieza -->
+    <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <!-- Ícono -->
+        <div style="width:48px;height:48px;border-radius:10px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <!-- Info -->
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span id="det-nombre" style="font-size:16px;font-weight:600;color:#1A202C;"></span>
+            <span id="det-estado-badge" style="padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;"></span>
+          </div>
+          <p id="det-desc" style="font-size:13px;color:#718096;margin:0 0 12px;"></p>
+          <div style="display:flex;gap:24px;">
+            <div>
+              <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
+              <div id="det-stock" style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock mínimo</div>
+              <div id="det-minimo" style="font-size:28px;font-weight:700;color:#718096;line-height:1;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Acciones -->
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+          <button onclick="openFromDetalle('entrada')"
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            Registrar entrada
+          </button>
+          <button onclick="openFromDetalle('salida')"
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;color:#2D3748;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            Registrar salida
+          </button>
+          <button onclick="openFromDetalle('ajuste')"
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="9.5" y="16" width="5" height="5"/><line x1="5.5" y1="8" x2="5.5" y2="14"/><line x1="18.5" y1="8" x2="18.5" y2="14"/><line x1="5.5" y1="14" x2="12" y2="16"/><line x1="18.5" y1="14" x2="12" y2="16"/></svg>
+            Ajuste
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Kardex -->
+    <div style="padding:16px 24px 20px;">
+      <h3 style="font-size:13.5px;font-weight:600;color:#1A202C;margin:0 0 12px;">Kardex de movimientos</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <thead>
+          <tr style="border-bottom:1px solid #E2E8F0;">
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Fecha/Hora</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Tipo</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Cantidad</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Antes</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Después</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Motivo</th>
+            <th style="padding:6px 8px;text-align:left;font-weight:600;color:#4A5568;">Usuario</th>
+          </tr>
+        </thead>
+        <tbody id="kardex-tbody">
+          <!-- Se llena con JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL REGISTRAR ENTRADA
+═══════════════════════════════════════════ -->
+<div id="modal-entrada" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Registrar entrada</h2>
+      <button onclick="closeEntrada()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="form-entrada" method="post" action="{% url 'admin_inventario_movimiento' %}">
+      {% csrf_token %}
+      <input type="hidden" name="tipo_mov" value="entrada">
+      <input type="hidden" name="pieza_id" id="ent-pieza-id">
+      <div style="padding:20px 24px;">
+        <!-- Material + Stock readonly -->
+        <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Material</div>
+            <div id="ent-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="ent-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
+          <div style="position:relative;">
+            <input type="number" name="cantidad" id="ent-cantidad" min="1" required
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Observaciones</label>
+          <textarea name="observaciones" placeholder="Observaciones opcionales"
+            style="width:100%;padding:10px 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;resize:none;height:80px;font-family:inherit;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
+        <button type="button" onclick="closeEntrada()"
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+        <button type="submit"
+                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar entrada</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL REGISTRAR SALIDA
+═══════════════════════════════════════════ -->
+<div id="modal-salida" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Registrar salida</h2>
+      <button onclick="closeSalida()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="form-salida" method="post" action="{% url 'admin_inventario_movimiento' %}">
+      {% csrf_token %}
+      <input type="hidden" name="tipo_mov" value="salida">
+      <input type="hidden" name="pieza_id" id="sal-pieza-id">
+      <div style="padding:20px 24px;">
+        <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Material</div>
+            <div id="sal-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="sal-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
+          <div style="position:relative;">
+            <input type="number" name="cantidad" min="1" required
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Motivo <span style="color:#EF5350;">*</span></label>
+          <select name="motivo" required
+            style="width:100%;height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+            <option value="">Seleccionar motivo</option>
+            <option value="uso_produccion">Consumo en producción</option>
+            <option value="merma">Merma / Desperdicio</option>
+            <option value="devolucion">Devolución a proveedor</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
+        <button type="button" onclick="closeSalida()"
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+        <button type="submit"
+                style="padding:8px 18px;background:#EF5350;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar salida</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL AJUSTE
+═══════════════════════════════════════════ -->
+<div id="modal-ajuste" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Ajuste de inventario</h2>
+      <button onclick="closeAjuste()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="form-ajuste" method="post" action="{% url 'admin_inventario_movimiento' %}">
+      {% csrf_token %}
+      <input type="hidden" name="tipo_mov" value="ajuste">
+      <input type="hidden" name="pieza_id" id="aj-pieza-id">
+      <div style="padding:20px 24px;">
+        <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Material</div>
+            <div id="aj-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="aj-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nueva cantidad <span style="color:#EF5350;">*</span></label>
+          <div style="position:relative;">
+            <input type="number" name="cantidad" min="0" required
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Justificación <span style="color:#EF5350;">*</span></label>
+          <textarea name="justificacion" placeholder="Motivo del ajuste..." required
+            style="width:100%;padding:10px 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;resize:none;height:80px;font-family:inherit;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
+        <button type="button" onclick="closeAjuste()"
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+        <button type="submit"
+                style="padding:8px 18px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar ajuste</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL NUEVA PIEZA
+═══════════════════════════════════════════ -->
+<div id="modal-nueva-pieza" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Nueva pieza / material</h2>
+      <button onclick="document.getElementById('modal-nueva-pieza').style.display='none';"
+              style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{% url 'admin_inventario_crear' %}">{% csrf_token %}
+      <div style="padding:20px 24px;">
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nombre <span style="color:#EF5350;">*</span></label>
+          <input type="text" name="nombre" required
+            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Descripción</label>
+          <input type="text" name="descripcion"
+            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+        </div>
+        <!-- Imagen opcional -->
+        <div style="margin-bottom:14px;">
+          <div style="border:1.5px dashed #CBD5E0;border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
+               onclick="document.getElementById('img-upload').click()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2" style="margin:0 auto 4px;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span style="font-size:12.5px;color:#A0AEC0;">Imagen (opcional) · </span>
+            <span style="font-size:12.5px;color:#16A85E;font-weight:500;">Seleccionar</span>
+            <input type="file" id="img-upload" name="imagen" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock inicial <span style="color:#EF5350;">*</span></label>
+            <div style="position:relative;">
+              <input type="number" name="stock" min="0" required
+                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+              <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock mínimo <span style="color:#EF5350;">*</span></label>
+            <div style="position:relative;">
+              <input type="number" name="stock_minimo" min="0" required
+                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+              <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
+        <button type="button" onclick="document.getElementById('modal-nueva-pieza').style.display='none';"
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+        <button type="submit"
+                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{% block extra_js %}
+<style>
+/* Chips de categoría */
+.chip-cat {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background: #2E3D52;
+  color: #C4C5D0;
+  transition: background .15s;
+}
+.chip-cat.active {
+  background: #7C3AED;
+  color: #fff;
+}
+.chip-cat:hover:not(.active) { background: #374e67; color: #fff; }
+</style>
+
+<script>
+// ── Estado global de la pieza seleccionada ──
+var _pieza = { pk: null, nombre: '', desc: '', stock: 0, minimo: 0, estado: 'OK' };
+
+// Kardex de ejemplo por pieza (en producción vendría del backend)
+var _kardexData = {
+  default: [
+    { fecha: '2026-06-09 08:32', tipo: 'Entrada', cantidad: 100, antes: 350, despues: 450, motivo: 'Compra OC-2026-001', usuario: 'admin@osat.mx' },
+    { fecha: '2026-06-08 14:10', tipo: 'Salida',  cantidad: 20,  antes: 370, despues: 350, motivo: 'Consumo en producción', usuario: 'sup.a@osat.mx' },
+    { fecha: '2026-06-07 09:00', tipo: 'Ajuste',  cantidad: 5,   antes: 365, despues: 370, motivo: 'Conteo físico',        usuario: 'admin@osat.mx' },
+  ]
+};
+
+function openDetalle(pk, nombre, desc, stock, minimo, estado) {
+  _pieza = { pk, nombre, desc, stock, minimo, estado };
+
+  document.getElementById('det-titulo').textContent = nombre + ' — Detalle';
+  document.getElementById('det-nombre').textContent = nombre;
+  document.getElementById('det-desc').textContent = desc || 'Sin descripción';
+  document.getElementById('det-stock').textContent = stock;
+  document.getElementById('det-minimo').textContent = minimo;
+
+  var badge = document.getElementById('det-estado-badge');
+  if (stock === 0) {
+    badge.style.cssText = 'background:#F8D7DA;color:#721C24;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;';
+    badge.textContent = 'Crítico';
+  } else if (stock < minimo) {
+    badge.style.cssText = 'background:#FFF3CD;color:#856404;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;';
+    badge.textContent = 'Bajo';
+  } else {
+    badge.style.cssText = 'background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;';
+    badge.textContent = 'OK';
+  }
+
+  // Llenar kardex
+  var tbody = document.getElementById('kardex-tbody');
+  var movs = _kardexData[pk] || _kardexData.default;
+  tbody.innerHTML = movs.map(function(m) {
+    var tipoStyle = m.tipo === 'Entrada'
+      ? 'background:#D4EDDA;color:#155724;'
+      : m.tipo === 'Salida'
+        ? 'background:#F8D7DA;color:#721C24;'
+        : 'background:#FFF3CD;color:#856404;';
+    return '<tr style="border-bottom:1px solid #EDF2F7;">' +
+      '<td style="padding:7px 8px;color:#2D3748;white-space:nowrap;">' + m.fecha + '</td>' +
+      '<td style="padding:7px 8px;"><span style="'+tipoStyle+'padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;">'+m.tipo+'</span></td>' +
+      '<td style="padding:7px 8px;font-weight:600;color:#1A202C;">' + m.cantidad + '</td>' +
+      '<td style="padding:7px 8px;color:#718096;">' + m.antes + '</td>' +
+      '<td style="padding:7px 8px;color:#718096;">' + m.despues + '</td>' +
+      '<td style="padding:7px 8px;color:#2D3748;">' + m.motivo + '</td>' +
+      '<td style="padding:7px 8px;color:#009EAF;font-size:12px;">' + m.usuario + '</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('modal-detalle-pieza').style.display = 'flex';
+}
+
+function openFromDetalle(tipo) {
+  // Cerrar detalle y abrir el modal correspondiente
+  document.getElementById('modal-detalle-pieza').style.display = 'none';
+  if (tipo === 'entrada') {
+    document.getElementById('ent-pieza-id').value = _pieza.pk;
+    document.getElementById('ent-material-name').textContent = _pieza.nombre;
+    document.getElementById('ent-stock-actual').textContent = _pieza.stock;
+    document.getElementById('modal-entrada').style.display = 'flex';
+  } else if (tipo === 'salida') {
+    document.getElementById('sal-pieza-id').value = _pieza.pk;
+    document.getElementById('sal-material-name').textContent = _pieza.nombre;
+    document.getElementById('sal-stock-actual').textContent = _pieza.stock;
+    document.getElementById('modal-salida').style.display = 'flex';
+  } else {
+    document.getElementById('aj-pieza-id').value = _pieza.pk;
+    document.getElementById('aj-material-name').textContent = _pieza.nombre;
+    document.getElementById('aj-stock-actual').textContent = _pieza.stock;
+    document.getElementById('modal-ajuste').style.display = 'flex';
+  }
+}
+
+function closeEntrada() {
+  document.getElementById('modal-entrada').style.display = 'none';
+  openDetalle(_pieza.pk, _pieza.nombre, _pieza.desc, _pieza.stock, _pieza.minimo, _pieza.estado);
+}
+function closeSalida() {
+  document.getElementById('modal-salida').style.display = 'none';
+  openDetalle(_pieza.pk, _pieza.nombre, _pieza.desc, _pieza.stock, _pieza.minimo, _pieza.estado);
+}
+function closeAjuste() {
+  document.getElementById('modal-ajuste').style.display = 'none';
+  openDetalle(_pieza.pk, _pieza.nombre, _pieza.desc, _pieza.stock, _pieza.minimo, _pieza.estado);
+}
+
+// Cerrar modales con click fuera
+['modal-detalle-pieza','modal-entrada','modal-salida','modal-ajuste','modal-nueva-pieza'].forEach(function(id) {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
+
+// Filtro de tabla
+function filterInventario() {
+  var q = document.getElementById('inv-search').value.toLowerCase();
+  var estado = document.getElementById('inv-estado').value;
+  document.querySelectorAll('.inv-row').forEach(function(row) {
+    var nombre = (row.dataset.nombre || '').toLowerCase();
+    var codigo = (row.dataset.codigo || '').toLowerCase();
+    var rowEstado = row.dataset.estado || '';
+    var matchQ = !q || nombre.includes(q) || codigo.includes(q);
+    var matchE = !estado || rowEstado === estado;
+    row.style.display = matchQ && matchE ? '' : 'none';
+  });
+}
+
+// Chips de categoría
+function selectChip(btn, cat) {
+  document.querySelectorAll('.chip-cat').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  // Aquí podrías filtrar por categoría si los rows tuvieran data-cat
+}
+</script>
+{% endblock %}
+{% endblock %}

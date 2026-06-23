@@ -1,0 +1,61 @@
+{% extends "operator/layout.html" %}
+{% load static %}
+{% block page_title %}Inicio{% endblock %}
+{% block content %}
+<div class="readonly-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><strong>Registro desde app móvil</strong> — El avance de etapas se registra desde la aplicación móvil con escaneo QR. Esta vista es solo de consulta.</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <div>
+    <div class="card" style="text-align:center;padding:32px 24px;margin-bottom:16px;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(22,168,94,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin-bottom:8px;">Consultar lote</h2>
+      <p style="font-size:13px;color:#4A5568;margin-bottom:20px;">Ingresa el folio del lote para ver su estado y progreso.</p>
+      {% if search_error %}<div class="banner banner-error" style="text-align:left;margin-bottom:12px;"><span>{{ search_error }}</span></div>{% endif %}
+      {% if lot_hold %}<div class="banner banner-warning" style="text-align:left;margin-bottom:12px;">El lote <strong>{{ lot_hold.folio }}</strong> está en Hold. Motivo: {{ lot_hold.hold_motivo }}</div>{% endif %}
+      {% if lot_complete %}<div class="banner banner-success" style="text-align:left;margin-bottom:12px;">El lote <strong>{{ lot_complete.folio }}</strong> ha sido completado.</div>{% endif %}
+      <form method="get" action="{% url 'operator_buscar_lote' %}" style="display:flex;gap:8px;">
+        <input type="text" name="folio" class="form-control" placeholder="Ej. LOT-2026-001" value="{{ request.GET.folio|default:'' }}" style="flex:1;" autofocus>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </form>
+    </div>
+
+    {% if turno_activo %}
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,158,175,.1);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h3 style="font-weight:600;font-size:14px;margin:0;">Turno activo</h3>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><span style="font-size:12px;color:#718096;">Turno</span><div style="font-weight:500;">{{ turno_activo.nombre }}</div></div>
+        <div><span style="font-size:12px;color:#718096;">Línea</span><div style="font-weight:500;">{{ turno_activo.linea|default:"—" }}</div></div>
+        <div><span style="font-size:12px;color:#718096;">Inicio</span><div style="font-weight:500;">{{ turno_activo.hora_inicio|time:"H:i" }}</div></div>
+        <div><span style="font-size:12px;color:#718096;">Fin</span><div style="font-weight:500;">{{ turno_activo.hora_fin|time:"H:i" }}</div></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="padding:0;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="font-weight:600;font-size:14px;margin:0;">Mis actividades recientes</h3></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Folio</th><th>Etapa</th><th>Estado</th><th>Última actividad</th></tr></thead>
+        <tbody>
+          {% for act in actividades_recientes %}
+          <tr>
+            <td><a href="{% url 'operator_detalle_lote' act.lote_pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ act.folio }}</a></td>
+            <td style="font-size:13px;">{{ act.etapa_nombre }}</td>
+            <td>{% if act.estado == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif act.estado == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% elif act.estado == 'Hold' %}<span class="badge badge-hold">Hold</span>{% else %}<span class="badge">{{ act.estado }}</span>{% endif %}</td>
+            <td style="font-size:12px;color:#718096;">{{ act.timestamp|timesince }} atrás</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty-state" style="padding:32px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p style="margin:8px 0 0;font-size:13px;color:#718096;">Sin actividad reciente</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Iniciar sesión — OSAT Tracer{% endblock %}
+
+{% block extra_css %}
+<style>
+.login-wrap {
+  min-height: 100vh;
+  background: var(--bg-app);
+  display: flex; align-items: center; justify-content: center; padding: 2rem;
+}
+.login-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 2.5rem 2rem;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+}
+.login-logo {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.login-logo img { width: 56px; height: 48px; object-fit: contain; }
+.login-logo h1 {
+  font-family: var(--font-main); font-weight: 700; font-size: 22px; color: var(--text-primary);
+}
+.login-tagline {
+  text-align: center; color: #718096; font-size: 13px; margin-bottom: 28px;
+  font-family: var(--font-main); font-weight: 300;
+}
+.password-wrap { position: relative; }
+.password-wrap .form-control { padding-right: 72px; }
+.password-toggle-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #4A5568; font-size: 12px; cursor: pointer;
+}
+.password-toggle-btn:hover { color: var(--green); }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card">
+
+    <div class="login-logo">
+      <img src="{% static 'img/logo.png' %}" alt="OSAT Tracer">
+      <h1>OSAT Tracer</h1>
+    </div>
+    <p class="login-tagline">Sistema de Trazabilidad de Ensamblado de Semiconductores</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="banner banner-{{ message.tags }}" style="margin-bottom:1rem;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="banner banner-error" style="margin-bottom:1rem;">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="id_username">Usuario empresarial</label>
+        <input
+          type="text" id="id_username" name="username"
+          class="form-control{% if form.username.errors %} error{% endif %}"
+          placeholder="usuario.apellido" autocomplete="username"
+          value="{{ form.username.value|default:'' }}" required
+        >
+        {% if form.username.errors %}
+          <span class="form-hint error">{{ form.username.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="id_password">Contraseña</label>
+        <div class="password-wrap">
+          <input
+            type="password" id="id_password" name="password"
+            class="form-control{% if form.password.errors %} error{% endif %}"
+            placeholder="••••••••" autocomplete="current-password" required
+          >
+          <button type="button" class="password-toggle-btn" onclick="togglePassword('id_password', this)">Ver</button>
+        </div>
+        {% if form.password.errors %}
+          <span class="form-hint error">{{ form.password.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full" style="height:44px;font-size:15px;justify-content:center;margin-top:4px;">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:20px;font-size:11.5px;color:#B0BEC5;">
+      Solo disponible en red privada de la empresa
+    </p>
+
+  </div>
+</div>
+{% endblock %}
