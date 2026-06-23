@@ -128,4 +128,4 @@ class HistorialDefectosAdmin(admin.ModelAdmin):
     list_display= [
         "defecto",
         "pasoRealizado",
-    ]  
+    ] 
