@@ -14,4 +14,4 @@ class Pieza(models.Model):
         db_table = 'pieza'
         
     def __str__(self):
-        return self.nombre
+        return self.nombre 
