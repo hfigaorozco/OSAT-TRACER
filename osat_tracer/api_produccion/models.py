@@ -125,7 +125,7 @@ class Oblea(models.Model):
 class LineaProceso(models.Model):
     linea = models.ForeignKey(Linea, on_delete=models.RESTRICT, related_name='linea_proceso')
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='linea_proceso')
-
+    #Tabla Muchos a Muchos
     class Meta:
         db_table = 'linea-proceso'
         constraints = [
