@@ -76,7 +76,7 @@ class OrdenAdmin(admin.ModelAdmin):
 @admin.register(models.Oblea)
 class ObleaAdmin(admin.ModelAdmin):
     list_display= [
-        "diesGeneados",
+        "diesGenerados",
         "orden",
         "estado",
         "tipo",        
@@ -102,7 +102,7 @@ class ProcesoPiezaAdmin(admin.ModelAdmin):
     list_display= [
         "proceso",
         "pieza",
-        "cantPieza",      
+        "cantPiezas",      
     ]  
 
 @admin.register(models.MaquinaPaso)
@@ -120,7 +120,7 @@ class PasoRealizadoAdmin(admin.ModelAdmin):
         "paso",
         "estado",
         "oblea",
-        "alerte",    
+        "alerta",    
     ]  
     
 @admin.register(models.Historial_Defectos)
@@ -128,4 +128,4 @@ class HistorialDefectosAdmin(admin.ModelAdmin):
     list_display= [
         "defecto",
         "pasoRealizado",
-    ]  
+    ] 
