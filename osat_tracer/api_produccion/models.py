@@ -223,3 +223,5 @@ class Historial_Defectos(models.Model):
         
     def __str__(self):
         return f"{self.defecto} - {self.pasoRealizado}"
+    
+    
