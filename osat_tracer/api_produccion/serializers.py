@@ -445,5 +445,5 @@ class ListHistorialDefectoSerializer(serializers.ModelSerializer):
             "pasoRealizado",  
         ] 
 #DETAIL
-#UPDATE
+#UPDATE Jiji
 
