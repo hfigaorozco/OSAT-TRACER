@@ -33,3 +33,7 @@ class DetailPiezaAPIView(APIView):
     
     
 ## Update Pieza
+class UpdatePiezaAPIView(generics.UpdateAPIView):
+    queryset = models.Pieza.objects.all()
+    serializer_class = serializers.UpdatePiezaSerializer
+    lookup_field = 'pk'  
