@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 urlpatterns = [
@@ -27,6 +27,12 @@ urlpatterns = [
     path('admin/configuracion/password/', views.admin_config_change_password, name='admin_config_change_password'),
     path('admin/notificaciones/', views.admin_notificaciones, name='admin_notificaciones'),
     path('admin/reportes/', views.admin_reportes, name='admin_reportes'),
+    # ── Organización ──────────────────────────
+    path('admin/organizacion/', views.admin_organizacion, name='admin_organizacion'),
+    path('admin/organizacion/plantilla/crear/', views.admin_organizacion_plantilla_crear, name='admin_organizacion_plantilla_crear'),
+    path('admin/organizacion/plantilla/<int:pk>/editar/', views.admin_organizacion_plantilla_editar, name='admin_organizacion_plantilla_editar'),
+    path('admin/organizacion/oblea/crear/', views.admin_organizacion_oblea_crear, name='admin_organizacion_oblea_crear'),
+    path('admin/organizacion/linea/crear/', views.admin_organizacion_linea_crear, name='admin_organizacion_linea_crear'),
 
     # ── Supervisor ────────────────────────────────────────────
     path('supervisor/', views.supervisor_dashboard, name='supervisor_dashboard'),
@@ -44,20 +50,4 @@ urlpatterns = [
     path('supervisor/notificaciones/', views.supervisor_notificaciones, name='supervisor_notificaciones'),
     path('supervisor/configuracion/', views.supervisor_configuracion, name='supervisor_configuracion'),
 
-    # ── Operator ──────────────────────────────────────────────
-    path('operator/', views.operator_dashboard, name='operator_dashboard'),
-    path('operator/mis-lotes/', views.operator_mis_lotes, name='operator_mis_lotes'),
-    path('operator/lote/<int:pk>/', views.operator_detalle_lote, name='operator_detalle_lote'),
-    path('operator/notificaciones/', views.operator_notificaciones, name='operator_notificaciones'),
-    path('operator/notificaciones/marcar-todas/', views.operator_marcar_todas_leidas, name='operator_marcar_todas_leidas'),
-    path('operator/perfil/', views.operator_perfil, name='operator_perfil'),
-    path('operator/buscar-lote/', views.operator_buscar_lote, name='operator_buscar_lote'),
-
-
-    # ── Organización (nueva pantalla) ──────────────────────────
-    path('admin/organizacion/', views.admin_organizacion, name='admin_organizacion'),
-    path('admin/organizacion/plantilla/crear/', views.admin_organizacion_plantilla_crear, name='admin_organizacion_plantilla_crear'),
-    path('admin/organizacion/plantilla/<int:pk>/editar/', views.admin_organizacion_plantilla_editar, name='admin_organizacion_plantilla_editar'),
-    path('admin/organizacion/oblea/crear/', views.admin_organizacion_oblea_crear, name='admin_organizacion_oblea_crear'),
-    path('admin/organizacion/linea/crear/', views.admin_organizacion_linea_crear, name='admin_organizacion_linea_crear'),
 ]

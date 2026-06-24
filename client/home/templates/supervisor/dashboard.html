@@ -1,112 +1,202 @@
 {% extends "supervisor/layout.html" %}
 {% load static %}
 {% block page_title %}Dashboard{% endblock %}
+
 {% block content %}
-<div class="page-header">
-  <div><h1 class="page-title">Dashboard</h1><p class="page-subtitle">Resumen de producción en tiempo real</p></div>
-  <div class="page-actions"><span style="font-size:12px;color:#718096;">Actualizado: {% now "H:i" %}</span></div>
+<h1 class="page-title" style="margin-bottom:20px;">Dashboard</h1>
+
+<!-- KPI CARDS — Yield, Throughput, OEE, Lotes en Hold -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+
+  <div class="card" style="padding:20px;">
+    <div style="font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Yield Total</div>
+    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.yield_pct }}%</div>
+    <div style="font-size:12px;color:#16A85E;">{{ kpi.yield_delta }}</div>
+  </div>
+
+  <div class="card" style="padding:20px;">
+    <div style="font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Throughput</div>
+    <div style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px;">UPH</div>
+    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.throughput }}</div>
+    <div style="font-size:12px;color:#EF5350;">{{ kpi.throughput_delta }}</div>
+  </div>
+
+  <div class="card" style="padding:20px;">
+    <div style="font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">OEE</div>
+    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.oee_pct }}%</div>
+    <div style="font-size:12px;color:#16A85E;">{{ kpi.oee_delta }}</div>
+  </div>
+
+  <div class="card" style="padding:20px;">
+    <div style="font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Lotes en Hold</div>
+    <div style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
+    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.lotes_hold }}</div>
+    <div style="font-size:12px;color:#F5A623;">{{ kpi.lotes_hold_delta }}</div>
+  </div>
+
 </div>
 
-<!-- KPI Semáforos -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
-  {% with yield_val=kpi.yield_pct|default:0 %}
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-      <div style="width:40px;height:40px;border-radius:50%;background:{% if yield_val >= kpi_thresholds.yield_verde|default:90 %}#16A85E{% elif yield_val >= kpi_thresholds.yield_amarillo|default:75 %}#F5A623{% else %}#EF5350{% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      </div>
-      <div>
-        <div style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;">{{ yield_val|floatformat:1 }}%</div>
-        <div style="font-size:12px;color:#718096;">Yield global</div>
-      </div>
-    </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:{{ yield_val }}%;background:{% if yield_val >= 90 %}#16A85E{% elif yield_val >= 75 %}#F5A623{% else %}#EF5350{% endif %};"></div></div>
-    <div style="font-size:11px;color:#718096;margin-top:4px;">Objetivo: {{ kpi_thresholds.yield_verde|default:"90" }}%</div>
-  </div>
-  {% endwith %}
+<!-- GRÁFICA + SEMÁFORO -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
-  {% with tput=kpi.throughput|default:0 %}
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div style="width:40px;height:40px;border-radius:50%;background:{% if tput >= kpi_thresholds.throughput_verde|default:500 %}#16A85E{% elif tput >= kpi_thresholds.throughput_amarillo|default:350 %}#F5A623{% else %}#EF5350{% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      </div>
-      <div>
-        <div style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;">{{ tput }}</div>
-        <div style="font-size:12px;color:#718096;">Throughput (dies/día)</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:#718096;margin-top:10px;">Objetivo: ≥ {{ kpi_thresholds.throughput_verde|default:"500" }}</div>
-  </div>
-  {% endwith %}
-
-  {% with oee=kpi.oee|default:0 %}
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-      <div style="width:40px;height:40px;border-radius:50%;background:{% if oee >= kpi_thresholds.oee_verde|default:85 %}#16A85E{% elif oee >= kpi_thresholds.oee_amarillo|default:70 %}#F5A623{% else %}#EF5350{% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div>
-        <div style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;">{{ oee|floatformat:1 }}%</div>
-        <div style="font-size:12px;color:#718096;">OEE</div>
-      </div>
-    </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:{{ oee }}%;background:{% if oee >= 85 %}#16A85E{% elif oee >= 70 %}#F5A623{% else %}#EF5350{% endif %};"></div></div>
-    <div style="font-size:11px;color:#718096;margin-top:4px;">Objetivo: {{ kpi_thresholds.oee_verde|default:"85" }}%</div>
-  </div>
-  {% endwith %}
-</div>
-
-<!-- Lotes activos + Alertas -->
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
-  <div>
-    <div class="card" style="padding:0;margin-bottom:24px;">
-      <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="font-weight:600;font-size:14px;margin:0;">Lotes activos</h3>
-        <a href="{% url 'supervisor_lotes' %}" style="font-size:12px;color:#16A85E;">Ver todos →</a>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Folio</th><th>Orden</th><th>Etapa</th><th>Operador</th><th>Tiempo</th><th>Estado</th></tr></thead>
-          <tbody>
-            {% for lote in lotes_activos %}
-            <tr>
-              <td><a href="{% url 'supervisor_lote_detalle' lote.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ lote.folio }}</a></td>
-              <td style="font-size:13px;">{{ lote.orden.numero|default:"—" }}</td>
-              <td>{{ lote.etapa_actual.nombre|default:"—" }}</td>
-              <td>{% if lote.operador_actual %}{{ lote.operador_actual.primer_nombre }} {{ lote.operador_actual.apellido_paterno|slice:":1" }}.{% else %}<span style="color:#718096;">—</span>{% endif %}</td>
-              <td style="font-size:13px;color:#718096;">{{ lote.tiempo_en_etapa|default:"—" }}</td>
-              <td><span class="badge badge-en-proceso">En proceso</span></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6"><div class="empty-state" style="padding:24px;"><p style="margin:0;color:#718096;">No hay lotes activos</p></div></td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Alertas -->
+  <!-- Throughput por línea -->
   <div class="card" style="padding:0;">
-    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="font-weight:600;font-size:14px;margin:0;">Alertas activas</h3>
-      {% if alertas_activas_count %}<span class="badge badge-critico">{{ alertas_activas_count }}</span>{% endif %}
+    <div style="padding:16px 20px 8px;">
+      <div style="font-size:11px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Throughput por línea</div>
     </div>
-    <div style="max-height:400px;overflow-y:auto;">
-      {% for alerta in alertas %}
-      <div style="padding:14px 20px;border-bottom:1px solid #F4F6F9;{% if not alerta.resuelta %}border-left:3px solid {% if alerta.tipo == 'critico' %}#EF5350{% else %}#F5A623{% endif %};{% endif %}">
-        <div style="font-size:13px;font-weight:500;color:#1A202C;margin-bottom:4px;">{{ alerta.descripcion }}</div>
-        <div style="font-size:11px;color:#718096;">{{ alerta.creada_en|timesince }} atrás</div>
-        {% if not alerta.resuelta %}<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px;margin-top:6px;">Resolver</button>{% endif %}
-      </div>
-      {% empty %}
-      <div class="empty-state" style="padding:32px 16px;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
-        <p style="margin:8px 0 0;color:#718096;font-size:13px;">Sin alertas activas</p>
-      </div>
-      {% endfor %}
+    <div style="padding:0 12px 16px;position:relative;height:240px;">
+      <canvas id="chart-throughput"></canvas>
     </div>
   </div>
+
+  <!-- Semáforo KPI -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;">
+      <div style="font-size:11px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Semáforo KPI</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;"></th>
+          <th style="padding:8px 14px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea A</th>
+          <th style="padding:8px 14px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea B</th>
+          <th style="padding:8px 14px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea C</th>
+          <th style="padding:8px 14px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Global</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in semaforo_kpi %}
+        <tr style="border-bottom:1px solid #EDF2F7;">
+          <td style="padding:10px 14px;font-weight:500;color:#2D3748;white-space:nowrap;">{{ row.nombre }}</td>
+          {% for celda in row.celdas %}
+          <td style="padding:10px 14px;text-align:center;">
+            <span style="display:inline-block;padding:3px 12px;border-radius:6px;font-weight:600;font-size:12px;background:{{ celda.bg }};color:{{ celda.color }};">
+              {{ celda.valor }}{{ celda.unidad }}
+            </span>
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 </div>
+
+<!-- ÓRDENES ACTIVAS + ALERTAS -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <!-- Órdenes activas -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;">
+      <div style="font-size:11px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Órdenes activas</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Número</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Proceso</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Progreso</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for orden in ordenes_activas %}
+        <tr style="border-bottom:1px solid #EDF2F7;">
+          <td style="padding:10px 14px;font-family:monospace;font-weight:600;color:#009EAF;font-size:12px;">{{ orden.numero }}</td>
+          <td style="padding:10px 14px;color:#2D3748;">{{ orden.proceso }}</td>
+          <td style="padding:10px 14px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:50px;">
+                <div style="height:100%;background:#16A85E;border-radius:999px;width:{{ orden.pct }}%;"></div>
+              </div>
+              <span style="font-size:11px;color:#718096;white-space:nowrap;">{{ orden.completados }}/{{ orden.total }}</span>
+            </div>
+          </td>
+          <td style="padding:10px 14px;">
+            {% if orden.estado == 'en_proceso' %}
+              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">En proceso</span>
+            {% else %}
+              <span style="background:#E9ECEF;color:#495057;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">Pendiente</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Alertas activas -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:11px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Alertas activas</div>
+      {% if alertas_activas %}<span style="background:#F8D7DA;color:#721C24;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Tipo</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Descripción</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Ref.</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Tiempo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alerta in alertas_activas %}
+        <tr style="border-bottom:1px solid #EDF2F7;">
+          <td style="padding:10px 14px;">
+            {% if alerta.tipo == 'critico' %}
+              <span style="background:#F8D7DA;color:#721C24;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">Crítico</span>
+            {% elif alerta.tipo == 'hold' %}
+              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">Hold</span>
+            {% else %}
+              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">Aviso</span>
+            {% endif %}
+          </td>
+          <td style="padding:10px 14px;color:#2D3748;font-size:12px;">{{ alerta.descripcion }}</td>
+          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:11px;">{{ alerta.referencia }}</td>
+          <td style="padding:10px 14px;color:#718096;font-size:11px;white-space:nowrap;">{{ alerta.tiempo }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var canvas = document.getElementById('chart-throughput');
+  if (!canvas) return;
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: {{ throughput_labels|safe }},
+      datasets: [{
+        data: {{ throughput_data|safe }},
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderColor: 'rgba(255,255,255,0.35)',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#718096', font: { size: 10 } } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.07)' },
+          ticks: { color: '#718096', font: { size: 10 }, callback: function(v){ return '$'+(v/1000).toFixed(0)+'K'; } },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
 {% endblock %}

@@ -39,25 +39,22 @@
         {% for etapa in lote.etapas %}
         <div class="stepper-item {% if etapa.completado %}completed{% elif etapa.activo %}active{% else %}pending{% endif %}">
           <div class="step-circle {% if etapa.completado %}done{% elif etapa.activo %}current{% else %}todo{% endif %}">
-            {% if etapa.completado %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-            {% elif etapa.activo %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>
-            {% else %}{{ forloop.counter }}{% endif %}
+            {% if etapa.completado %}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% elif etapa.activo %}
+              <div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>
+            {% else %}
+              {{ forloop.counter }}
+            {% endif %}
           </div>
           <div style="flex:1;padding-left:10px;">
-            <div style="font-size:13px;font-weight:{% if etapa.activo %}600{% else %}400{% endif %};color:{% if etapa.completado %}#16A85E{% elif etapa.activo %}#1A202C{% else %}#718096{% endif %};">{{ etapa.nombre }}</div>
-            {% if etapa.completado %}<div style="font-size:11px;color:#718096;">{{ etapa.operador_nombre|default:"" }}{% if etapa.completado_en %} · {{ etapa.completado_en|date:"d/m H:i" }}{% endif %}</div>{% endif %}
-            {% if etapa.activo %}<div style="font-size:11px;color:#009EAF;">En curso</div>{% endif %}
+            <div style="font-size:13px;color:{% if etapa.completado %}#16A85E{% elif etapa.activo %}#1A202C{% else %}#718096{% endif %};">
+              {{ etapa.nombre }}
+            </div>
           </div>
         </div>
         {% empty %}
-        {% for i in "1,2,3,4,5,6,7,8,9,10,11,12"|split:"," %}
-        <div class="stepper-item {% if forloop.counter <= 3 %}completed{% elif forloop.counter == 4 %}active{% else %}pending{% endif %}">
-          <div class="step-circle {% if forloop.counter <= 3 %}done{% elif forloop.counter == 4 %}current{% else %}todo{% endif %}">
-            {% if forloop.counter <= 3 %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{% elif forloop.counter == 4 %}<div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>{% else %}{{ forloop.counter }}{% endif %}
-          </div>
-          <div style="flex:1;padding-left:10px;"><div style="font-size:13px;color:{% if forloop.counter <= 3 %}#16A85E{% elif forloop.counter == 4 %}#1A202C{% else %}#718096{% endif %};">Etapa {{ forloop.counter }}</div></div>
-        </div>
-        {% endfor %}
+        <div style="padding:16px;text-align:center;color:#718096;font-size:13px;">Sin etapas definidas</div>
         {% endfor %}
       </div>
     </div>
@@ -89,7 +86,30 @@
           <div><span style="font-size:12px;color:#718096;">Operador</span><div style="font-weight:500;">{{ lote.etapa_activa.operador_nombre|default:"—" }}</div></div>
         </div>
       </div>
-      <div class="readonly-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>El registro de esta etapa se realiza desde la app móvil con escaneo QR.</div>
+      <div style="background:#E8F5EE;border:1px solid #B2DFCB;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style="font-size:13px;color:#155724;">
+          El avance puede registrarse desde la <strong>app móvil</strong> con escaneo QR o ingresando el código del lote manualmente desde esta pantalla.
+        </div>
+      </div>
+
+      <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:8px;">
+          Registrar avance — Ingresa el código del lote
+        </label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="input-codigo-lote" class="form-control"
+                 placeholder="Ej. LOT-2026-0047"
+                 value="{{ lote.folio }}"
+                 style="flex:1;background:#fff;color:#1A202C;border-color:#CBD5E0;">
+          <button class="btn btn-primary" onclick="confirmarAvanceManual()">
+            Confirmar avance
+          </button>
+        </div>
+        <span style="font-size:11.5px;color:#718096;margin-top:6px;display:block;">
+          El código se pre-llena con el lote actual. Cámbialo si quieres registrar otro lote.
+        </span>
+      </div>
       {% endif %}
     {% else %}
     <div class="card"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Etapa pendiente de inicio</p><span style="font-size:13px;color:#718096;">El operador inicia desde la app móvil.</span></div></div>
@@ -127,4 +147,16 @@
     </form>
   </div>
 </div>
+{% block extra_js %}
+<script>
+function confirmarAvanceManual() {
+  var codigo = document.getElementById('input-codigo-lote').value.trim();
+  if (!codigo) { alert('Ingresa el código del lote'); return; }
+  if (confirm('¿Confirmar avance de la etapa actual para el lote ' + codigo + '?')) {
+    // En producción: POST al backend
+    alert('Avance registrado para ' + codigo);
+  }
+}
+</script>
+{% endblock %}
 {% endblock %}

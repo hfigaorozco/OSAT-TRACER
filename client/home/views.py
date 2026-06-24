@@ -1,4 +1,4 @@
-"""
+﻿"""
 OSAT Tracer — Views del frontend (datos falsos para probar templates)
 Reemplaza esto con queries reales cuando el backend esté listo.
 """
@@ -36,9 +36,7 @@ def login_view(request):
             role = getattr(user, 'perfil', {}).get('rol', 'admin') if hasattr(user, 'perfil') else 'admin'
             if role == 'supervisor':
                 return redirect('supervisor_dashboard')
-            if role == 'operador':
-                return redirect('operator_dashboard')
-            return redirect('admin_dashboard')
+return redirect('admin_dashboard')
         from django.contrib import messages
         messages.error(request, 'Usuario o contraseña incorrectos.')
     return render(request, 'base/login.html')
@@ -309,12 +307,128 @@ def admin_configuracion(request):
     return render(request, 'admin/configuracion.html', ctx)
 
 
+def _build_alertas():
+    return [
+        {
+            'pk': 1, 'tipo': 'hold', 'leida': False,
+            'titulo': 'Lote en Hold — Wire Bonding',
+            'cuerpo': 'El lote LOT-2026-0047 fue puesto en Hold durante la etapa de Wire Bonding. Contacta al supervisor para continuar.',
+            'tiempo': 'Hace 15 min',
+            'color_bg': '#FFF8E1', 'color_borde': '#F5A623', 'color_icon': '#F5A623',
+            'badge_label': 'Hold', 'badge_color': '#856404',
+            'ref_label': 'Lote relacionado', 'ref_valor': 'LOT-2026-0047',
+            'accion_label': 'Ver lote', 'accion_url': '/supervisor/lotes/1/',
+        },
+        {
+            'pk': 2, 'tipo': 'stock', 'leida': False,
+            'titulo': 'Stock Insuficiente: Resina EMC',
+            'cuerpo': 'No hay stock disponible para Resina EMC. Registra una entrada antes de continuar con la producción.',
+            'tiempo': 'Hace 1h',
+            'color_bg': '#FEECEB', 'color_borde': '#EF5350', 'color_icon': '#EF5350',
+            'badge_label': 'Stock crítico', 'badge_color': '#721C24',
+            'ref_label': 'Material', 'ref_valor': 'MAT-001 — Resina EMC',
+            'accion_label': 'Ver inventario', 'accion_url': '/admin/inventario/',
+        },
+        {
+            'pk': 3, 'tipo': 'kpi', 'leida': False,
+            'titulo': 'Yield por debajo del umbral — Línea C',
+            'cuerpo': 'El Yield de la Línea C (68.3%) está por debajo del umbral mínimo configurado (75%). Revisar proceso y operaciones.',
+            'tiempo': 'Hace 2h',
+            'color_bg': '#E3F2FD', 'color_borde': '#009EAF', 'color_icon': '#009EAF',
+            'badge_label': 'KPI bajo umbral', 'badge_color': '#006064',
+            'ref_label': 'Línea afectada', 'ref_valor': 'Línea C — Yield 68.3%',
+            'accion_label': 'Ver Dashboard', 'accion_url': '/admin-dash/',
+        },
+        {
+            'pk': 4, 'tipo': 'liberado', 'leida': True,
+            'titulo': 'Lote Liberado — puede continuar',
+            'cuerpo': 'El lote LOT-2026-0047 fue liberado por el supervisor y puede continuar el proceso de producción.',
+            'tiempo': 'Hace 3h',
+            'color_bg': '#E8F5EE', 'color_borde': '#16A85E', 'color_icon': '#16A85E',
+            'badge_label': 'Lote liberado', 'badge_color': '#155724',
+            'ref_label': 'Lote relacionado', 'ref_valor': 'LOT-2026-0047',
+            'accion_label': 'Ver lote', 'accion_url': '/supervisor/lotes/1/',
+        },
+        {
+            'pk': 5, 'tipo': 'scrap', 'leida': True,
+            'titulo': 'Lote enviado a scrap total',
+            'cuerpo': 'El lote LOT-2026-0038 fue enviado a scrap total durante la etapa de Inspección Final. Yield final: 0%. Se registró en el kardex de producción.',
+            'tiempo': 'Hace 5h',
+            'color_bg': '#FEECEB', 'color_borde': '#EF5350', 'color_icon': '#EF5350',
+            'badge_label': 'Scrap total', 'badge_color': '#721C24',
+            'ref_label': 'Lote', 'ref_valor': 'LOT-2026-0038',
+            'accion_label': 'Ver detalle', 'accion_url': '/supervisor/lotes/5/',
+        },
+        {
+            'pk': 6, 'tipo': 'mantenimiento', 'leida': True,
+            'titulo': 'Mantenimiento programado — MQ-003',
+            'cuerpo': 'La máquina MQ-003 (Dicing Saw) tiene mantenimiento preventivo programado para mañana a las 06:00. Asegúrate de no asignarle lotes.',
+            'tiempo': 'Hace 8h',
+            'color_bg': '#E3F2FD', 'color_borde': '#009EAF', 'color_icon': '#009EAF',
+            'badge_label': 'Mantenimiento', 'badge_color': '#006064',
+            'ref_label': 'Máquina', 'ref_valor': 'MQ-003 — Dicing Saw',
+            'accion_label': 'Ver maquinaria', 'accion_url': '/admin/maquinaria/',
+        },
+        {
+            'pk': 7, 'tipo': 'stock', 'leida': True,
+            'titulo': 'Stock bajo mínimo: Hilo de cobre 25µm',
+            'cuerpo': 'El stock de Hilo de cobre 25µm (12 unidades) está por debajo del mínimo configurado (100 unidades). Se recomienda realizar una entrada.',
+            'tiempo': 'Hace 10h',
+            'color_bg': '#FFF8E1', 'color_borde': '#F5A623', 'color_icon': '#F5A623',
+            'badge_label': 'Stock bajo', 'badge_color': '#856404',
+            'ref_label': 'Material', 'ref_valor': 'MAT-002 — Hilo de cobre 25µm',
+            'accion_label': 'Ver inventario', 'accion_url': '/admin/inventario/',
+        },
+    ]
+
+
 def admin_notificaciones(request):
-    return redirect('admin_dashboard')
+    alertas = _build_alertas()
+    ctx = _base_ctx('Administrador', sum(1 for a in alertas if not a['leida']))
+    ctx.update({
+        'alertas': alertas,
+        'total_count': len(alertas),
+        'unread_count': sum(1 for a in alertas if not a['leida']),
+        'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}, {'label': 'Alertas', 'url': '/admin/notificaciones/'}],
+    })
+    return render(request, 'admin/alertas.html', ctx)
 
 
 def admin_reportes(request):
-    return redirect('supervisor_reportes')
+    ctx = _base_ctx('Administrador', 3)
+    ctx.update({
+        'ordenes': [
+            {'pk': 1, 'numero': 'ORD-2026-042'},
+            {'pk': 2, 'numero': 'ORD-2026-041'},
+            {'pk': 3, 'numero': 'ORD-2026-040'},
+        ],
+        'reporte_produccion': [
+            {'folio': 'LOT-2026-001', 'orden': 'ORD-2026-042', 'operador': 'Juan Torres',  'dies_iniciales': 1200, 'dies_finales': 1178, 'scrap': 22, 'yield_pct': 98.2, 'estado': 'Completado'},
+            {'folio': 'LOT-2026-002', 'orden': 'ORD-2026-042', 'operador': 'Ana López',    'dies_iniciales': 1200, 'dies_finales': 1150, 'scrap': 50, 'yield_pct': 95.8, 'estado': 'Completado'},
+            {'folio': 'LOT-2026-003', 'orden': 'ORD-2026-041', 'operador': 'Pedro Torres', 'dies_iniciales': 800,  'dies_finales': 760,  'scrap': 40, 'yield_pct': 95.0, 'estado': 'En proceso'},
+        ],
+        'total_dies_ini': 3200,
+        'total_dies_fin': 3088,
+        'total_scrap': 112,
+        'yield_global': 96.5,
+        'reporte_inventario': [
+            {'codigo': 'MAT-001', 'nombre': 'Resina EMC',        'stock_inicial': 100, 'entradas': 0,  'salidas': 100, 'stock_final': 0,   'estado': 'Crítico'},
+            {'codigo': 'MAT-002', 'nombre': 'Hilo de cobre 25µm','stock_inicial': 200, 'entradas': 0,  'salidas': 188, 'stock_final': 12,  'estado': 'Bajo'},
+            {'codigo': 'MAT-003', 'nombre': 'Adhesivo epoxi DAF','stock_inicial': 150, 'entradas': 200,'salidas': 70,  'stock_final': 280, 'estado': 'OK'},
+        ],
+        'reporte_kpi': [
+            {'fecha': '2026-06-01', 'linea': 'Línea A', 'valor': 94.2, 'objetivo': 95, 'variacion': -0.8, 'cumple': False, 'unidad': 'pct'},
+            {'fecha': '2026-06-01', 'linea': 'Línea B', 'valor': 91.5, 'objetivo': 95, 'variacion': -3.5, 'cumple': False, 'unidad': 'pct'},
+            {'fecha': '2026-06-02', 'linea': 'Línea A', 'valor': 96.1, 'objetivo': 95, 'variacion': 1.1,  'cumple': True,  'unidad': 'pct'},
+        ],
+        'todas_alertas': [
+            {'tipo': 'critico',     'descripcion': 'Stock crítico: Resina EMC',            'referencia': 'MAT-001',      'creada_en': '2026-06-09 08:00', 'resuelta': False},
+            {'tipo': 'advertencia', 'descripcion': 'KPI Throughput bajo umbral — Línea C', 'referencia': 'Línea C',      'creada_en': '2026-06-08 14:30', 'resuelta': False},
+            {'tipo': 'advertencia', 'descripcion': 'KPI Yield bajo umbral — Línea B',     'referencia': 'Línea B',      'creada_en': '2026-06-07 09:00', 'resuelta': True},
+        ],
+        'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}, {'label': 'Reportes', 'url': '/admin/reportes/'}],
+    })
+    return render(request, 'admin/reportes.html', ctx)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -333,24 +447,78 @@ def stub_post(request):
 
 def supervisor_dashboard(request):
     ctx = _base_ctx('Supervisor', 2)
-    ctx.update({
-        'kpi': {'yield_pct': 94.2, 'throughput': 520, 'oee': 87.1},
-        'kpi_thresholds': {
-            'yield_verde': 90, 'yield_amarillo': 75,
-            'throughput_verde': 500, 'throughput_amarillo': 350,
-            'oee_verde': 85, 'oee_amarillo': 70,
+
+    th = {
+        'yield':      {'verde': 95, 'amarillo': 85},
+        'throughput': {'verde': 200, 'amarillo': 150},
+        'oee':        {'verde': 85, 'amarillo': 70},
+    }
+
+    def semaforo_color(valor, tipo, unidad='%'):
+        t = th[tipo]
+        if valor >= t['verde']:
+            bg, color = '#D4EDDA', '#155724'
+        elif valor >= t['amarillo']:
+            bg, color = '#FFF3CD', '#856404'
+        else:
+            bg, color = '#F8D7DA', '#721C24'
+        val_str = f"{valor:.1f}" if isinstance(valor, float) else str(valor)
+        return {'bg': bg, 'color': color, 'valor': val_str, 'unidad': unidad}
+
+    semaforo_kpi = [
+        {
+            'nombre': 'Yield',
+            'celdas': [
+                semaforo_color(94.2, 'yield'),
+                semaforo_color(91.5, 'yield'),
+                semaforo_color(88.3, 'yield'),
+                semaforo_color(91.3, 'yield'),
+            ]
         },
-        'lotes_activos': [
-            {'pk': 1, 'folio': 'LOT-2026-0047', 'orden': _orden('ORD-2026-012'), 'etapa_actual': _obj('Wire Bonding'), 'operador_actual': _empleado('Juan García'), 'tiempo_en_etapa': '1h 23min'},
-            {'pk': 2, 'folio': 'LOT-2026-0048', 'orden': _orden('ORD-2026-012'), 'etapa_actual': _obj('Die Attach'), 'operador_actual': _empleado('Pedro Torres'), 'tiempo_en_etapa': '45min'},
-            {'pk': 3, 'folio': 'LOT-2026-0049', 'orden': _orden('ORD-2026-013'), 'etapa_actual': _obj('Molding'), 'operador_actual': None, 'tiempo_en_etapa': '2h 10min'},
+        {
+            'nombre': 'Throughput',
+            'celdas': [
+                semaforo_color(210, 'throughput', ''),
+                semaforo_color(185, 'throughput', ''),
+                semaforo_color(95,  'throughput', ''),
+                semaforo_color(163, 'throughput', ''),
+            ]
+        },
+        {
+            'nombre': 'OEE',
+            'celdas': [
+                semaforo_color(88.1, 'oee'),
+                semaforo_color(82.4, 'oee'),
+                semaforo_color(71.2, 'oee'),
+                semaforo_color(80.6, 'oee'),
+            ]
+        },
+    ]
+
+    ctx.update({
+        'kpi': {
+            'yield_pct':        94.2,
+            'yield_delta':      '+2,5%',
+            'throughput':       498,
+            'throughput_delta': '-1,2%',
+            'oee_pct':          87.1,
+            'oee_delta':        '+11%',
+            'lotes_hold':       3,
+            'lotes_hold_delta': '+5,2%',
+        },
+        'throughput_labels': ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        'throughput_data':   [7200, 8100, 8900, 7800, 9200, 8500, 9800, 10200, 9500, 10800, 11200, 11800],
+        'semaforo_kpi': semaforo_kpi,
+        'ordenes_activas': [
+            {'numero': 'ORD-2026-042', 'proceso': 'OSAT Estándar', 'completados': 5, 'total': 8,  'pct': 63, 'estado': 'en_proceso'},
+            {'numero': 'ORD-2026-043', 'proceso': 'OSAT Express',  'completados': 0, 'total': 5,  'pct': 0,  'estado': 'pendiente'},
+            {'numero': 'ORD-2026-044', 'proceso': 'OSAT Estándar', 'completados': 2, 'total': 10, 'pct': 20, 'estado': 'en_proceso'},
         ],
-        'alertas': [
-            {'tipo': 'critico', 'descripcion': 'Stock crítico: Resina EMC — 0 unidades', 'creada_en': _dt(), 'resuelta': False},
-            {'tipo': 'advertencia', 'descripcion': 'Hilo de cobre 25µm bajo mínimo — 12 unidades', 'creada_en': _dt(), 'resuelta': False},
-            {'tipo': 'advertencia', 'descripcion': 'Lote LOT-2026-0047 lleva más de 2h en Wire Bonding', 'creada_en': _dt(), 'resuelta': False},
+        'alertas_activas': [
+            {'tipo': 'critico',     'descripcion': 'Stock crítico: Resina EMC',            'referencia': 'MAT-001',      'tiempo': 'hace 5 min'},
+            {'tipo': 'hold',        'descripcion': 'Lote LOT-2026-047 en Hold',            'referencia': 'LOT-2026-047', 'tiempo': 'hace 20 min'},
+            {'tipo': 'advertencia', 'descripcion': 'KPI Throughput bajo umbral — Línea C', 'referencia': 'Línea C',      'tiempo': 'hace 1h'},
         ],
-        'alertas_activas_count': 3,
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/supervisor/'}],
     })
     return render(request, 'supervisor/dashboard.html', ctx)
@@ -452,7 +620,16 @@ def supervisor_reportes(request):
 
 
 def supervisor_notificaciones(request):
-    return redirect('supervisor_dashboard')
+    todas = _build_alertas()
+    alertas = [a for a in todas if a['tipo'] in ('hold', 'scrap', 'kpi', 'liberado')]
+    ctx = _base_ctx('Supervisor', sum(1 for a in alertas if not a['leida']))
+    ctx.update({
+        'alertas': alertas,
+        'total_count': len(alertas),
+        'unread_count': sum(1 for a in alertas if not a['leida']),
+        'breadcrumbs': [{'label': 'Dashboard', 'url': '/supervisor/'}, {'label': 'Alertas', 'url': '/supervisor/notificaciones/'}],
+    })
+    return render(request, 'supervisor/alertas.html', ctx)
 
 
 def supervisor_configuracion(request):
@@ -478,91 +655,6 @@ def supervisor_lote_registrar(request):
 def supervisor_ordenes_crear(request):
     return redirect('supervisor_ordenes')
 
-
-# ════════════════════════════════════════════════════════════════
-# OPERATOR
-# ════════════════════════════════════════════════════════════════
-
-def operator_dashboard(request):
-    ctx = _base_ctx('Operador', 1)
-    ctx.update({
-        'actividades_recientes': [
-            {'lote_pk': 1, 'folio': 'LOT-2026-0047', 'etapa_nombre': 'Wire Bonding', 'estado': 'En proceso', 'timestamp': _dt()},
-            {'lote_pk': 3, 'folio': 'LOT-2026-0041', 'etapa_nombre': 'Packing', 'estado': 'Completado', 'timestamp': _dt()},
-        ],
-        'turno_activo': {'nombre': 'Turno Matutino', 'hora_inicio': '06:00', 'hora_fin': '14:00', 'linea': 'Línea A'},
-        'search_error': None, 'lot_hold': None, 'lot_complete': None,
-        'breadcrumbs': [{'label': 'Inicio', 'url': '/operator/'}],
-    })
-    return render(request, 'operator/dashboard.html', ctx)
-
-
-def operator_mis_lotes(request):
-    ctx = _base_ctx('Operador', 1)
-    ctx.update({
-        'mis_lotes': [
-            {'pk': 1, 'folio': 'LOT-2026-0047', 'orden': _orden('ORD-2026-012'), 'etapa_actual': _obj('Wire Bonding'), 'estado': _obj('En proceso'), 'yield_pct': 96.5, 'ultima_actividad': _dt()},
-            {'pk': 2, 'folio': 'LOT-2026-0048', 'orden': _orden('ORD-2026-012'), 'etapa_actual': _obj('Die Attach'), 'estado': _obj('Hold'), 'yield_pct': None, 'ultima_actividad': _dt()},
-            {'pk': 3, 'folio': 'LOT-2026-0041', 'orden': _orden('ORD-2026-010'), 'etapa_actual': _obj('Packing'), 'estado': _obj('Completado'), 'yield_pct': 94.1, 'ultima_actividad': _dt()},
-        ],
-        'lotes_count': {'total': 3, 'en_proceso': 1, 'hold': 1},
-        'breadcrumbs': [{'label': 'Inicio', 'url': '/operator/'}, {'label': 'Mis lotes', 'url': '/operator/mis-lotes/'}],
-    })
-    return render(request, 'operator/mis_lotes.html', ctx)
-
-
-def operator_detalle_lote(request, pk=1):
-    etapas = [
-        {'nombre': 'Wafer Back Grinding', 'completado': True, 'activo': False, 'operador_nombre': 'Juan García', 'completado_en': _dt(), 'iniciado_en': _dt(), 'maquina': 'MQ-001', 'scrap': 2, 'yield_pct': 99.2, 'notas': ''},
-        {'nombre': 'Dicing', 'completado': True, 'activo': False, 'operador_nombre': 'Pedro Torres', 'completado_en': _dt(), 'iniciado_en': _dt(), 'maquina': 'MQ-003', 'scrap': 5, 'yield_pct': 98.9, 'notas': ''},
-        {'nombre': 'Die Attach', 'completado': True, 'activo': False, 'operador_nombre': 'Juan García', 'completado_en': _dt(), 'iniciado_en': _dt(), 'maquina': 'MQ-002', 'scrap': 3, 'yield_pct': 99.4, 'notas': 'Sin incidencias.'},
-        {'nombre': 'Cure Oven', 'completado': True, 'activo': False, 'operador_nombre': 'Juan García', 'completado_en': _dt(), 'iniciado_en': _dt(), 'maquina': 'MQ-005', 'scrap': 0, 'yield_pct': 100, 'notas': ''},
-        {'nombre': 'Wire Bonding', 'completado': False, 'activo': True, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': _dt(), 'maquina': None, 'scrap': None, 'yield_pct': None, 'notas': ''},
-        {'nombre': 'Molding', 'completado': False, 'activo': False, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': None},
-        {'nombre': 'PMC Oven', 'completado': False, 'activo': False, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': None},
-        {'nombre': 'Laser Marking', 'completado': False, 'activo': False, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': None},
-        {'nombre': 'Final Test', 'completado': False, 'activo': False, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': None},
-        {'nombre': 'Packing', 'completado': False, 'activo': False, 'operador_nombre': None, 'completado_en': None, 'iniciado_en': None},
-    ]
-    ctx = _base_ctx('Operador', 1)
-    ctx.update({
-        'lote': {
-            'pk': pk, 'folio': f'LOT-2026-00{pk:02d}',
-            'orden': _orden('ORD-2026-012'),
-            'estado': _obj('En proceso'),
-            'dies_iniciales': 500, 'dies_activos': 490, 'scrap_total': 10, 'yield_pct': 96.5,
-            'hold_motivo': '',
-            'etapas': etapas,
-        },
-        'breadcrumbs': [{'label': 'Mis lotes', 'url': '/operator/mis-lotes/'}, {'label': f'LOT-2026-00{pk:02d}', 'url': '#'}],
-    })
-    return render(request, 'operator/detalle_lote.html', ctx)
-
-
-def operator_notificaciones(request):
-    ctx = _base_ctx('Operador', 1)
-    ctx.update({
-        'notificaciones': [
-            {'pk': 1, 'titulo': 'Lote LOT-2026-0047 en Hold', 'cuerpo': 'Anomalía detectada en el patrón de bonding. Contacta al supervisor antes de continuar.', 'tipo': 'hold', 'creada_en': _dt(), 'leida': False, 'referencia_tipo': 'Lote', 'referencia_valor': 'LOT-2026-0047', 'accion_url': '/operator/lote/1/', 'accion_label': 'Ver lote'},
-            {'pk': 2, 'titulo': 'Stock crítico: Resina EMC', 'cuerpo': 'El stock de Resina EMC ha llegado a 0. La producción puede verse afectada.', 'tipo': 'critico', 'creada_en': _dt(), 'leida': False, 'referencia_tipo': 'Material', 'referencia_valor': 'MAT-001', 'accion_url': '', 'accion_label': ''},
-            {'pk': 3, 'titulo': 'Lote LOT-2026-0041 completado', 'cuerpo': 'El lote LOT-2026-0041 completó todos los pasos del proceso exitosamente.', 'tipo': 'exito', 'creada_en': _dt(), 'leida': True, 'referencia_tipo': 'Lote', 'referencia_valor': 'LOT-2026-0041', 'accion_url': '/operator/lote/3/', 'accion_label': 'Ver lote'},
-        ],
-        'notificacion_activa': None,
-        'breadcrumbs': [{'label': 'Inicio', 'url': '/operator/'}, {'label': 'Notificaciones', 'url': '/operator/notificaciones/'}],
-    })
-    return render(request, 'operator/notificaciones.html', ctx)
-
-
-def operator_perfil(request):
-    return redirect('operator_dashboard')
-
-
-def operator_buscar_lote(request):
-    return redirect('operator_dashboard')
-
-
-def operator_marcar_todas_leidas(request):
-    return redirect('operator_notificaciones')
 
 
 # ════════════════════════════════════════════════════════════════
