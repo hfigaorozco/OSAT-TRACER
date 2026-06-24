@@ -1,0 +1,37 @@
+[
+    {
+        "model": "api_usuarios.estado_empleado",
+        "fields": {
+            "codigo": "ACT",
+            "descripcion": "ACTIVO"
+        }
+    },
+    {
+        "model": "api_usuarios.estado_empleado",
+        "fields": {
+            "codigo": "INA",
+            "descripcion": "INACTIVO"
+        }
+    },
+    {
+        "model": "api_usuarios.rol",
+        "fields": {
+            "codigo": "ADMIN",
+            "descripcion": "Administrador"
+        }
+    },
+    {
+        "model": "api_usuarios.rol",
+        "fields": {
+            "codigo": "SUPER",
+            "descripcion": "Supervisor"
+        }
+    },
+    {
+        "model": "api_usuarios.rol",
+        "fields": {
+            "codigo": "OPERA",
+            "descripcion": "Operador"
+        }
+    }
+]
