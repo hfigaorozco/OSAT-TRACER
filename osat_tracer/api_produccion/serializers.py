@@ -174,88 +174,276 @@ class UpdateProcesoSerializer(serializers.ModelSerializer):
 #CREATE
 class CreatePasoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Proceso
+        model = models.Paso
         fields = [
+            "codigo",
+            "nombre",
             "descripcion",
-            "imagen",
+            "tiempoEstimado",
         ] 
 #LIST
+class ListPasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Paso
+        fields = [
+            "nombre",
+            "descripcion",
+            "tiempoEstimado",
+        ] 
 #DETAIL
+class DetailPasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Paso
+        fields = [
+            "codigo",
+            "nombre",
+            "descripcion",
+            "tiempoEstimado",
+        ] 
+#UPDATE
+class UpdatePasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Paso
+        fields = [
+            "descripcion",
+            "tiempoEstimado",
+        ] 
+
+#SERIALIZERS  Orden
+#CREATE
+class CreateOrdenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Orden
+        fields = [
+            "horaIni",
+            "horaFin",
+            "proceso",
+            "estado",
+            "empleado",
+        ] 
+#LIST
+class ListOrdenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Orden
+        fields = [
+            "numero",
+            "horaIni",
+            "horaFin",
+            "fechaReg",
+            "proceso",
+            "estado",
+        ] 
+#DETAIL
+class DetailOrdenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Orden
+        fields = [
+            "numero",
+            "horaIni",
+            "horaFin",
+            "fechaReg",
+            "proceso",
+            "estado",
+            "empleado",
+        ] 
+                   
 #UPDATE
 
 
-class PasoAdmin(admin.ModelAdmin):
-    list_display= [
-        "codigo",
-        "nombre",
-        "descripcion",
-        "tiempoEstimado",
-    ]  
+#SERIALIZERS Oblea
+#CREATE
+class CreateObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Oblea
+        fields = [
+            "diesGenerados",
+            "orden",
+            "estado",
+            "tipo",
+        ]
+
+#LIST
+class ListObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Oblea
+        fields = [
+            "numero",
+            "diesGenerados",
+            "orden",
+            "estado",
+        ] 
+#DETAIL
+class DetailObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Oblea
+        fields = [
+            "numero",
+            "diesGenerados",
+            "orden",
+            "estado",
+            "tipo",
+        ] 
+#UPDATE
+
+#SERIALIZERS  LineaProceso
+#CREATE
+class CreateLineaProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.LineaProceso
+        fields = [
+           "linea",
+           "proceso",  
+        ] 
+#LIST
+class ListLineaProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.LineaProceso
+        fields = [
+           "linea",
+           "proceso",  
+        ] 
+#DETAIL
+#UPDATE
+
+#SERIALIZERS  PasoProceso
+#CREATE
+class CreatePasoProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoProceso
+        fields = [
+            "paso",
+            "proceso",
+            "orden",    
+        ] 
+#LIST
+class ListPasoProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoProceso
+        fields = [
+            "paso",
+            "proceso",
+            "orden",    
+        ] 
+#DETAIL
+class DetailPasoProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoProceso
+        fields = [
+            "paso",
+            "proceso",
+            "orden",    
+        ] 
+#UPDATE
+class UpdatePasoProcesoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoProceso
+        fields = [
+            "orden",    
+        ] 
     
 
-class OrdenAdmin(admin.ModelAdmin):
-    list_display= [
-        "horaIni",
-        "horaFin",
-        "fechaReg",
-        "proceso",
-        "estado",
-        "empleado",
-    ]  
+
+#SERIALIZERS  Proceso
+#CREATE
+class CreateProcesoPiezaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProcesoPieza
+        fields = [
+            "proceso",
+            "pieza",
+            "cantPiezas",   
+        ] 
+#LIST
+class ListProcesoPiezaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProcesoPieza
+        fields = [
+            "proceso",
+            "pieza",
+            "cantPiezas",   
+        ] 
+#DETAIL
+class DetailProcesoPiezaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProcesoPieza
+        fields = [
+            "proceso",
+            "pieza",
+            "cantPiezas",   
+        ] 
+#UPDATE
+class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProcesoPieza
+        fields = [
+            "cantPiezas",   
+        ] 
 
 
-class ObleaAdmin(admin.ModelAdmin):
-    list_display= [
-        "diesGenerados",
-        "orden",
-        "estado",
-        "tipo",        
-    ]  
-    
 
-class LineaProcesoAdmin(admin.ModelAdmin):
-    list_display= [
-        "linea",
-        "proceso",      
-    ]  
+#SERIALIZERS  MaquinaPaso
+#CREATE
+class CreateMaquinaPasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.MaquinaPaso
+        fields = [
+            "maquina",
+            "paso",   
+        ] 
+#LIST
+class ListMaquinaPasoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.MaquinaPaso
+        fields = [
+            "maquina",
+            "paso",   
+        ] 
+#DETAIL
+#UPDATE
 
+#SERIALIZERS  PasoRealizado
+#CREATE
+class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Paso_Realizado
+        fields = [
+            "paso",
+            "estado",
+            "oblea",
+            "alerta",  
+        ] 
+#LIST
+class ListPasoRealizadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Paso_Realizado
+        fields = [
+            "hora",
+            "fecha",
+            "paso",
+            "estado",
+            "oblea",
+            "alerta",  
+        ] 
+#DETAIL
+#UPDATE
 
-class PasoProcesoAdmin(admin.ModelAdmin):
-    list_display= [
-        "paso",
-        "proceso",
-        "orden",      
-    ]  
+#SERIALIZERS   HistorialDefecto
+#CREATE
+class CreateHistorialDefectoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Historial_Defectos
+        fields = [
+            "defecto",
+            "pasoRealizado",  
+        ] 
+#LIST
+class ListHistorialDefectoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Historial_Defectos
+        fields = [
+            "defecto",
+            "pasoRealizado",  
+        ] 
+#DETAIL
+#UPDATE
 
-
-class ProcesoPiezaAdmin(admin.ModelAdmin):
-    list_display= [
-        "proceso",
-        "pieza",
-        "cantPiezas",      
-    ]  
-
-
-class MaquinaPasoAdmin(admin.ModelAdmin):
-    list_display= [
-        "maquina",
-        "paso",    
-    ]  
-
-
-class PasoRealizadoAdmin(admin.ModelAdmin):
-    list_display= [
-        "hora",
-        "fecha",
-        "paso",
-        "estado",
-        "oblea",
-        "alerta",    
-    ]  
-    
-
-class HistorialDefectosAdmin(admin.ModelAdmin):
-    list_display= [
-        "defecto",
-        "pasoRealizado",
-    ]  
