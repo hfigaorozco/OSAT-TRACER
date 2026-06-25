@@ -166,6 +166,7 @@ class UpdateProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Proceso
         fields = [
+            "codigo",
             "descripcion",
             "imagen",
         ] 
@@ -205,6 +206,7 @@ class UpdatePasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paso
         fields = [
+            "codigo",
             "descripcion",
             "tiempoEstimado",
         ] 
