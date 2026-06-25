@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/', include('api_inventario.urls')),
     #path('api/', include('api_kpi.urls')),
     #path('api/', include('api_maquinaria.urls')),
-    #path('api/', include('api_produccion.urls')),
+    path('api/', include('api_produccion.urls')),
     #path('api/', include('api_reportes.urls')),
     path('api/', include('api_usuarios.urls'))
 ]
