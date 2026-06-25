@@ -340,6 +340,7 @@ class UpdatePasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PasoProceso
         fields = [
+            "proceso",
             "orden",    
         ] 
     
@@ -378,6 +379,7 @@ class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProcesoPieza
         fields = [
+            "proceso",
             "cantPiezas",   
         ] 
 
