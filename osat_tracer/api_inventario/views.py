@@ -7,7 +7,7 @@ from . import models, serializers
 
 # Create your views here.
 
-# CRUD PIEZA SERVICES
+### CRUD PIEZA SERVICES
 
 ## Create Pieza
 class CreatePiezaAPIView(generics.CreateAPIView):
@@ -33,3 +33,7 @@ class DetailPiezaAPIView(APIView):
     
     
 ## Update Pieza
+class UpdatePiezaAPIView(generics.UpdateAPIView):
+    queryset = models.Pieza.objects.all()
+    serializer_class = serializers.UpdatePiezaSerializer
+    lookup_field = 'pk'  
