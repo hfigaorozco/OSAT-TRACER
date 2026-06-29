@@ -1,0 +1,429 @@
+{% extends "admin/layout.html" %}
+{% load static %}
+{% block page_title %}Organización{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" id="org-page-title">Plantillas de Procesos de Producción</h1>
+    <p class="page-subtitle">Gestión de plantillas, procesos y configuración de planta</p>
+  </div>
+  <div id="org-actions-plantillas" class="page-actions">
+    <button class="btn btn-primary" onclick="openModal('modal-nueva-plantilla')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Plantilla
+    </button>
+  </div>
+  <div id="org-actions-obleas" class="page-actions" style="display:none;">
+    <button class="btn btn-primary" onclick="openModal('modal-nueva-oblea')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Oblea
+    </button>
+  </div>
+  <div id="org-actions-lineas" class="page-actions" style="display:none;">
+    <button class="btn btn-primary" onclick="openModal('modal-nueva-linea')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Línea
+    </button>
+  </div>
+  <div id="org-actions-kpi" class="page-actions" style="display:none;"></div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchOrgTab('plantillas',this)">Plantillas</button>
+  <button class="tab-btn" onclick="switchOrgTab('obleas',this)">Tipos de Oblea</button>
+  <button class="tab-btn" onclick="switchOrgTab('lineas',this)">Líneas de Producción</button>
+  <button class="tab-btn" onclick="switchOrgTab('kpi',this)">Configuración de Umbrales de KPI</button>
+</div>
+
+<!-- ═══ TAB PLANTILLAS ═══ -->
+<div id="org-tab-plantillas">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <span style="font-size:13.5px;color:var(--text-muted);">{{ plantillas|length }} Plantillas Registradas</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="position:relative;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search..." id="search-plantillas" oninput="filterPlantillas(this.value)"
+          style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+      </div>
+      <div style="position:relative;">
+        <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+        <select style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
+          <option>Select</option><option>Activo</option><option>Inactivo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="plantillas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;">
+    {% for p in plantillas %}
+    <div class="card org-plantilla-card" style="position:relative;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
+        <h3 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">{{ p.nombre }}</h3>
+        <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;flex-shrink:0;margin-left:8px;">{% if p.activo %}Activo{% else %}Inactivo{% endif %}</span>
+      </div>
+      <p style="font-size:13px;color:#718096;margin-bottom:14px;min-height:36px;">{{ p.descripcion|default:"Sin descripción" }}</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:12px;">
+        <span style="font-size:12px;color:#718096;">{{ p.pasos_count|default:"0" }} pasos</span>
+        <button style="background:none;border:none;color:#16A85E;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;"
+                onclick="openEditarPlantilla({{ p.pk }}, '{{ p.nombre|escapejs }}', '{{ p.descripcion|default:''|escapejs }}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginación -->
+  <div style="display:flex;justify-content:center;gap:4px;margin-top:8px;">
+    <button class="pag-btn disabled">‹</button>
+    <button class="pag-btn active">1</button>
+    <button class="pag-btn">2</button>
+    <button class="pag-btn">3</button>
+    <button class="pag-btn">4</button>
+    <button class="pag-btn">›</button>
+  </div>
+</div>
+
+<!-- ═══ TAB TIPOS DE OBLEA ═══ -->
+<div id="org-tab-obleas" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:20px;">
+    <div style="position:relative;">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    </div>
+    <div style="position:relative;">
+      <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+      <select style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;"><option>Select</option><option>Activo</option><option>Inactivo</option></select>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Código</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre / Descripción</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Cantidad dies</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in tipos_oblea %}
+        <tr>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">{{ o.codigo }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ o.nombre }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-weight:600;color:#009EAF;">{{ o.dies_maximos }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+            <button style="background:none;border:none;color:#16A85E;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;justify-content:center;gap:4px;">
+    <button class="pag-btn disabled">‹</button>
+    <button class="pag-btn active">1</button>
+    <button class="pag-btn">2</button>
+    <button class="pag-btn">3</button>
+    <button class="pag-btn">4</button>
+    <button class="pag-btn">›</button>
+  </div>
+</div>
+
+<!-- ═══ TAB LÍNEAS DE PRODUCCIÓN ═══ -->
+<div id="org-tab-lineas" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:20px;">
+    <div style="position:relative;">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    </div>
+    <div style="position:relative;">
+      <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+      <select style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;"><option>Select</option><option>Activo</option><option>Inactivo</option></select>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Planta</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso asignado</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lineas %}
+        <tr>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-weight:500;color:#2D3748;">{{ l.nombre }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ l.planta|default:"—" }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+            {% if l.activo %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Activo</span>
+            {% else %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Inactivo</span>{% endif %}
+          </td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:{% if l.proceso_asignado %}#2D3748{% else %}#718096{% endif %};">{{ l.proceso_asignado|default:"Sin asignar" }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+            <button style="background:none;border:none;color:#718096;cursor:pointer;padding:4px;" onclick="openModal('modal-nueva-linea')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;justify-content:center;gap:4px;">
+    <button class="pag-btn disabled">‹</button>
+    <button class="pag-btn active">1</button>
+    <button class="pag-btn">2</button>
+    <button class="pag-btn">3</button>
+    <button class="pag-btn">4</button>
+    <button class="pag-btn">›</button>
+  </div>
+</div>
+
+<!-- ═══ TAB KPI ═══ -->
+<div id="org-tab-kpi" style="display:none;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;">
+
+    {% for kpi_item in kpi_cards %}
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">{{ kpi_item.nombre }}</h3>
+        <div style="display:flex;gap:5px;">
+          <div style="width:14px;height:14px;border-radius:50%;background:#16A85E;"></div>
+          <div style="width:14px;height:14px;border-radius:50%;background:#F5A623;"></div>
+          <div style="width:14px;height:14px;border-radius:50%;background:#EF5350;"></div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'admin_config_kpi_save' %}">{% csrf_token %}
+        <input type="hidden" name="kpi" value="{{ kpi_item.key }}">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Verde ({{ kpi_item.label_verde }})</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#16A85E;flex-shrink:0;"></div>
+            <div style="position:relative;flex:1;">
+              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="padding-right:32px;">
+              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Amarillo ({{ kpi_item.label_amarillo }})</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
+            <div style="position:relative;flex:1;">
+              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="padding-right:32px;">
+              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Rojo ({{ kpi_item.label_rojo }})</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
+            <div style="position:relative;flex:1;">
+              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="padding-right:32px;">
+              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Guardar umbrales</button>
+      </form>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+
+<!-- ═══ MODAL NUEVA PLANTILLA ═══ -->
+<div class="modal-overlay" id="modal-nueva-plantilla" style="display:none;" onclick="if(event.target===this)closeModal('modal-nueva-plantilla')">
+  <div class="modal-card modal-md">
+    <div class="modal-header">
+      <h2 id="plantilla-modal-title">Nueva plantilla</h2>
+      <button class="modal-close" onclick="closeModal('modal-nueva-plantilla')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'admin_organizacion_plantilla_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nombre <span class="required">*</span></label>
+          <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción</label>
+          <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3"></textarea>
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:10px;">Pasos del proceso</label>
+          <div id="pasos-modal-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <button type="button" onclick="addPasoRow('pasos-modal-list')"
+                  style="background:none;border:none;color:#16A85E;font-size:13px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;margin-top:4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar paso
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-nueva-plantilla')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar plantilla</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL NUEVA OBLEA ═══ -->
+<div class="modal-overlay" id="modal-nueva-oblea" style="display:none;" onclick="if(event.target===this)closeModal('modal-nueva-oblea')">
+  <div class="modal-card modal-md">
+    <div class="modal-header">
+      <h2>Nuevo tipo de oblea</h2>
+      <button class="modal-close" onclick="closeModal('modal-nueva-oblea')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'admin_organizacion_oblea_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">Nombre / Descripción <span class="required">*</span></label><input type="text" name="nombre" class="form-control" required></div>
+        <div class="form-group">
+          <label class="form-label">Cantidad de dies <span class="required">*</span></label>
+          <div style="position:relative;">
+            <input type="number" name="dies_maximos" class="form-control" min="1" required style="padding-right:36px;">
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-nueva-oblea')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL NUEVA LÍNEA ═══ -->
+<div class="modal-overlay" id="modal-nueva-linea" style="display:none;" onclick="if(event.target===this)closeModal('modal-nueva-linea')">
+  <div class="modal-card modal-md">
+    <div class="modal-header">
+      <h2>Nueva línea</h2>
+      <button class="modal-close" onclick="closeModal('modal-nueva-linea')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'admin_organizacion_linea_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" class="form-control" required></div>
+        <div class="form-group"><label class="form-label" style="color:#16A85E;">Planta <span class="required">*</span></label><input type="text" name="planta" class="form-control" required></div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select name="estado" class="form-control"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#16A85E;">Proceso asignado</label>
+          <select name="proceso" class="form-control">
+            <option value="">Sin asignar</option>
+            {% for p in plantillas %}<option value="{{ p.pk }}">{{ p.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-nueva-linea')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{% block extra_js %}
+<script>
+var _pasoCount = 0;
+
+var _titulos = {
+  plantillas: 'Plantillas de Procesos de Producción',
+  obleas: 'Tipos de Obleas',
+  lineas: 'Líneas de Producción',
+  kpi: 'Configuración de Umbrales de KPI'
+};
+
+function switchOrgTab(tab, btn) {
+  ['plantillas','obleas','lineas','kpi'].forEach(function(t){
+    document.getElementById('org-tab-'+t).style.display = t===tab ? 'block' : 'none';
+    var ac = document.getElementById('org-actions-'+t);
+    if(ac) ac.style.display = t===tab ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('org-page-title').textContent = _titulos[tab] || '';
+}
+
+function openEditarPlantilla(pk, nombre, desc) {
+  document.getElementById('plantilla-modal-title').textContent = nombre ? 'Editar: ' + nombre : 'Nueva plantilla';
+  document.getElementById('plantilla-nombre-input').value = nombre || '';
+  document.getElementById('plantilla-desc-input').value = desc || '';
+
+  var list = document.getElementById('pasos-modal-list');
+  list.innerHTML = '';
+  _pasoCount = 0;
+
+  // Pasos de ejemplo para edición
+  var pasos = pk === 1
+    ? ['Recepción oblea','Die Attach','Wire Bonding','Encapsulado','Inspección final']
+    : ['Die Attach','Wire Bonding','Encapsulado','Inspección final'];
+
+  pasos.forEach(function(nombre){
+    _pasoCount++;
+    var row = document.createElement('div');
+    row.className = 'paso-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F7FAFC;border-radius:7px;border:1px solid #E2E8F0;';
+    row.innerHTML =
+      '<span style="color:#A0AEC0;cursor:grab;">⠿</span>' +
+      '<span style="background:#2D3748;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">' + _pasoCount + '</span>' +
+      '<input type="text" name="paso_' + _pasoCount + '" class="form-control" value="' + nombre + '" style="flex:1;">' +
+      '<button type="button" style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;" title="Editar">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+      '</button>' +
+      '<button type="button" style="color:#EF5350;background:none;border:none;cursor:pointer;padding:4px;" onclick="this.closest(\'.paso-row\').remove()">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>' +
+      '</button>';
+    list.appendChild(row);
+  });
+
+  openModal('modal-nueva-plantilla');
+}
+
+function addPasoRow(listId) {
+  _pasoCount++;
+  var list = document.getElementById(listId);
+  if (!list) return;
+  var n = list.querySelectorAll('.paso-row').length + 1;
+  var row = document.createElement('div');
+  row.className = 'paso-row';
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F7FAFC;border-radius:7px;border:1px solid #E2E8F0;';
+  row.innerHTML =
+    '<span style="color:#A0AEC0;cursor:grab;">⠿</span>' +
+    '<span style="background:#2D3748;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;">' + n + '</span>' +
+    '<input type="text" name="paso_' + _pasoCount + '" class="form-control" placeholder="Nombre del paso" style="flex:1;">' +
+    '<button type="button" style="color:#EF5350;background:none;border:none;cursor:pointer;padding:4px;" onclick="this.closest(\'.paso-row\').remove()">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>' +
+    '</button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function filterPlantillas(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.org-plantilla-card').forEach(function(card){
+    card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
+{% endblock %}

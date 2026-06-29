@@ -30,7 +30,7 @@ urlpatterns = [
     path('v1/detail/registro_kpi/<int:pk>/', views.DetailRegistroKpiAPIView.as_view(), name='detail_registroKpi'),
 
     # Historial alerta
-    path('v1/create/historial_alertas/', views.CreateHistorialAlertaAPIView.as_view(), name='create_historialAlerta'),
-    path('v1/list/historiales_alertas/', views.ListHistorialAlertaAPIView.as_view(), name='list_historialAlerta'),
+    path('v1/create/historial_alertas/', views.CreateHistorialAlertasAPIView.as_view(), name='create_historialAlerta'),
+    path('v1/list/historiales_alertas/', views.ListHistorialAlertasAPIView.as_view(), name='list_historialAlerta'),
     path('v1/detail/historial_alertas/<int:registroKPI>/<int:alerta>/', views.DetailHistorialAlertaAPIView.as_view(), name='detail_historialAlerta'),
 ]

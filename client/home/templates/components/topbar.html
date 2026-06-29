@@ -1,0 +1,83 @@
+{% load static %}
+<header class="topbar">
+
+  <div style="display:flex;align-items:center;gap:0;">
+    <!-- El hamburger/flecha está en el sidebar, no aquí -->
+    <img src="{% static 'img/logo.png' %}" alt="OSAT Tracer" style="width:52px;height:44px;object-fit:contain;margin-right:10px;">
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:13px;color:#fff;line-height:1.2;">
+      O.S.A.T. Tracer<br>
+      <span style="font-size:11px;color:#C4C5D0;">Trazabilidad de Ensamblado de Semiconductores</span>
+    </span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:32px;">
+
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
+      {% now "d/m/Y" %}
+    </span>
+
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
+      {{ user.get_full_name|default:user.username|default:"Nombre Empleado" }}
+    </span>
+
+    <div style="position:relative;">
+      <button class="topbar-bell" onclick="toggleNotifDropdown()" aria-label="Notificaciones">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        {% if unread_count and unread_count > 0 %}
+          <span class="topbar-bell-badge">{{ unread_count }}</span>
+        {% endif %}
+      </button>
+
+      <div class="notif-dropdown" id="notif-dropdown" style="display:none;">
+        <div style="padding:12px 16px;border-bottom:1px solid #2E3D52;font-weight:600;font-size:13px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+          <span>Notificaciones</span>
+          {% if unread_count and unread_count > 0 %}
+            <span class="badge badge-activo">{{ unread_count }}</span>
+          {% endif %}
+        </div>
+        <div style="max-height:300px;overflow-y:auto;">
+          {% if recent_notifications %}
+            {% for notif in recent_notifications %}
+            <div class="notif-item {% if not notif.leida %}unread{% endif %}">
+              <div style="flex-shrink:0;margin-top:2px;">
+                {% if notif.tipo == 'hold' or notif.tipo == 'alerta' %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                {% elif notif.tipo == 'critico' %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                {% else %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                {% endif %}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="notif-title">{{ notif.titulo }}</div>
+                <div class="notif-time">{{ notif.creada_en|timesince }} atrás</div>
+              </div>
+              {% if not notif.leida %}<div style="width:7px;height:7px;border-radius:50%;background:#EF5350;flex-shrink:0;margin-top:4px;"></div>{% endif %}
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="padding:20px;text-align:center;color:#718096;font-size:13px;">Sin notificaciones nuevas</div>
+          {% endif %}
+        </div>
+        <div style="padding:8px;border-top:1px solid #2E3D52;display:flex;justify-content:flex-end;">
+          <a href="#" style="font-size:12px;color:#16A85E;">Ver todas →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<script>
+function toggleNotifDropdown() {
+  var dd = document.getElementById('notif-dropdown');
+  if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('notif-dropdown');
+  if (dd && !dd.contains(e.target) && !e.target.closest('.topbar-bell')) dd.style.display = 'none';
+});
+</script>
