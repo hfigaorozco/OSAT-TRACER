@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+
 urlpatterns = [
     #Defecto
     path('v1/list/Defecto/', views.ListDefectoAPIView.as_view(), name='list_Defectos'),

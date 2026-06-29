@@ -5,6 +5,7 @@ from rest_framework import generics
 
 from api_maquinaria import serializers
 from api_maquinaria import models
+
 # Create your views here.
 
 ## Maquina CRUD
@@ -12,14 +13,17 @@ from api_maquinaria import models
 class CreateMaquinaAPIView(generics.CreateAPIView):
     queryset = models.Maquina.objects.all()
     serializer_class = serializers.CreateMaquinaSerializer
+
 #LIST
 class ListMaquinaAPIView(generics.ListAPIView):
     queryset = models.Maquina.objects.all()
     serializer_class = serializers.ListMaquinaSerializer
+
 #DETAIL
 class DetailMaquinaAPIView(generics.RetrieveAPIView):
     queryset = models.Maquina.objects.all()
     serializer_class = serializers.DetalMaquinaSerializer
+
 #UPDATE
 class UpdateMaquinaAPIView(generics.UpdateAPIView):
     queryset = models.Maquina.objects.all()
@@ -31,10 +35,12 @@ class UpdateMaquinaAPIView(generics.UpdateAPIView):
 class CreateEstadoMaquinaAPIView(generics.CreateAPIView):
     queryset = models.Estado_Maquina.objects.all()
     serializer_class = serializers.CreateEstadoMaquinaSerializer
+
 #LIST
 class ListEstadoMaquinaAPIView(generics.ListAPIView):
     queryset = models.Estado_Maquina.objects.all()
     serializer_class = serializers.ListEstadoMaquinaSerializer
+
 #DETAIL
 #UPDATE
 
@@ -43,9 +49,11 @@ class ListEstadoMaquinaAPIView(generics.ListAPIView):
 class CreateTipoMaquinaAPIView(generics.CreateAPIView):
     queryset = models.Tipo_Maquina.objects.all()
     serializer_class = serializers.CreateTipoMaquinaSerializer
+
 #LIST
 class ListTipoMaquinaAPIView(generics.ListAPIView):
     queryset = models.Tipo_Maquina.objects.all()
     serializer_class = serializers.ListTipoMaquinaSerializer
+
 #DETAIL
 #UPDATE
