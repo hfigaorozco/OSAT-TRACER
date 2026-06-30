@@ -1,0 +1,346 @@
+[
+  {
+    "model": "api_produccion.linea",
+    "fields": {
+      "codigo": "lin1",
+      "nombre": "Línea Ensamblado QFN"
+    }
+  },
+  {
+    "model": "api_produccion.linea",
+    "fields": {
+      "codigo": "lin2",
+      "nombre": "Línea Ensamblado BGA"
+    }
+  },
+  {
+    "model": "api_produccion.proceso",
+    "fields": {
+      "codigo": "ens-1",
+      "nombre": "Ensamblado QFN Std",
+      "descripcion": "Proceso de ensamblado OSAT para empaque QFN estándar (12 pasos)"
+    }
+  },
+  {
+    "model": "api_produccion.proceso",
+    "fields": {
+      "codigo": "ens-2",
+      "nombre": "Ensamblado BGA HD",
+      "descripcion": "Proceso de ensamblado OSAT para empaque BGA de alta densidad (12 pasos)"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "bgr",
+      "nombre": "Wafer Backgriding",
+      "descripcion": "Desbaste del reverso de la oblea al espesor objetivo",
+      "tiempoEstimado": "00:15:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "dic",
+      "nombre": "Dicing",
+      "descripcion": "Corte de la oblea para separar los dies individuales",
+      "tiempoEstimado": "00:10:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "dia",
+      "nombre": "Die Attach",
+      "descripcion": "Fijación del die al sustrato con adhesivo conductor",
+      "tiempoEstimado": "00:05:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "wir",
+      "nombre": "Wire Bonding",
+      "descripcion": "Conexión eléctrica del die mediante hilos de oro",
+      "tiempoEstimado": "00:08:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "ovc",
+      "nombre": "Die Overcoat",
+      "descripcion": "Recubrimiento protector aplicado sobre el die",
+      "tiempoEstimado": "00:04:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "mol",
+      "nombre": "Molding",
+      "descripcion": "Encapsulado del die con resina epóxica",
+      "tiempoEstimado": "00:10:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "mar",
+      "nombre": "Marking",
+      "descripcion": "Impresión de códigos e información técnica en el empaque",
+      "tiempoEstimado": "00:02:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "dtf",
+      "nombre": "Deflash/Trim/Form",
+      "descripcion": "Remoción de excedentes y formado de terminales",
+      "tiempoEstimado": "00:06:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "sin",
+      "nombre": "Singulation",
+      "descripcion": "Separación de unidades individuales del marco conductor",
+      "tiempoEstimado": "00:05:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "plt",
+      "nombre": "Lead Finish",
+      "descripcion": "Recubrimiento/plateado de las terminales",
+      "tiempoEstimado": "00:07:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "tst",
+      "nombre": "Prueba Eléctrica",
+      "descripcion": "Verificación de continuidad y funcionalidad",
+      "tiempoEstimado": "00:03:00"
+    }
+  },
+  {
+    "model": "api_produccion.paso",
+    "fields": {
+      "codigo": "pak",
+      "nombre": "Tape and Reel",
+      "descripcion": "Empaque final de las unidades para embarque",
+      "tiempoEstimado": "00:04:00"
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "bgr",
+      "proceso": "ens-1",
+      "orden": 1
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dic",
+      "proceso": "ens-1",
+      "orden": 2
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dia",
+      "proceso": "ens-1",
+      "orden": 3
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "wir",
+      "proceso": "ens-1",
+      "orden": 4
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "ovc",
+      "proceso": "ens-1",
+      "orden": 5
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "mol",
+      "proceso": "ens-1",
+      "orden": 6
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "mar",
+      "proceso": "ens-1",
+      "orden": 7
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dtf",
+      "proceso": "ens-1",
+      "orden": 8
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "sin",
+      "proceso": "ens-1",
+      "orden": 9
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "plt",
+      "proceso": "ens-1",
+      "orden": 10
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "tst",
+      "proceso": "ens-1",
+      "orden": 11
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "pak",
+      "proceso": "ens-1",
+      "orden": 12
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "bgr",
+      "proceso": "ens-2",
+      "orden": 1
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dic",
+      "proceso": "ens-2",
+      "orden": 2
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dia",
+      "proceso": "ens-2",
+      "orden": 3
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "wir",
+      "proceso": "ens-2",
+      "orden": 4
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "ovc",
+      "proceso": "ens-2",
+      "orden": 5
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "mol",
+      "proceso": "ens-2",
+      "orden": 6
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "mar",
+      "proceso": "ens-2",
+      "orden": 7
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "dtf",
+      "proceso": "ens-2",
+      "orden": 8
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "sin",
+      "proceso": "ens-2",
+      "orden": 9
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "plt",
+      "proceso": "ens-2",
+      "orden": 10
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "tst",
+      "proceso": "ens-2",
+      "orden": 11
+    }
+  },
+  {
+    "model": "api_produccion.pasoproceso",
+    "fields": {
+      "paso": "pak",
+      "proceso": "ens-2",
+      "orden": 12
+    }
+  },
+  {
+    "model": "api_produccion.lineaproceso",
+    "fields": {
+      "linea": "lin1",
+      "proceso": "ens-1"
+    }
+  },
+  {
+    "model": "api_produccion.lineaproceso",
+    "fields": {
+      "linea": "lin2",
+      "proceso": "ens-2"
+    }
+  }
+]

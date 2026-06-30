@@ -1,0 +1,64 @@
+[
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "activo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "inactivo"}},
+
+  {"model": "api_usuarios.rol", "fields": {"codigo": "admin", "descripcion": "Administrador"}},
+  {"model": "api_usuarios.rol", "fields": {"codigo": "super", "descripcion": "Supervisor"}},
+  {"model": "api_usuarios.rol", "fields": {"codigo": "opera", "descripcion": "Operador"}},
+
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "prep", "descripcion": "Preparación de oblea"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "mont", "descripcion": "Montaje"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "prot", "descripcion": "Protección"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "acab", "descripcion": "Acabado"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "insp", "descripcion": "Inspección"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "empq", "descripcion": "Empaquetado"}},
+
+  {"model": "api_maquinaria.estado_maquina", "fields": {"clave": "act", "descripcion": "Activa"}},
+  {"model": "api_maquinaria.estado_maquina", "fields": {"clave": "ina", "descripcion": "Inactiva"}},
+
+  {"model": "api_kpi.semaforo", "fields": {"codigo": "ver", "descripcion": "verde"}},
+  {"model": "api_kpi.semaforo", "fields": {"codigo": "ama", "descripcion": "amarillo"}},
+  {"model": "api_kpi.semaforo", "fields": {"codigo": "roj", "descripcion": "rojo"}},
+
+  {"model": "api_kpi.estadoalerta", "fields": {"codigo": "resue", "descripcion": "Resuelta"}},
+  {"model": "api_kpi.estadoalerta", "fields": {"codigo": "sinre", "descripcion": "Sin Resolver"}},
+
+  {"model": "api_kpi.kpi", "fields": {
+    "clave": "yie", "nombre": "Yield",
+    "descripcion": "Dies buenos sobre el total de dies generados",
+    "unidad": "%",
+    "umbralVerde": 90, "umbralAmarillo": 80, "umbralRojo": 70
+  }},
+  {"model": "api_kpi.kpi", "fields": {
+    "clave": "thr", "nombre": "Throughput",
+    "descripcion": "Dies generados por hora",
+    "unidad": "dies/hora",
+    "umbralVerde": 500, "umbralAmarillo": 300, "umbralRojo": 150
+  }},
+  {"model": "api_kpi.kpi", "fields": {
+    "clave": "oee", "nombre": "Overall Equipment Effectiveness",
+    "descripcion": "Eficiencia global (disponibilidad x rendimiento x calidad)",
+    "unidad": "%",
+    "umbralVerde": 85, "umbralAmarillo": 70, "umbralRojo": 55
+  }},
+
+  {"model": "api_produccion.estado_paso", "fields": {"codigo": "compl", "descripcion": "Completado"}},
+  {"model": "api_produccion.estado_paso", "fields": {"codigo": "pendi", "descripcion": "Pendiente"}},
+  {"model": "api_produccion.estado_paso", "fields": {"codigo": "nocom", "descripcion": "No Completado"}},
+
+  {"model": "api_produccion.estado_orden", "fields": {"codigo": "abier", "descripcion": "Abierta"}},
+  {"model": "api_produccion.estado_orden", "fields": {"codigo": "proce", "descripcion": "En proceso"}},
+  {"model": "api_produccion.estado_orden", "fields": {"codigo": "cerra", "descripcion": "Cerrada"}},
+
+  {"model": "api_produccion.estado_oblea", "fields": {"codigo": "proce", "descripcion": "En Proceso"}},
+  {"model": "api_produccion.estado_oblea", "fields": {"codigo": "termi", "descripcion": "Terminada"}},
+  {"model": "api_produccion.estado_oblea", "fields": {"codigo": "recha", "descripcion": "Rechazada"}},
+
+  {"model": "api_produccion.defecto", "fields": {"codigo": "defic", "descripcion": "Wire bonding deficiente"}},
+  {"model": "api_produccion.defecto", "fields": {"codigo": "delam", "descripcion": "Delaminación de encapsulado"}},
+  {"model": "api_produccion.defecto", "fields": {"codigo": "griet", "descripcion": "Grieta en Die"}},
+  {"model": "api_produccion.defecto", "fields": {"codigo": "desal", "descripcion": "Desalineación en Die"}},
+
+  {"model": "api_produccion.tipo_oblea", "fields": {"codigo": "estan", "descripcion": "Estándar", "cantidadDies": 50}},
+  {"model": "api_produccion.tipo_oblea", "fields": {"codigo": "alden", "descripcion": "Alta densidad", "cantidadDies": 100}}
+]
