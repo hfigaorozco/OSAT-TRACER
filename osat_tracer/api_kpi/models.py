@@ -28,7 +28,7 @@ class Kpi(models.Model):
     clave = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=50)
-    unidad = models.CharField(unique=True, max_length=20, default='Porcentaje')
+    unidad = models.CharField(max_length=20, default='Porcentaje')
     umbralVerde = models.IntegerField(unique=True, default=1)
     umbralAmarillo = models.IntegerField(unique=True, default=2)
     umbralRojo = models.IntegerField(unique=True, default=3)
@@ -49,7 +49,7 @@ class Alerta(models.Model):
         db_table = 'alerta'
         
     def __str__(self):
-        return self.codigo
+        return self.descripcion
 
 
 class Registro_Kpi(models.Model):
@@ -65,7 +65,7 @@ class Registro_Kpi(models.Model):
         db_table = 'registro_kpi'
         
     def __str__(self):
-        return self.codigo
+        return self.numero
 
 
 class Historial_Alertas(models.Model):
