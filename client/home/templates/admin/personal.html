@@ -1,0 +1,286 @@
+{% extends "admin/layout.html" %}
+{% load static %}
+{% block page_title %}Personal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Personal y Cuentas</h1>
+    <p class="page-subtitle">Gestión de empleados y accesos al sistema</p>
+  </div>
+  <div class="page-actions" id="page-actions-empleados">
+    <button class="btn btn-outline btn-sm" onclick="openModal('modal-catalogos')">Catálogos</button>
+    <button class="btn btn-primary" onclick="openModal('modal-create-empleado')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo empleado
+    </button>
+  </div>
+  <div class="page-actions" id="page-actions-cuentas" style="display:none;">
+    <button class="btn btn-primary" onclick="openModal('modal-create-cuenta')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva cuenta
+    </button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchPersonalTab('tab-empleados', this)">Empleados</button>
+  <button class="tab-btn" onclick="switchPersonalTab('tab-cuentas', this)">Cuentas de usuario</button>
+</div>
+
+<!-- ── Tab Empleados ── -->
+<div id="tab-empleados" class="tab-pane">
+  <div class="filter-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o RFC…" value="{{ request.GET.q }}">
+      </div>
+      <select name="rol" class="form-control" style="width:160px;background:var(--bg-app);color:var(--text-subtle);">
+        <option value="">Todos los roles</option>
+        {% for rol in roles_list %}<option value="{{ rol.pk }}" {% if request.GET.rol == rol.pk|stringformat:"s" %}selected{% endif %}>{{ rol.nombre }}</option>{% endfor %}
+      </select>
+      <select name="estado" class="form-control" style="width:160px;background:var(--bg-app);color:var(--text-subtle);">
+        <option value="">Todos los estados</option>
+        {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if request.GET.estado == est.pk|stringformat:"s" %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0;">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Nombre completo</th><th>RFC</th><th>Rol</th><th>Estado</th><th>Fecha contrato</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for emp in empleados %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:#2E3D52;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C4C5D0;flex-shrink:0;">
+                  {{ emp.primer_nombre|slice:":1"|upper }}
+                </div>
+                <span style="color:#fff;font-weight:500;">{{ emp.primer_nombre }} {{ emp.apellido_paterno }} {{ emp.apellido_materno }}</span>
+              </div>
+            </td>
+            <td style="font-family:monospace;font-size:13px;">{{ emp.rfc|upper }}</td>
+            <td>{{ emp.rol.nombre|default:"—" }}</td>
+            <td>
+              {% if emp.estado.nombre == 'Activo' %}<span class="badge badge-activo">Activo</span>
+              {% else %}<span class="badge badge-inactivo">{{ emp.estado.nombre|default:"—" }}</span>{% endif %}
+            </td>
+            <td>{{ emp.fecha_contrato|date:"d/m/Y"|default:"—" }}</td>
+            <td class="table-actions">
+              <button class="action-btn" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><p>No se encontraron empleados</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tab Cuentas ── -->
+<div id="tab-cuentas" class="tab-pane" style="display:none;">
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="form-control" placeholder="Buscar usuario…">
+    </div>
+    <select class="form-control" style="width:160px;background:var(--bg-app);color:var(--text-subtle);">
+      <option value="">Todos los roles</option>
+      <option>Administrador</option>
+      <option>Supervisor</option>
+      <option>Operador</option>
+    </select>
+  </div>
+
+  <div class="card" style="padding:0;">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Fecha contrato</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for cuenta in cuentas %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:#2E3D52;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C4C5D0;">
+                  {{ cuenta.user.get_full_name|default:cuenta.user.username|slice:":1"|upper }}
+                </div>
+                <span style="font-weight:500;color:#fff;">{{ cuenta.user.username }}</span>
+              </div>
+            </td>
+            <td>{{ cuenta.user.get_full_name|default:"—" }}</td>
+            <td>
+              {% if cuenta.rol == 'admin' %}<span class="badge" style="background:rgba(255,255,255,.1);color:#fff;">Administrador</span>
+              {% elif cuenta.rol == 'supervisor' %}<span class="badge" style="background:rgba(0,158,175,.15);color:#80DEEA;">Supervisor</span>
+              {% else %}<span class="badge badge-activo">Operador</span>{% endif %}
+            </td>
+            <td>
+              {% if cuenta.activo %}<span class="badge badge-activo">Activo</span>
+              {% else %}<span class="badge badge-inactivo">Inactivo</span>{% endif %}
+            </td>
+            <td>{{ cuenta.fecha_contrato|date:"d/m/Y"|default:"—" }}</td>
+            <td class="table-actions">
+              <button class="action-btn" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="action-btn" title="{% if cuenta.activo %}Desactivar{% else %}Activar{% endif %}">
+                {% if cuenta.activo %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {% else %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 11 12 14 22 4"/></svg>
+                {% endif %}
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><p>No se encontraron cuentas</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal crear empleado -->
+<div class="modal-overlay" id="modal-create-empleado" style="display:none;" onclick="if(event.target===this)closeModal('modal-create-empleado')">
+  <div class="modal-card modal-md">
+    <div class="modal-header">
+      <h2>Nuevo empleado</h2>
+      <button class="modal-close" onclick="closeModal('modal-create-empleado')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'admin_personal_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-grid-3">
+          <div class="form-group"><label class="form-label">Primer nombre <span class="required">*</span></label><input type="text" name="primer_nombre" class="form-control" placeholder="Juan" required></div>
+          <div class="form-group"><label class="form-label">Apellido paterno <span class="required">*</span></label><input type="text" name="apellido_paterno" class="form-control" placeholder="Pérez" required></div>
+          <div class="form-group"><label class="form-label">Apellido materno</label><input type="text" name="apellido_materno" class="form-control" placeholder="López"></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">RFC <span class="required">*</span></label><input type="text" name="rfc" class="form-control" placeholder="PELJ800101XXX" maxlength="13" required></div>
+          <div class="form-group"><label class="form-label">Rol <span class="required">*</span></label>
+            <select name="rol" class="form-control" required>
+              <option value="">Seleccionar…</option>
+              {% for rol in roles_list %}<option value="{{ rol.pk }}">{{ rol.nombre }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha de contrato <span class="required">*</span></label><input type="date" name="fecha_contrato" class="form-control" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-create-empleado')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Crear empleado</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal crear cuenta -->
+<div class="modal-overlay" id="modal-create-cuenta" style="display:none;" onclick="if(event.target===this)closeModal('modal-create-cuenta')">
+  <div class="modal-card modal-md">
+    <div class="modal-header">
+      <h2>Nueva cuenta de usuario</h2>
+      <button class="modal-close" onclick="closeModal('modal-create-cuenta')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'admin_cuentas_crear' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Usuario empresarial <span class="required">*</span></label><input type="text" name="username" class="form-control" placeholder="nombre.apellido" required></div>
+          <div class="form-group"><label class="form-label">Nombre completo <span class="required">*</span></label><input type="text" name="nombre_completo" class="form-control" placeholder="Juan Pérez" required></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Fecha de contrato <span class="required">*</span></label><input type="date" name="fecha_contrato" class="form-control" required></div>
+        </div>
+        <div class="form-group"><label class="form-label">Rol <span class="required">*</span></label>
+          <select name="rol" class="form-control" required>
+            <option value="">Seleccionar…</option>
+            <option value="admin">Administrador</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="operador">Operador</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Contraseña inicial <span class="required">*</span></label>
+          <div style="position:relative;">
+            <input type="password" id="pw-nueva" name="password" class="form-control" style="padding-right:72px;" required>
+            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:12px;background:none;border:none;cursor:pointer;" onclick="togglePassword('pw-nueva',this)">Ver</button>
+          </div>
+          <span class="form-hint">El usuario deberá cambiarla en su primer acceso.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-create-cuenta')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Crear cuenta</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal catálogos -->
+<div class="modal-overlay" id="modal-catalogos" style="display:none;" onclick="if(event.target===this)closeModal('modal-catalogos')">
+  <div class="modal-card modal-lg">
+    <div class="modal-header"><h2>Catálogos de Personal</h2><button class="modal-close" onclick="closeModal('modal-catalogos')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="font-size:13px;font-weight:600;color:#fff;">Estados de empleado</h3>
+            <button class="btn btn-outline btn-sm">+ Agregar</button>
+          </div>
+          <table class="data-table"><thead><tr><th>Nombre</th><th>Color</th><th></th></tr></thead>
+          <tbody>
+            {% for estado in estados_empleado %}
+            <tr>
+              <td><input type="text" class="form-control" value="{{ estado.nombre }}" style="height:30px;padding:4px 8px;"></td>
+              <td><input type="color" value="{{ estado.color|default:'#16A85E' }}" style="width:32px;height:28px;border:1px solid #2E3D52;border-radius:4px;background:transparent;cursor:pointer;"></td>
+              <td><button class="action-btn" style="color:#16A85E;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button></td>
+            </tr>
+            {% endfor %}
+          </tbody></table>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="font-size:13px;font-weight:600;color:#fff;">Roles de empleado</h3>
+            <button class="btn btn-outline btn-sm">+ Agregar</button>
+          </div>
+          <table class="data-table"><thead><tr><th>Nombre</th><th>Descripción</th><th></th></tr></thead>
+          <tbody>
+            {% for rol in roles_list %}
+            <tr>
+              <td><input type="text" class="form-control" value="{{ rol.nombre }}" style="height:30px;padding:4px 8px;"></td>
+              <td><input type="text" class="form-control" value="{{ rol.descripcion|default:'' }}" style="height:30px;padding:4px 8px;"></td>
+              <td><button class="action-btn" style="color:#16A85E;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button></td>
+            </tr>
+            {% endfor %}
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-catalogos')">Cerrar</button></div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function switchPersonalTab(tabId, btn) {
+  document.querySelectorAll('#tab-empleados, #tab-cuentas').forEach(function(p){ p.style.display='none'; });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById(tabId).style.display = 'block';
+  btn.classList.add('active');
+  document.getElementById('page-actions-empleados').style.display = tabId === 'tab-empleados' ? 'flex' : 'none';
+  document.getElementById('page-actions-cuentas').style.display = tabId === 'tab-cuentas' ? 'flex' : 'none';
+}
+</script>
+{% endblock %}
+{% endblock %}

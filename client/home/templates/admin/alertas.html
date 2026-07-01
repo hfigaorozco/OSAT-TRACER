@@ -1,0 +1,244 @@
+{% extends "admin/layout.html" %}
+{% load static %}
+{% block page_title %}Alertas{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Alertas</h1>
+    <p class="page-subtitle">Centro de notificaciones del sistema</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-outline btn-sm" onclick="marcarTodasLeidas()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Marcar todas leídas
+    </button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar" style="margin-bottom:0;">
+  <button class="tab-btn active" onclick="filterAlertas('todas', this)">
+    Todas
+    {% if total_count %}<span style="background:#E2E8F0;color:#4A5568;padding:0 7px;border-radius:999px;font-size:11px;margin-left:6px;">{{ total_count }}</span>{% endif %}
+  </button>
+  <button class="tab-btn" onclick="filterAlertas('no-leidas', this)">
+    No leídas
+    {% if unread_count %}<span style="background:#F8D7DA;color:#721C24;padding:0 7px;border-radius:999px;font-size:11px;margin-left:6px;">{{ unread_count }}</span>{% endif %}
+  </button>
+  <button class="tab-btn" onclick="filterAlertas('hold', this)">Hold</button>
+  <button class="tab-btn" onclick="filterAlertas('stock', this)">Stock</button>
+  <button class="tab-btn" onclick="filterAlertas('kpi', this)">KPI</button>
+</div>
+
+<!-- Layout: lista + detalle -->
+<div style="display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px;align-items:flex-start;">
+
+  <!-- Lista de alertas -->
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;max-height:calc(100vh - 280px);overflow-y:auto;">
+    {% for alerta in alertas %}
+    <div class="alerta-item" id="item-{{ alerta.pk }}"
+         data-tipo="{{ alerta.tipo }}"
+         data-leida="{{ alerta.leida|yesno:'true,false' }}"
+         onclick="mostrarDetalle({{ alerta.pk }})"
+         style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid #EDF2F7;cursor:pointer;transition:background .12s;position:relative;{% if not alerta.leida %}border-left:3px solid {{ alerta.color_borde }};{% endif %}">
+
+      <!-- Ícono -->
+      <div style="width:36px;height:36px;border-radius:8px;background:{{ alerta.color_bg }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        {% if alerta.tipo == 'hold' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        {% elif alerta.tipo == 'stock' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        {% elif alerta.tipo == 'kpi' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        {% elif alerta.tipo == 'liberado' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        {% elif alerta.tipo == 'scrap' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        {% elif alerta.tipo == 'mantenimiento' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83"/></svg>
+        {% else %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+        {% endif %}
+      </div>
+
+      <!-- Texto -->
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:{% if not alerta.leida %}600{% else %}400{% endif %};color:#1A202C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ alerta.titulo }}</div>
+        <div style="font-size:11.5px;color:#718096;margin-top:2px;">{{ alerta.tiempo }}</div>
+      </div>
+
+      <!-- Punto no leída -->
+      {% if not alerta.leida %}
+      <div style="width:8px;height:8px;border-radius:50%;background:#EF5350;flex-shrink:0;margin-top:4px;"></div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div style="padding:48px;text-align:center;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <p style="font-size:13px;color:#718096;">Sin alertas</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Panel detalle -->
+  <div id="panel-detalle">
+    <!-- Estado vacío -->
+    <div id="detalle-vacio" style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:64px 32px;text-align:center;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0" stroke-width="1.5" style="margin:0 auto 16px;display:block;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <p style="font-size:14px;color:#CBD5E0;">Selecciona una alerta para ver el detalle</p>
+    </div>
+
+    <!-- Contenido del detalle -->
+    <div id="detalle-contenido" style="display:none;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:28px;">
+      <!-- Header del detalle -->
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;">
+        <div id="det-icono-wrap" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div id="det-badge" style="font-size:12px;font-weight:600;margin-bottom:6px;"></div>
+          <h2 id="det-titulo" style="font-size:20px;font-weight:700;color:#1A202C;margin:0 0 4px;"></h2>
+          <div id="det-tiempo" style="font-size:12px;color:#718096;"></div>
+        </div>
+      </div>
+
+      <!-- Cuerpo -->
+      <p id="det-cuerpo" style="font-size:14px;color:#4A5568;line-height:1.6;margin-bottom:20px;"></p>
+
+      <!-- Referencia -->
+      <div id="det-ref-wrap" style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='#EDF2F7'" onmouseout="this.style.background='#F7FAFC'">
+        <div>
+          <div id="det-ref-label" style="font-size:11px;color:#718096;margin-bottom:4px;"></div>
+          <div id="det-ref-valor" style="font-size:15px;font-weight:700;color:#1A202C;font-family:monospace;"></div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
+      <!-- Acciones -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="det-btn-accion" class="btn btn-primary" onclick="accionDetalle()" style="min-width:120px;justify-content:center;"></button>
+        <button class="btn btn-outline" onclick="marcarLeidaActual()">Marcar como leída</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+var _alertasData = {
+  {% for a in alertas %}
+  {{ a.pk }}: {
+    pk: {{ a.pk }},
+    tipo: "{{ a.tipo }}",
+    titulo: "{{ a.titulo|escapejs }}",
+    cuerpo: "{{ a.cuerpo|escapejs }}",
+    tiempo: "{{ a.tiempo }}",
+    color_bg: "{{ a.color_bg }}",
+    color_borde: "{{ a.color_borde }}",
+    color_icon: "{{ a.color_icon }}",
+    ref_label: "{{ a.ref_label|default:''|escapejs }}",
+    ref_valor: "{{ a.ref_valor|default:''|escapejs }}",
+    accion_label: "{{ a.accion_label|default:''|escapejs }}",
+    accion_url: "{{ a.accion_url|default:'' }}",
+    leida: {{ a.leida|yesno:"true,false" }},
+    badge_label: "{{ a.badge_label|escapejs }}",
+    badge_color: "{{ a.badge_color }}",
+    icono_svg: "{{ a.icono_svg|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+
+var _alertaActual = null;
+
+var _iconosSVG = {
+  hold:          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
+  stock:         '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+  kpi:           '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  liberado:      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+  scrap:         '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+  mantenimiento: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83"/></svg>',
+  info:          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>',
+};
+
+function mostrarDetalle(pk) {
+  var a = _alertasData[pk];
+  if (!a) return;
+  _alertaActual = pk;
+
+  // Resaltar item seleccionado
+  document.querySelectorAll('.alerta-item').forEach(function(el){
+    el.style.background = '';
+  });
+  var item = document.getElementById('item-' + pk);
+  if (item) item.style.background = '#F0FBF6';
+
+  // Icono
+  var iconoWrap = document.getElementById('det-icono-wrap');
+  iconoWrap.style.background = a.color_bg;
+  iconoWrap.style.color = a.color_icon;
+  iconoWrap.innerHTML = _iconosSVG[a.tipo] || _iconosSVG.info;
+
+  // Badge
+  var badge = document.getElementById('det-badge');
+  badge.textContent = a.badge_label;
+  badge.style.color = a.badge_color;
+
+  // Datos
+  document.getElementById('det-titulo').textContent  = a.titulo;
+  document.getElementById('det-tiempo').textContent  = a.tiempo;
+  document.getElementById('det-cuerpo').textContent  = a.cuerpo;
+  document.getElementById('det-ref-label').textContent = a.ref_label || 'Referencia';
+  document.getElementById('det-ref-valor').textContent = a.ref_valor || '—';
+
+  // Botón acción
+  var btnAccion = document.getElementById('det-btn-accion');
+  if (a.accion_label) {
+    btnAccion.textContent = a.accion_label;
+    btnAccion.style.display = '';
+  } else {
+    btnAccion.style.display = 'none';
+  }
+
+  document.getElementById('detalle-vacio').style.display = 'none';
+  document.getElementById('detalle-contenido').style.display = 'block';
+}
+
+function accionDetalle() {
+  if (!_alertaActual) return;
+  var a = _alertasData[_alertaActual];
+  if (a && a.accion_url) window.location.href = a.accion_url;
+}
+
+function marcarLeidaActual() {
+  if (!_alertaActual) return;
+  var item = document.getElementById('item-' + _alertaActual);
+  if (item) {
+    item.style.borderLeft = '';
+    item.querySelector('div[style*="border-radius:50%"]') && item.querySelector('div[style*="border-radius:50%"]').remove();
+    var titulo = item.querySelector('div[style*="font-weight:600"]');
+    if (titulo) titulo.style.fontWeight = '400';
+  }
+  document.getElementById('det-btn-accion').textContent || null;
+  // En prod: POST a /alertas/{pk}/marcar-leida/
+}
+
+function marcarTodasLeidas() {
+  document.querySelectorAll('.alerta-item').forEach(function(el){
+    el.style.borderLeft = '';
+  });
+  // En prod: POST a /alertas/marcar-todas-leidas/
+}
+
+function filterAlertas(tipo, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('.alerta-item').forEach(function(el){
+    var show = true;
+    if (tipo === 'no-leidas') show = el.dataset.leida === 'false';
+    else if (tipo !== 'todas')  show = el.dataset.tipo === tipo;
+    el.style.display = show ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
+{% endblock %}
