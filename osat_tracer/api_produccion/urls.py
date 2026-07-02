@@ -38,8 +38,8 @@ urlpatterns = [
     #Oblea
     path('v1/list/Oblea/', views.ListObleaAPIView.as_view(), name='list_Obleas'),
     path('v1/create/Oblea/', views.CreateObleaAPIView.as_view(), name='create_Oblea'),
-    path('v1/detail/Oblea/<int:pk>/', views.DetailObleaAPIView.as_view(), name='detail_Oblea'),
-    
+    path('v1/detail/Oblea/<int:pk>/', views.DetailObleaConEtapasAPIView.as_view(), name='detail_Oblea'),
+    path('v1/update/Oblea/<int:pk>/', views.UpdateObleaAPIView.as_view(), name='update_Oblea'),
     # ----- TABLAS CON PK COMPUESTAS -----#
     #Las marco porque tengo duda de como llamarlas desde el endpoint
     #LineaProceso

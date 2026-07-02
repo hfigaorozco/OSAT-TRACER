@@ -211,7 +211,30 @@ class DetailObleaAPIView(APIView):
         Oblea = models.Oblea.objects.get(pk=pk)
         data = serializers.DetailObleaSerializer(Oblea, many=False).data
         return Response(data)
-    
+
+#DETAIL Movil
+class DetailObleaConEtapasAPIView(APIView):
+    """
+    Detalle de oblea para la app móvil — incluye trazabilidad completa.
+    Usado por GET /api/v1/detail/Oblea/<pk>/
+    """
+    def get(self, request, pk):
+        try:
+            oblea = models.Oblea.objects.select_related(
+                'orden', 'orden__proceso', 'estado', 'tipo'
+            ).get(pk=pk)
+        except models.Oblea.DoesNotExist:
+            return Response({'error': 'Lote no encontrado.'}, status=404)
+
+        data = serializers.DetailObleaConEtapasSerializer(oblea, many=False).data
+        return Response(data)
+
+#UPDATE Movil
+class UpdateObleaAPIView(generics.UpdateAPIView):
+    queryset = models.Oblea.objects.all()
+    serializer_class = serializers.UpdateObleaSerializer
+    lookup_field = 'pk'
+
 
 #Vistas  LineaProceso
 #CREATE
