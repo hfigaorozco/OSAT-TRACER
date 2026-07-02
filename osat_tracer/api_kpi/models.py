@@ -65,7 +65,7 @@ class Registro_Kpi(models.Model):
         db_table = 'registro_kpi'
         
     def __str__(self):
-        return self.numero
+        return str(self.numero)
 
 
 class Historial_Alertas(models.Model):
@@ -84,4 +84,4 @@ class Historial_Alertas(models.Model):
         ]
         
     def __str__(self):
-        return f"{self.registroKPI} - {self.alerta}"
+        return f"{str(self.registroKPI)} - {str(self.alerta)}"

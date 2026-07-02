@@ -106,7 +106,7 @@ class Orden(models.Model):
         db_table = 'orden' 
     
     def __str__(self):
-        return self.numero 
+        return str(self.numero)
 
 
 class Oblea(models.Model):
@@ -119,7 +119,7 @@ class Oblea(models.Model):
         db_table = 'oblea' 
     
     def __str__(self):
-        return self.numero 
+        return str(self.numero) 
     
     
 class LineaProceso(models.Model):
@@ -206,7 +206,7 @@ class Paso_Realizado(models.Model):
         db_table = 'paso_realizado' 
         
     def __str__(self):
-        return self.numero 
+        return str(self.numero) 
     
 
 class Historial_Defectos(models.Model):
@@ -224,5 +224,3 @@ class Historial_Defectos(models.Model):
         
     def __str__(self):
         return f"{self.defecto} - {self.pasoRealizado}"
-    
-    
