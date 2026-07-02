@@ -196,6 +196,7 @@ class Paso_Realizado(models.Model):
     numero = models.AutoField(primary_key=True)
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
+    observaciones = models.CharField(max_length=200)
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
