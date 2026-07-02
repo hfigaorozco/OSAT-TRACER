@@ -1,0 +1,64 @@
+[
+  {
+    "model": "api_inventario.pieza",
+    "pk": "strce",
+    "fields": {
+      "nombre": "Sustrato ce",
+      "descripcion": "Base de montaje para el die",
+      "stockMinimo": 5,
+      "stockActual": 20
+    }
+  },
+  {
+    "model": "api_inventario.pieza",
+    "pk": "hloro",
+    "fields": {
+      "nombre": "Hilo oro 25",
+      "descripcion": "Hilo conductor de oro 25μm para el wire bonding",
+      "stockMinimo": 10,
+      "stockActual": 50
+    }
+  },
+  {
+    "model": "api_inventario.pieza",
+    "pk": "resep",
+    "fields": {
+      "nombre": "Resina epox",
+      "descripcion": "Compuesto epóxico para encapsulado del die",
+      "stockMinimo": 8,
+      "stockActual": 30
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-1",
+      "pieza": "strce",
+      "cantPiezas": 200
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-1",
+      "pieza": "hloro",
+      "cantPiezas": 500
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-1",
+      "pieza": "resep",
+      "cantPiezas": 150
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-2",
+      "pieza": "strce",
+      "cantPiezas": 300
+    }
+  }
+]

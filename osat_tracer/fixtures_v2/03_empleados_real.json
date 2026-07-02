@@ -1,0 +1,282 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "hfigueroa",
+      "first_name": "Hector Armando",
+      "last_name": "Figueroa Orozco",
+      "email": "hfigueroa@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 1,
+    "fields": {
+      "nombre": "Hector Armando",
+      "primerApell": "Figueroa",
+      "seguApell": "Orozco",
+      "rfc": "FAOH900315KX7",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "admin",
+      "usuario": 1
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "username": "jflores",
+      "first_name": "Jose Manuel",
+      "last_name": "Flores Ruiz",
+      "email": "jfloresruiz@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 2,
+    "fields": {
+      "nombre": "Jose Manuel",
+      "primerApell": "Flores",
+      "seguApell": "Ruiz",
+      "rfc": "FORM881122QJ4",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "admin",
+      "usuario": 2
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "username": "arturjm",
+      "first_name": "Arturo Javier",
+      "last_name": "Jimenez de Lara Rizo",
+      "email": "arturjm@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 3,
+    "fields": {
+      "nombre": "Arturo Javier",
+      "primerApell": "Jimenez",
+      "seguApell": "de Lara Rizo",
+      "rfc": "JIRA920807MT9",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "admin",
+      "usuario": 3
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "username": "fabiansaiz",
+      "first_name": "Fabian Oswaldo",
+      "last_name": "Saiz Gonzalez",
+      "email": "fabiansaiz@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 4,
+    "fields": {
+      "nombre": "Fabian Oswaldo",
+      "primerApell": "Saiz",
+      "seguApell": "Gonzalez",
+      "rfc": "SAGF950418DL2",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "admin",
+      "usuario": 4
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "username": "isabelhdez",
+      "first_name": "Sofia Isabel",
+      "last_name": "Hernandez Espinoza",
+      "email": "isabelhdez@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 5,
+    "fields": {
+      "nombre": "Sofia Isabel",
+      "primerApell": "Hernandez",
+      "seguApell": "Espinoza",
+      "rfc": "HEES930926PN8",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "super",
+      "usuario": 5
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "username": "jhdez",
+      "first_name": "Juan Manuel",
+      "last_name": "Hernandez Medina",
+      "email": "jhdezmedina@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 6,
+    "fields": {
+      "nombre": "Juan Manuel",
+      "primerApell": "Hernandez",
+      "seguApell": "Medina",
+      "rfc": "HEMJ891210VC5",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 6
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "username": "bmaryn",
+      "first_name": "Brayan Jaciel",
+      "last_name": "Marin Loyo",
+      "email": "bmaryn@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 7,
+    "fields": {
+      "nombre": "Brayan Jaciel",
+      "primerApell": "Marin",
+      "seguApell": "Loyo",
+      "rfc": "MALB970731RW1",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 7
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "username": "kcoriap",
+      "first_name": "Karen Sherlyn",
+      "last_name": "Coria Peña",
+      "email": "karencoriap@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 8,
+    "fields": {
+      "nombre": "Karen Sherlyn",
+      "primerApell": "Coria",
+      "seguApell": "Peña",
+      "rfc": "COPK940214HF6",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 8
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "username": "lgallardo",
+      "first_name": "Luis David",
+      "last_name": "Gallardo Ramirez",
+      "email": "luisdgallardo@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 9,
+    "fields": {
+      "nombre": "Luis David",
+      "primerApell": "Gallardo",
+      "seguApell": "Ramirez",
+      "rfc": "GARL910603ZT3",
+      "fechaReg": "2026-06-01",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 9
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+      "username": "rmendivil",
+      "first_name": "Jesus Rafael",
+      "last_name": "Mendivil Perez",
+      "email": "rafaelmendivil@osat.mx",
+      "is_active": false,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$73ClIZ54OVSxUCBffmJnE2$1N0BpsZ/mnnocm67iH/zupN5PYJ5bqbL5QVSNkpRHoc="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 10,
+    "fields": {
+      "nombre": "Jesus Rafael",
+      "primerApell": "Mendivil",
+      "seguApell": "Perez",
+      "rfc": "MEPJ880925BX0",
+      "fechaReg": "2026-06-01",
+      "estado": "ina",
+      "rol": "opera",
+      "usuario": 10
+    }
+  }
+]
