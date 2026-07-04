@@ -130,6 +130,13 @@ class DetailLineaSerializer(serializers.ModelSerializer):
             "nombre",
         ]
 #UPDATE
+class UpdateLineaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Linea
+        fields = [
+            'nombre',
+            estado
+        ]
 
 
 #SERIALIZERS  proceso
@@ -218,6 +225,7 @@ class CreateOrdenSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Orden
         fields = [
+            "fecha",
             "horaIni",
             "horaFin",
             "proceso",
@@ -230,9 +238,9 @@ class ListOrdenSerializer(serializers.ModelSerializer):
         model = models.Orden
         fields = [
             "numero",
+            "fecha",
             "horaIni",
             "horaFin",
-            "fechaReg",
             "proceso",
             "estado",
         ] 
@@ -242,9 +250,9 @@ class DetailOrdenSerializer(serializers.ModelSerializer):
         model = models.Orden
         fields = [
             "numero",
+            "fecha",
             "horaIni",
             "horaFin",
-            "fechaReg",
             "proceso",
             "estado",
             "empleado",
