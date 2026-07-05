@@ -100,6 +100,7 @@ class Orden(models.Model):
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='orden')
     estado = models.ForeignKey(Estado_Orden, on_delete=models.RESTRICT, related_name='orden')
     empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='orden')
+    tipoOblea = models.ForeignKey(Tipo_Oblea, on_delete=models.RESTRICT, related_name='orden')
 
     class Meta:
         db_table = 'orden' 
@@ -113,7 +114,6 @@ class Oblea(models.Model):
     diesGenerados = models.IntegerField(default=(0))
     orden = models.ForeignKey(Orden, on_delete=models.RESTRICT, related_name='oblea')
     estado = models.ForeignKey(Estado_Oblea, on_delete=models.RESTRICT, related_name='oblea')
-    tipo = models.ForeignKey(Tipo_Oblea, on_delete=models.RESTRICT, related_name='oblea')
 
     class Meta:
         db_table = 'oblea' 
