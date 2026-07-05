@@ -50,7 +50,6 @@ class ProcesoAdmin(admin.ModelAdmin):
         "codigo",
         "nombre",
         "descripcion",
-        "imagen",
     ]
 
 @admin.register(models.Paso)
@@ -67,7 +66,8 @@ class OrdenAdmin(admin.ModelAdmin):
     list_display= [
         "horaIni",
         "horaFin",
-        "fechaReg",
+        "fecha",
+        "tipoOblea",
         "proceso",
         "estado",
         "empleado",
@@ -78,8 +78,7 @@ class ObleaAdmin(admin.ModelAdmin):
     list_display= [
         "diesGenerados",
         "orden",
-        "estado",
-        "tipo",        
+        "estado",        
     ]  
     
 @admin.register(models.LineaProceso)
@@ -117,6 +116,7 @@ class PasoRealizadoAdmin(admin.ModelAdmin):
     list_display= [
         "hora",
         "fecha",
+        "observaciones",
         "paso",
         "estado",
         "oblea",

@@ -70,7 +70,6 @@ class Proceso(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=80)
-    imagen = models.ImageField(upload_to='proceso/', null=True, blank=True)
     
     class Meta:
         db_table = 'proceso'
@@ -96,7 +95,7 @@ class Orden(models.Model):
     numero = models.AutoField(primary_key=True)
     horaIni = models.DateTimeField(auto_now=False, auto_now_add=False)
     horaFin = models.DateTimeField(auto_now=False, auto_now_add=False)
-    fechaReg = models.DateTimeField(auto_now=False, auto_now_add=True)
+    fecha = models.DateTimeField(auto_now=False, auto_now_add=False, default="2026-07-05 00:00:00+0000")
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='orden')
     estado = models.ForeignKey(Estado_Orden, on_delete=models.RESTRICT, related_name='orden')
     empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='orden')
@@ -196,6 +195,7 @@ class Paso_Realizado(models.Model):
     numero = models.AutoField(primary_key=True)
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
+    observaciones = models.CharField(max_length=200)
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
@@ -223,5 +223,3 @@ class Historial_Defectos(models.Model):
         
     def __str__(self):
         return f"{self.defecto} - {self.pasoRealizado}"
-    
-    
