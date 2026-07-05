@@ -623,3 +623,15 @@ class UpdateObleaSerializer(serializers.ModelSerializer):
                 )
 
         return instance
+
+class PasoSerializer(serializers.ModelSerializer):
+    tiempoEstimado = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Paso
+        fields = ['codigo', 'nombre', 'descripcion', 'tiempoEstimado']
+
+    def get_tiempoEstimado(self, obj):
+        if obj.tiempoEstimado is None:
+            return 0
+        return int(obj.tiempoEstimado.total_seconds())
