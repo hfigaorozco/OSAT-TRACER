@@ -135,7 +135,7 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             'nombre',
-            estado
+    
         ]
 
 

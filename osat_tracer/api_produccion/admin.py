@@ -50,7 +50,6 @@ class ProcesoAdmin(admin.ModelAdmin):
         "codigo",
         "nombre",
         "descripcion",
-        "imagen",
     ]
 
 @admin.register(models.Paso)
@@ -67,7 +66,7 @@ class OrdenAdmin(admin.ModelAdmin):
     list_display= [
         "horaIni",
         "horaFin",
-        "fechaReg",
+        "fecha",
         "tipoOblea",
         "proceso",
         "estado",
