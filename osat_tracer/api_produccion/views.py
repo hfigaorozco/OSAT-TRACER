@@ -337,7 +337,7 @@ class CreatePasoRealizadoAPIView(generics.CreateAPIView):
 class ListPasoRealizadoAPIView(APIView):
     
     def get(self, request):
-        PasoRealizados = models.PasoRealizado.objects.all()
+        PasoRealizados = models.Paso_Realizado.objects.all()
         data = serializers.ListPasoRealizadoSerializer(PasoRealizados, many=True).data
         return Response(data)
     
@@ -354,4 +354,6 @@ class ListHistorialDefectoAPIView(APIView):
         data = serializers.ListHistorialDefectoSerializer(HistorialDefectos, many=True).data
         return Response(data)
     
- 
+class ListPasoAPIView(generics.ListAPIView):
+    queryset = models.Paso.objects.all()
+    serializer_class = serializers.PasoSerializer

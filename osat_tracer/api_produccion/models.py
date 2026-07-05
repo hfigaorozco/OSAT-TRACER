@@ -105,7 +105,7 @@ class Orden(models.Model):
         db_table = 'orden' 
     
     def __str__(self):
-        return str(self.numero)
+        return f'ORD-{self.numero:04d}'
 
 
 class Oblea(models.Model):
@@ -118,9 +118,9 @@ class Oblea(models.Model):
         db_table = 'oblea' 
     
     def __str__(self):
-        return str(self.numero) 
-    
-    
+        return f'LOT-{self.numero:04d}'
+
+
 class LineaProceso(models.Model):
     linea = models.ForeignKey(Linea, on_delete=models.RESTRICT, related_name='linea_proceso')
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='linea_proceso')
@@ -205,7 +205,7 @@ class Paso_Realizado(models.Model):
         db_table = 'paso_realizado' 
         
     def __str__(self):
-        return str(self.numero) 
+        return str(self.numero)
     
 
 class Historial_Defectos(models.Model):

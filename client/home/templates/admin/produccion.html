@@ -19,14 +19,14 @@
   <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
     <div style="position:relative;">
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Search..." id="search-ordenes" oninput="filterOrdenes(this.value)"
+      <input type="text" placeholder="Buscar..." id="search-ordenes" oninput="filterOrdenes(this.value)"
         style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
     </div>
     <div style="position:relative;">
       <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
       <select id="filter-estado-orden" onchange="filterOrdenes()"
         style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:180px;outline:none;appearance:none;">
-        <option value="">Select</option>
+        <option value="">Todos</option>
         <option value="en_proceso">En proceso</option>
         <option value="aprobado">Aprobado</option>
         <option value="rechazado">Rechazado</option>
@@ -39,20 +39,19 @@
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;" id="tabla-ordenes">
       <thead style="background:#F7FAFC;">
         <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Número orden</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Número</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha inicio</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha fin est.</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Total lotes</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Inicio</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fin est.</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Lotes</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Completados</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;"></th>
         </tr>
       </thead>
       <tbody>
         {% for orden in ordenes %}
-        <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}"
-            style="transition:background .12s;">
+        <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}" style="transition:background .12s;">
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">{{ orden.numero }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.proceso }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.fecha_inicio }}</td>
@@ -61,7 +60,7 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;">
-                <div style="height:100%;border-radius:999px;background:{% if orden.pct >= 100 %}#16A85E{% elif orden.pct > 0 %}#16A85E{% else %}#E2E8F0{% endif %};width:{{ orden.pct }}%;"></div>
+                <div style="height:100%;border-radius:999px;background:#16A85E;width:{{ orden.pct }}%;"></div>
               </div>
               <span style="font-size:12px;color:#718096;white-space:nowrap;">{{ orden.completados }}/{{ orden.total_lotes }}</span>
             </div>
@@ -83,27 +82,16 @@
       </tbody>
     </table>
   </div>
-
-  <div style="display:flex;justify-content:center;gap:4px;">
-    <button class="pag-btn disabled">‹</button>
-    <button class="pag-btn active">1</button>
-    <button class="pag-btn">2</button>
-    <button class="pag-btn">3</button>
-    <button class="pag-btn">4</button>
-    <button class="pag-btn">›</button>
-  </div>
 </div>
 
 
 <!-- ═══ VISTA: DETALLE ORDEN ═══ -->
 <div id="vista-detalle-orden" style="display:none;">
-  <!-- Breadcrumb -->
   <nav style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);margin-bottom:20px;">
-    <button onclick="volverAOrdenes()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">Órdenes de Producción</button>
+    <button onclick="volverAOrdenes()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">Órdenes</button>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     <span id="det-orden-breadcrumb" style="color:#fff;font-weight:500;"></span>
   </nav>
-
   <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
@@ -112,29 +100,23 @@
       </div>
       <p id="det-orden-meta" style="font-size:13px;color:var(--text-muted);"></p>
     </div>
-    <button class="btn btn-primary" onclick="openModal('modal-agregar-lote')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Agregar Lote
-    </button>
+    <button class="btn btn-primary" onclick="openModal('modal-agregar-lote')">+ Agregar Lote</button>
   </div>
-
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Número orden</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Folio</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha inicio</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha fin est.</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Total lotes</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Completados</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Inicio</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fin</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Pasos</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Progreso</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;"></th>
         </tr>
       </thead>
-      <tbody id="tbody-lotes-orden">
-        <!-- Se llena con JS -->
-      </tbody>
+      <tbody id="tbody-lotes-orden"></tbody>
     </table>
   </div>
 </div>
@@ -142,44 +124,29 @@
 
 <!-- ═══ VISTA: DETALLE LOTE ═══ -->
 <div id="vista-detalle-lote" style="display:none;">
-
-  <!-- Breadcrumb -->
   <nav style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);margin-bottom:20px;">
-    <button onclick="volverAOrdenes()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">Órdenes de Producción</button>
+    <button onclick="volverAOrdenes()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">Órdenes</button>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     <button id="lote-bread-orden" onclick="volverAOrden()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;"></button>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     <span id="lote-bread-lote" style="color:#fff;font-weight:500;"></span>
   </nav>
 
-  <!-- Header con KPIs y acciones -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <div>
-      <h1 id="lote-titulo" class="page-title" style="margin:0 0 4px;"></h1>
+      <h1 id="lote-titulo" class="page-title" style="margin:0 0 4px;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;"></h1>
       <p id="lote-meta" style="font-size:13px;color:var(--text-muted);margin:0;"></p>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="openModal('modal-completar-etapa')"
-              style="background:#7C3AED;border-color:#7C3AED;" id="btn-completar-etapa">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Completar Etapa
-      </button>
-      <button class="btn btn-warning" onclick="openModal('modal-hold')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    <div style="display:flex;gap:10px;">
+      <button onclick="openModal('modal-hold')"
+              style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         Poner en Hold
-      </button>
-      <button class="btn btn-outline" onclick="openModal('modal-scrap')" style="border-color:#EF5350;color:#EF5350;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-        Registrar Scrap
-      </button>
-      <button class="btn btn-primary" onclick="openModal('modal-agregar-lote')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Agregar Lote
       </button>
     </div>
   </div>
 
-  <!-- Stats rápidos -->
+  <!-- KPI Stats -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
     <div class="card" style="padding:16px;">
       <div style="font-size:11px;color:#718096;margin-bottom:4px;">Dies iniciales</div>
@@ -199,25 +166,7 @@
     </div>
   </div>
 
-  <!-- Registro manual por código -->
-  <div style="background:#E8F5EE;border:1px solid #B2DFCB;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:200px;">
-      <div style="font-size:13px;font-weight:600;color:#155724;margin-bottom:2px;">Registro manual de etapa</div>
-      <div style="font-size:12px;color:#2D6A4F;">Desde la web o app móvil — ingresa el folio del lote para registrar el avance</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="input-codigo-lote-manual" class="form-control"
-             placeholder="Ej. LOT-2026-0047"
-             style="width:200px;background:#fff;color:#1A202C;border-color:#B2DFCB;">
-      <button class="btn btn-primary" style="background:#16A85E;border-color:#16A85E;white-space:nowrap;"
-              onclick="cargarLotePorCodigo()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Buscar y cargar
-      </button>
-    </div>
-  </div>
-
-  <!-- Trazabilidad del lote -->
+  <!-- Trazabilidad -->
   <div class="card">
     <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
     <div id="trazabilidad-container" style="display:flex;flex-direction:column;gap:6px;"></div>
@@ -249,243 +198,94 @@
   </div>
 </div>
 
-<!-- Modal agregar lote — 2 pasos -->
+<!-- Modal agregar lote -->
 <div class="modal-overlay" id="modal-agregar-lote" style="display:none;" onclick="if(event.target===this)closeModal('modal-agregar-lote')">
   <div class="modal-card modal-md">
-    <!-- Paso 1 -->
     <div id="lote-paso-1">
-      <div class="modal-header">
-        <h2>Registrar oblea/lote — Paso 1 de 2</h2>
-        <button class="modal-close" onclick="closeModal('modal-agregar-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
+      <div class="modal-header"><h2>Registrar lote — Paso 1 de 2</h2><button class="modal-close" onclick="closeModal('modal-agregar-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
       <div class="modal-body">
-        <p style="font-size:12px;font-weight:600;color:#7C3AED;margin-bottom:16px;">Paso 1: Recepción de oblea</p>
+        <p style="font-size:12px;font-weight:600;color:#7C3AED;margin-bottom:16px;">Recepción de oblea</p>
         <div class="form-group"><label class="form-label">Número de oblea <span class="required">*</span></label><input type="text" id="p1-num-oblea" class="form-control" required></div>
-        <div class="form-group">
-          <label class="form-label">Tecnología / nodo <span class="required">*</span></label>
-          <select id="p1-tecnologia" class="form-control" required>
-            <option value="">Seleccionar</option>
-            <option>28nm</option><option>65nm</option><option>130nm</option><option>180nm</option>
-          </select>
-        </div>
+        <div class="form-group"><label class="form-label">Tecnología <span class="required">*</span></label><select id="p1-tecnologia" class="form-control" required><option value="">Seleccionar</option><option>28nm</option><option>65nm</option><option>130nm</option><option>180nm</option></select></div>
         <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label">Total dies <span class="required">*</span></label>
-            <div style="position:relative;"><input type="number" id="p1-total-dies" class="form-control" min="1" required style="padding-right:32px;"><span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Dies buenos (wafer sort) <span class="required">*</span></label>
-            <div style="position:relative;"><input type="number" id="p1-dies-buenos" class="form-control" min="0" value="0" required style="padding-right:32px;"><span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span></div>
-          </div>
+          <div class="form-group"><label class="form-label">Total dies <span class="required">*</span></label><input type="number" id="p1-total-dies" class="form-control" min="1" required></div>
+          <div class="form-group"><label class="form-label">Dies buenos <span class="required">*</span></label><input type="number" id="p1-dies-buenos" class="form-control" min="0" value="0" required></div>
         </div>
         <div class="form-group"><label class="form-label">Fecha de recepción <span class="required">*</span></label><input type="date" id="p1-fecha" class="form-control" required></div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-agregar-lote')">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="irPaso2()">Siguiente</button>
-      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-agregar-lote')">Cancelar</button><button type="button" class="btn btn-primary" onclick="irPaso2()">Siguiente</button></div>
     </div>
-    <!-- Paso 2 -->
     <div id="lote-paso-2" style="display:none;">
-      <div class="modal-header">
-        <h2>Registrar oblea/lote — Paso 2 de 2</h2>
-        <button class="modal-close" onclick="closeModal('modal-agregar-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
+      <div class="modal-header"><h2>Registrar lote — Paso 2 de 2</h2><button class="modal-close" onclick="closeModal('modal-agregar-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
       <div class="modal-body">
-        <p style="font-size:12px;font-weight:600;color:#7C3AED;margin-bottom:16px;">Paso 2: Crear lote</p>
-        <div class="form-group">
-          <label class="form-label">Orden de producción <span class="required">*</span></label>
+        <p style="font-size:12px;font-weight:600;color:#7C3AED;margin-bottom:16px;">Crear lote</p>
+        <div class="form-group"><label class="form-label">Orden de producción <span class="required">*</span></label>
           <select id="p2-orden" class="form-control">
             {% for orden in ordenes %}<option value="{{ orden.pk }}">{{ orden.numero }}</option>{% endfor %}
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Código QR generado</label>
+        <div class="form-group"><label class="form-label">Código QR generado</label>
           <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:20px;text-align:center;">
-            <!-- QR simulado -->
-            <div style="width:80px;height:80px;margin:0 auto 8px;background:#E2E8F0;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A5568" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/></svg>
-            </div>
-            <p id="p2-codigo-lote" style="font-family:monospace;font-weight:700;font-size:14px;color:#1A202C;margin:0;">LOT-2026-005</p>
+            <p id="p2-codigo-lote" style="font-family:monospace;font-weight:700;font-size:14px;color:#1A202C;margin:0;">LOT-2026-001</p>
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="irPaso1()">Atrás</button>
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-agregar-lote')">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="registrarLote()">Registrar lote</button>
-      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="irPaso1()">Atrás</button><button type="button" class="btn btn-outline" onclick="closeModal('modal-agregar-lote')">Cancelar</button><button type="button" class="btn btn-primary" onclick="registrarLote()">Registrar lote</button></div>
     </div>
   </div>
 </div>
 
-<!-- Modal completar etapa — completo -->
-<div class="modal-overlay" id="modal-completar-etapa" style="display:none;" onclick="if(event.target===this)closeModal('modal-completar-etapa')">
-  <div class="modal-card modal-lg">
-    <div class="modal-header">
-      <h2>Completar etapa</h2>
-      <button class="modal-close" onclick="closeModal('modal-completar-etapa')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <!-- Info de la etapa actual -->
-      <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <div>
-          <div style="font-size:11px;color:#718096;margin-bottom:3px;">Lote</div>
-          <div id="comp-lote-folio" style="font-family:monospace;font-weight:700;color:#1A202C;font-size:14px;"></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:#718096;margin-bottom:3px;">Etapa actual</div>
-          <div id="comp-etapa-nombre" style="font-weight:600;color:#1A202C;font-size:14px;"></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:#718096;margin-bottom:3px;">Dies activos</div>
-          <div id="comp-dies-activos" style="font-weight:600;color:#1A202C;font-size:14px;"></div>
-        </div>
-      </div>
-
-      <!-- Registro manual por código (en caso de que no haya lote cargado) -->
-      <div id="comp-codigo-wrap" style="margin-bottom:16px;">
-        <label class="form-label">Código del lote <span class="required">*</span></label>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="comp-codigo-input" class="form-control"
-                 placeholder="Ej. LOT-2026-0047"
-                 style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
-          <button type="button" class="btn btn-outline" onclick="verificarCodigoLote()"
-                  style="white-space:nowrap;">Verificar</button>
-        </div>
-        <span class="form-hint">Puedes ingresar el código manualmente o escanearlo desde la app móvil.</span>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Máquina utilizada</label>
-          <select class="form-control" id="comp-maquina" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
-            <option value="">Sin máquina / N/A</option>
-            {% for maq in maquinas_disponibles %}
-            <option value="{{ maq.id }}">{{ maq.id_maquina }} — {{ maq.tipo }}</option>
-            {% empty %}
-            <option value="MQ-001">MQ-001 — Wire Bonder</option>
-            <option value="MQ-002">MQ-002 — Die Attach Machine</option>
-            <option value="MQ-003">MQ-003 — Dicing Saw</option>
-            <option value="MQ-004">MQ-004 — Molding Press</option>
-            <option value="MQ-005">MQ-005 — Cure Oven</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Operador responsable</label>
-          <select class="form-control" id="comp-operador" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
-            <option value="">Seleccionar operador…</option>
-            {% for emp in empleados %}
-            <option value="{{ emp.pk }}">{{ emp.primer_nombre }} {{ emp.apellido_paterno }}</option>
-            {% empty %}
-            <option value="1">Juan Torres</option>
-            <option value="2">Ana López</option>
-            <option value="3">Pedro Sánchez</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Dies buenos en esta etapa</label>
-          <div style="position:relative;">
-            <input type="number" id="comp-dies-buenos" class="form-control" min="0"
-                   style="background:#fff;color:#1A202C;border-color:#CBD5E0;padding-right:32px;">
-            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Dies scrapeados en esta etapa</label>
-          <div style="position:relative;">
-            <input type="number" id="comp-dies-scrap" class="form-control" min="0" value="0"
-                   oninput="calcularYieldPreview()"
-                   style="background:#fff;color:#1A202C;border-color:#CBD5E0;padding-right:32px;">
-            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview yield -->
-      <div id="yield-preview" style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:16px;font-size:13px;">
-        <span style="color:#718096;">Yield estimado esta etapa:</span>
-        <span id="yield-preview-val" style="font-weight:700;color:#16A85E;font-size:16px;">—</span>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Defectos detectados</label>
-        <div id="defectos-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-        <button type="button" onclick="agregarDefecto()"
-                style="background:none;border:none;color:#16A85E;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Agregar defecto
-        </button>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Materiales utilizados</label>
-        <div id="materiales-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-        <button type="button" onclick="agregarMaterial()"
-                style="background:none;border:none;color:#16A85E;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Agregar material
-        </button>
-      </div>
-
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Observaciones</label>
-        <textarea id="comp-obs" class="form-control" rows="3"
-                  placeholder="Notas adicionales sobre esta etapa..."
-                  style="background:#fff;color:#1A202C;border-color:#CBD5E0;"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline" onclick="closeModal('modal-completar-etapa')">Cancelar</button>
-      <button type="button" class="btn btn-primary" style="background:#7C3AED;border-color:#7C3AED;" onclick="submitCompletarEtapa()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Confirmar etapa completada
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal poner en Hold -->
+<!-- Modal Hold -->
 <div class="modal-overlay" id="modal-hold" style="display:none;" onclick="if(event.target===this)closeModal('modal-hold')">
   <div class="modal-card modal-md">
     <div class="modal-header"><h2>Poner lote en Hold</h2><button class="modal-close" onclick="closeModal('modal-hold')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:#2D3748;margin-bottom:16px;">El lote <strong id="hold-folio"></strong> quedará detenido hasta que se resuelva el motivo.</p>
-      <div class="form-group">
-        <label class="form-label">Motivo <span class="required">*</span></label>
-        <textarea id="hold-motivo" class="form-control" rows="4" placeholder="Describe el motivo del hold..." required></textarea>
-      </div>
+      <p style="font-size:13px;color:#2D3748;margin-bottom:16px;">El lote <strong id="hold-folio"></strong> quedará detenido hasta resolver el motivo.</p>
+      <div class="form-group"><label class="form-label">Motivo <span class="required">*</span></label><textarea id="hold-motivo" class="form-control" rows="3" placeholder="Describe el motivo…" required></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline" onclick="closeModal('modal-hold')">Cancelar</button>
-      <button type="button" class="btn btn-warning" onclick="confirmarHold()">Confirmar Hold</button>
-    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-hold')">Cancelar</button><button type="button" class="btn btn-warning" onclick="confirmarHold()">Confirmar Hold</button></div>
   </div>
 </div>
 
-<!-- Modal registrar scrap -->
-<div class="modal-overlay" id="modal-scrap" style="display:none;" onclick="if(event.target===this)closeModal('modal-scrap')">
-  <div class="modal-card modal-md">
-    <div class="modal-header"><h2>Registrar scrap</h2><button class="modal-close" onclick="closeModal('modal-scrap')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+<!-- Modal completar etapa (compartido) -->
+<div class="modal-overlay" id="modal-completar-etapa" style="display:none;" onclick="if(event.target===this)closeModal('modal-completar-etapa')">
+  <div class="modal-card modal-lg">
+    <div class="modal-header">
+      <div>
+        <h2 id="comp-modal-titulo" style="margin:0 0 2px;">Completar etapa</h2>
+        <div style="font-size:12px;color:#718096;" id="comp-modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-completar-etapa')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
     <div class="modal-body">
-      <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div><div style="font-size:11px;color:#718096;margin-bottom:2px;">Etapa actual</div><div id="scrap-etapa" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div></div>
-        <div><div style="font-size:11px;color:#718096;margin-bottom:2px;">Unidades restantes</div><div id="scrap-unidades" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div></div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Resultado <span class="required">*</span></label>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#D4EDDA;color:#155724;font-weight:600;font-size:13px;cursor:pointer;">✓ Aprobado</div>
+          <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#fff;color:#718096;font-weight:600;font-size:13px;cursor:pointer;">✕ Rechazado</div>
+          <div id="btn-res-hold" onclick="selectResultadoComp('hold')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#fff;color:#718096;font-weight:600;font-size:13px;cursor:pointer;">⏸ Hold</div>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Cantidad a descartar <span class="required">*</span></label>
-        <div style="position:relative;"><input type="number" class="form-control" min="0" value="0" style="padding-right:32px;"><span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">▲</span></div>
+        <label class="form-label">Unidades con scrap en esta etapa</label>
+        <input type="number" id="comp-scrap" class="form-control" min="0" value="0" oninput="calcularYieldPreviewComp()" style="max-width:180px;">
+        <div id="yield-preview-comp" style="margin-top:8px;font-size:12px;color:#718096;"></div>
       </div>
-      <div class="form-group"><label class="form-label">Causa del scrap <span class="required">*</span></label><textarea class="form-control" rows="3" placeholder="Describe la causa..." required></textarea></div>
+      <div class="form-group">
+        <label class="form-label">Defectos detectados</label>
+        <div id="defectos-comp-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+        <button type="button" onclick="agregarDefectoComp()" style="background:none;border:1px dashed #CBD5E0;color:#718096;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Agregar defecto
+        </button>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Comentarios</label>
+        <textarea id="comp-comentarios" class="form-control" rows="3" placeholder="Observaciones sobre esta etapa…"></textarea>
+      </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-outline" onclick="closeModal('modal-scrap')">Cancelar</button>
-      <button type="button" class="btn btn-danger">Confirmar scrap</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-completar-etapa')">Cancelar</button>
+      <button type="button" class="btn btn-primary" style="min-width:160px;" onclick="submitCompletarEtapa()">✓ Confirmar</button>
     </div>
   </div>
 </div>
@@ -493,12 +293,20 @@
 
 {% block extra_js %}
 <script>
-// ── Datos de ejemplo ──
-var _ordenes = {{ ordenes_json|safe }};
-var _lotes = {{ lotes_json|safe }};
+var _ordenes    = {{ ordenes_json|safe }};
+var _lotes      = {{ lotes_json|safe }};
 var _ordenActual = null;
-var _loteActual = null;
+var _loteActual  = null;
+var _compResultado = 'aprobado';
+var _defCompCount  = 0;
+var _catalogoDefectos = [
+  {codigo:'defic', descripcion:'Wire bonding deficiente'},
+  {codigo:'delam', descripcion:'Delaminación de encapsulado'},
+  {codigo:'griet', descripcion:'Grieta en die'},
+  {codigo:'desal', descripcion:'Desalineación en die'},
+];
 
+// ── Filtros ──
 function filterOrdenes(q) {
   q = (q || '').toLowerCase();
   var estado = document.getElementById('filter-estado-orden').value;
@@ -509,13 +317,13 @@ function filterOrdenes(q) {
   });
 }
 
+// ── Navegación ──
 function abrirOrden(pk, numero, proceso, fi, ff, estado) {
-  _ordenActual = { pk, numero, proceso, fi, ff, estado };
+  _ordenActual = {pk, numero, proceso, fi, ff, estado};
   document.getElementById('det-orden-breadcrumb').textContent = numero;
   document.getElementById('det-orden-titulo').textContent = numero;
   document.getElementById('det-orden-meta').textContent = proceso + ' · ' + fi + ' → ' + ff;
 
-  var badge = document.getElementById('det-orden-badge');
   var badgeMap = {
     en_proceso: ['#FFF3CD','#856404','En proceso'],
     aprobado:   ['#D4EDDA','#155724','Aprobado'],
@@ -523,6 +331,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
     pendiente:  ['#E9ECEF','#495057','Pendiente'],
   };
   var b = badgeMap[estado] || badgeMap.pendiente;
+  var badge = document.getElementById('det-orden-badge');
   badge.style.cssText = 'background:'+b[0]+';color:'+b[1]+';padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;';
   badge.textContent = b[2];
 
@@ -530,26 +339,20 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   var lotesDeLaOrden = _lotes.filter(function(l){ return l.orden_pk === pk; });
   tbody.innerHTML = lotesDeLaOrden.map(function(l) {
     var pct = l.total_pasos > 0 ? Math.round((l.pasos_completados/l.total_pasos)*100) : 0;
-    var badgeEstado = l.estado === 'en_proceso'
-      ? '<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">En proceso</span>'
+    var badgeEdo = l.estado === 'en_proceso'
+      ? '<span style="background:#FFF3CD;color:#856404;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;">En proceso</span>'
       : l.estado === 'aprobado'
-        ? '<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Aprobado</span>'
-        : l.estado === 'rechazado'
-          ? '<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Rechazado</span>'
-          : '<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Pendiente</span>';
-    return '<tr style="transition:background .12s;cursor:pointer;" onmouseover="this.style.background=\'#F0FBF6\'" onmouseout="this.style.background=\'\'" onclick="abrirLote('+l.pk+')">' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">' + l.folio + '</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">' + l.proceso + '</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">' + l.fecha_inicio + '</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">' + l.fecha_fin + '</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">' + l.total_pasos + '</td>' +
+        ? '<span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;">Aprobado</span>'
+        : '<span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;">Pendiente</span>';
+    return '<tr style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.fecha_inicio+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.fecha_fin+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">'+l.total_pasos+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;"><div style="height:100%;background:#16A85E;border-radius:999px;width:'+pct+'%;"></div></div><span style="font-size:12px;color:#718096;white-space:nowrap;">'+l.pasos_completados+'/'+l.total_pasos+'</span></div></td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">' + badgeEstado + '</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">' +
-        '<button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;" title="Ver lote">' +
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-        '</button>' +
-      '</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">'+badgeEdo+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
     '</tr>';
   }).join('') || '<tr><td colspan="8" style="padding:48px;text-align:center;color:#718096;">No hay lotes en esta orden</td></tr>';
 
@@ -564,11 +367,10 @@ function abrirLote(pk) {
   _loteActual = lote;
 
   document.getElementById('lote-bread-orden').textContent = _ordenActual ? _ordenActual.numero : 'Orden';
-  document.getElementById('lote-bread-lote').textContent = lote.folio;
-  document.getElementById('lote-titulo').textContent = lote.folio;
-  document.getElementById('lote-meta').textContent = lote.proceso;
+  document.getElementById('lote-bread-lote').textContent  = lote.folio;
+  document.getElementById('lote-titulo').textContent      = lote.folio;
+  document.getElementById('lote-meta').textContent        = lote.proceso;
 
-  // Stats
   document.getElementById('lote-stat-ini').textContent   = lote.dies_iniciales;
   document.getElementById('lote-stat-act').textContent   = lote.dies_activos;
   document.getElementById('lote-stat-scrap').textContent = lote.scrap;
@@ -576,24 +378,9 @@ function abrirLote(pk) {
   yieldEl.textContent = lote.yield_pct + '%';
   yieldEl.style.color = lote.yield_pct >= 95 ? '#16A85E' : lote.yield_pct >= 75 ? '#F5A623' : '#EF5350';
 
-  // Pre-llenar código en el campo manual
-  var inputManual = document.getElementById('input-codigo-lote-manual');
-  if (inputManual) inputManual.value = lote.folio;
-
-  // Pre-llenar modal completar etapa
   var etapaActiva = lote.etapas.find(function(e){ return e.estado === 'en_curso'; });
-  document.getElementById('comp-lote-folio').textContent    = lote.folio;
-  document.getElementById('comp-etapa-nombre').textContent  = etapaActiva ? etapaActiva.nombre : 'Sin etapa activa';
-  document.getElementById('comp-dies-activos').textContent  = lote.dies_activos;
-  document.getElementById('comp-codigo-input').value        = lote.folio;
-  document.getElementById('comp-dies-buenos').value         = lote.dies_activos;
-
-  // Pre-llenar Hold y Scrap
   document.getElementById('hold-folio').textContent = lote.folio;
-  document.getElementById('scrap-etapa').textContent   = etapaActiva ? etapaActiva.nombre : '—';
-  document.getElementById('scrap-unidades').textContent = lote.dies_activos;
 
-  // Renderizar trazabilidad
   renderTrazabilidad(lote);
 
   document.getElementById('vista-ordenes').style.display = 'none';
@@ -601,8 +388,11 @@ function abrirLote(pk) {
   document.getElementById('vista-detalle-lote').style.display = 'block';
 }
 
+// ── Renderizar trazabilidad con barra de progreso ──
 function renderTrazabilidad(lote) {
   var container = document.getElementById('trazabilidad-container');
+  var now = new Date();
+
   container.innerHTML = lote.etapas.map(function(etapa, i) {
     var isCompleted = etapa.estado === 'aprobado';
     var isActive    = etapa.estado === 'en_curso';
@@ -610,9 +400,8 @@ function renderTrazabilidad(lote) {
 
     var circleStyle = isCompleted
       ? 'background:#16A85E;color:#fff;'
-      : isActive
-        ? 'background:#009EAF;color:#fff;'
-        : 'background:#E2E8F0;color:#718096;';
+      : isActive ? 'background:#009EAF;color:#fff;'
+      : 'background:#E2E8F0;color:#718096;';
 
     var badgeHtml = isCompleted
       ? '<span style="background:#D4EDDA;color:#155724;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-left:8px;">Aprobado</span>'
@@ -624,55 +413,116 @@ function renderTrazabilidad(lote) {
       ? '<div style="font-size:12px;color:#718096;margin-top:2px;">'+etapa.meta+'</div>'
       : '';
 
-    var detalleHtml = '';
-    if (isCompleted && etapa.detalle) {
-      var d = etapa.detalle;
-      detalleHtml = '<div class="etapa-detalle-body" style="display:none;margin:10px 0 0 38px;padding:12px 14px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:12.5px;">' +
-        (d.defectos && d.defectos.length
-          ? '<div style="margin-bottom:8px;"><span style="color:#4A5568;font-weight:500;">Defectos detectados:</span>' +
-            d.defectos.map(function(def){ return '<div style="color:#EF5350;margin-top:3px;">• '+def+'</div>'; }).join('') + '</div>'
-          : '') +
-        (d.materiales && d.materiales.length
-          ? '<div><span style="color:#4A5568;font-weight:500;">Materiales utilizados:</span>' +
-            d.materiales.map(function(m){ return '<div style="color:#4A5568;margin-top:3px;">• '+m+'</div>'; }).join('') + '</div>'
-          : '') +
+    // Barra de progreso para etapa activa
+    var progressHtml = '';
+    if (isActive && etapa.tiempo_estimado_seg > 0) {
+      var idSuffix = 'step-' + i;
+      progressHtml = '<div style="margin-top:8px;" id="prog-wrap-'+idSuffix+'">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">' +
+          '<span style="font-size:10px;color:#718096;">Progreso del paso</span>' +
+          '<span id="prog-pct-'+idSuffix+'" style="font-size:10px;font-weight:700;color:#009EAF;">0%</span>' +
+        '</div>' +
+        '<div style="height:5px;background:#E2E8F0;border-radius:999px;overflow:hidden;">' +
+          '<div id="prog-bar-'+idSuffix+'" style="height:100%;width:0%;border-radius:999px;transition:width .4s;background:linear-gradient(90deg,#009EAF,#16A85E);"></div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:#718096;margin-top:3px;">' +
+          '<span id="prog-elapsed-'+idSuffix+'">00:00</span> transcurrido' +
+        '</div>' +
       '</div>';
+    } else if (isActive) {
+      progressHtml = '<div style="margin-top:6px;font-size:11px;color:#718096;font-style:italic;">Sin tiempo estimado configurado</div>';
     }
 
-    var rowBg    = isActive  ? 'background:#E0F7FA;border:1px solid #B2EBF2;' : 'border:1px solid transparent;';
-    var rowOp    = isPending ? 'opacity:.5;' : '';
-    var chevron  = isCompleted
+    // Botón completar etapa — SOLO en el paso activo, dentro del paso
+    var completarBtn = isActive
+      ? '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+')" '+
+        'style="padding:8px 18px;background:#7C3AED;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">'+
+        '✓ Completar etapa'+
+        '</button>'
+      : '';
+
+    var rowBg   = isActive ? 'background:#E0F7FA;border:1px solid #B2EBF2;' : 'border:1px solid transparent;';
+    var rowOp   = isPending ? 'opacity:.45;' : '';
+    var chevron = isCompleted
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>'
-      : isActive
-        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
-        : '';
+      : '';
+    var clickHandler = isCompleted ? 'onclick="toggleEtapaDetalle(this)"' : '';
 
-    var clickHandler = (isCompleted || isActive) ? 'onclick="toggleEtapaDetalle(this)"' : '';
-
-    return '<div class="etapa-row" style="border-radius:10px;padding:12px 14px;'+rowBg+rowOp+'cursor:'+(isCompleted||isActive?'pointer':'default')+';" '+clickHandler+'>' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
-          '<div style="width:28px;height:28px;border-radius:50%;'+circleStyle+'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">' +
+    return '<div class="etapa-row" style="border-radius:10px;padding:14px 16px;'+rowBg+rowOp+'cursor:'+(isCompleted?'pointer':'default')+';" '+clickHandler+'>' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+        '<div style="display:flex;align-items:flex-start;gap:12px;flex:1;">' +
+          '<div style="width:30px;height:30px;border-radius:50%;'+circleStyle+'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;">' +
             (isCompleted
-              ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+              ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
               : (i+1)) +
           '</div>' +
-          '<div>' +
-            '<span style="font-size:14px;font-weight:'+(isActive?'600':'400')+';color:'+(isPending?'#A0AEC0':'#1A202C')+';">'+etapa.nombre+'</span>' +
-            badgeHtml + metaHtml +
+          '<div style="flex:1;">' +
+            '<div style="display:flex;align-items:center;flex-wrap:wrap;">' +
+              '<span style="font-size:14px;font-weight:'+(isActive?'600':'400')+';color:'+(isPending?'#A0AEC0':'#1A202C')+';">'+etapa.nombre+'</span>' +
+              badgeHtml +
+            '</div>' +
+            metaHtml +
+            progressHtml +
           '</div>' +
         '</div>' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
-          (isActive
-            ? '<button onclick="event.stopPropagation();openModal(\'modal-completar-etapa\')" '+
-              'style="padding:5px 12px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Completar</button>'
-            : '') +
-          chevron +
+        '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
+          completarBtn + chevron +
         '</div>' +
       '</div>' +
-      detalleHtml +
+      (isCompleted && etapa.detalle
+        ? '<div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:12.5px;">'+
+          (etapa.detalle.defectos && etapa.detalle.defectos.length ? '<div>Defectos: '+etapa.detalle.defectos.join(', ')+'</div>' : '')+
+          '</div>'
+        : '') +
     '</div>';
   }).join('');
+
+  // Iniciar timers de progreso para etapas activas
+  lote.etapas.forEach(function(etapa, i) {
+    if (etapa.estado !== 'en_curso' || !etapa.tiempo_estimado_seg) return;
+    var idSuffix = 'step-' + i;
+    var barEl   = document.getElementById('prog-bar-' + idSuffix);
+    var pctEl   = document.getElementById('prog-pct-' + idSuffix);
+    var elapsEl = document.getElementById('prog-elapsed-' + idSuffix);
+    if (!barEl) return;
+
+    var estimado = etapa.tiempo_estimado_seg;
+    var horaInicio = etapa.hora_inicio_iso || '';
+
+    var _startTime = horaInicio ? (function(){
+      var now = new Date(), p = horaInicio.split(':');
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+        parseInt(p[0]), parseInt(p[1]), parseInt(p[2]||0));
+    })() : new Date();
+
+    function calcElapsed() {
+      return Math.max(0, Math.floor((new Date() - _startTime) / 1000));
+    }
+
+    function fmt(s) {
+      var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      return h > 0 ? h+'h '+String(m).padStart(2,'0')+'m' : String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+    }
+
+    function update() {
+      var elapsed = calcElapsed();
+      var pct = Math.min(100, Math.round(elapsed / estimado * 100));
+      barEl.style.width = pct + '%';
+      barEl.style.background = pct >= 100
+        ? 'linear-gradient(90deg,#F5A623,#EF5350)'
+        : pct >= 80 ? 'linear-gradient(90deg,#F5A623,#F59E0B)'
+        : 'linear-gradient(90deg,#009EAF,#16A85E)';
+      pctEl.style.color = pct >= 100 ? '#EF5350' : pct >= 80 ? '#F5A623' : '#009EAF';
+      pctEl.textContent = pct + '%';
+      elapsEl.textContent = fmt(elapsed);
+      if (pct >= 100 && !window['_alerted_' + idSuffix]) {
+        window['_alerted_' + idSuffix] = true;
+        showToast('Tiempo estimado completado — ' + etapa.nombre, 'warning');
+      }
+    }
+    update();
+    setInterval(update, 10000);
+  });
 }
 
 function toggleEtapaDetalle(el) {
@@ -680,139 +530,117 @@ function toggleEtapaDetalle(el) {
   if (det) det.style.display = det.style.display === 'none' ? 'block' : 'none';
 }
 
-// ── Búsqueda manual por código ──
-function cargarLotePorCodigo() {
-  var codigo = document.getElementById('input-codigo-lote-manual').value.trim().toUpperCase();
-  if (!codigo) { alert('Ingresa el código del lote'); return; }
-  var lote = _lotes.find(function(l){ return l.folio.toUpperCase() === codigo; });
-  if (lote) {
-    abrirLote(lote.pk);
-  } else {
-    alert('Lote "' + codigo + '" no encontrado. Verifica el folio e intenta de nuevo.');
-  }
+// ── Completar etapa ──
+function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos) {
+  _compResultado = 'aprobado';
+  _defCompCount  = 0;
+  document.getElementById('defectos-comp-list').innerHTML = '';
+  document.getElementById('comp-scrap').value = 0;
+  document.getElementById('comp-comentarios').value = '';
+  document.getElementById('yield-preview-comp').textContent = '';
+  selectResultadoComp('aprobado');
+  document.getElementById('comp-modal-titulo').textContent = 'Completar — ' + nombreEtapa;
+  document.getElementById('comp-modal-sub').textContent    = loteFolio + ' · ' + diesActivos + ' dies activos';
+  openModal('modal-completar-etapa');
 }
 
-function verificarCodigoLote() {
-  var codigo = document.getElementById('comp-codigo-input').value.trim().toUpperCase();
-  var lote = _lotes.find(function(l){ return l.folio.toUpperCase() === codigo; });
-  if (lote) {
-    document.getElementById('comp-lote-folio').textContent   = lote.folio;
-    document.getElementById('comp-dies-activos').textContent = lote.dies_activos;
-    document.getElementById('comp-dies-buenos').value        = lote.dies_activos;
-    var etapaActiva = lote.etapas.find(function(e){ return e.estado === 'en_curso'; });
-    document.getElementById('comp-etapa-nombre').textContent = etapaActiva ? etapaActiva.nombre : 'Sin etapa activa';
-    alert('Lote verificado: ' + lote.folio);
-  } else {
-    alert('Lote no encontrado: ' + codigo);
-  }
-}
-
-// ── Yield preview ──
-function calcularYieldPreview() {
-  var activos = parseInt(document.getElementById('comp-dies-activos').textContent) || 0;
-  var scrap   = parseInt(document.getElementById('comp-dies-scrap').value) || 0;
-  var el      = document.getElementById('yield-preview-val');
-  if (activos > 0) {
-    var y = ((activos - scrap) / activos * 100).toFixed(1);
-    el.textContent = y + '%';
-    el.style.color = y >= 95 ? '#16A85E' : y >= 75 ? '#F5A623' : '#EF5350';
-  } else {
-    el.textContent = '—';
-  }
-}
-
-// ── Defectos y materiales dinámicos ──
-var _defCount = 0, _matCount = 0;
-function agregarDefecto() {
-  _defCount++;
-  var list = document.getElementById('defectos-list');
-  var row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:8px;';
-  row.innerHTML =
-    '<select class="form-control" name="defecto_'+_defCount+'" style="background:#fff;color:#1A202C;border-color:#CBD5E0;flex:1;">' +
-      '<option value="">Seleccionar tipo…</option>' +
-      '<option>Wire bond desalineado</option>' +
-      '<option>Die mal posicionado</option>' +
-      '<option>Delamination</option>' +
-      '<option>Cortocircuito</option>' +
-      '<option>Otro</option>' +
-    '</select>' +
-    '<button type="button" onclick="this.closest(\'div\').remove()" ' +
-    'style="color:#EF5350;background:none;border:none;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>';
-  list.appendChild(row);
-}
-
-function agregarMaterial() {
-  _matCount++;
-  var list = document.getElementById('materiales-list');
-  var row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:8px;';
-  row.innerHTML =
-    '<input type="text" class="form-control" name="material_'+_matCount+'" ' +
-    'placeholder="Ej. Pasta conductora 15g" style="background:#fff;color:#1A202C;border-color:#CBD5E0;flex:1;">' +
-    '<button type="button" onclick="this.closest(\'div\').remove()" ' +
-    'style="color:#EF5350;background:none;border:none;cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>';
-  list.appendChild(row);
-}
-
-// ── Submit completar etapa ──
-function submitCompletarEtapa() {
-  var codigo = document.getElementById('comp-codigo-input').value.trim();
-  var etapa  = document.getElementById('comp-etapa-nombre').textContent;
-  var buenos = document.getElementById('comp-dies-buenos').value;
-  var scrap  = document.getElementById('comp-dies-scrap').value;
-
-  if (!codigo) { alert('Ingresa o verifica el código del lote'); return; }
-  if (!buenos)  { alert('Ingresa la cantidad de dies buenos'); return; }
-
-  // En producción: POST al backend con todos los datos
-  closeModal('modal-completar-etapa');
-
-  // Actualizar trazabilidad en el cliente (simulación)
-  if (_loteActual) {
-    var etapaIdx = _loteActual.etapas.findIndex(function(e){ return e.estado === 'en_curso'; });
-    if (etapaIdx >= 0) {
-      _loteActual.etapas[etapaIdx].estado = 'aprobado';
-      _loteActual.etapas[etapaIdx].meta   = 'Completado por Admin · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
-      _loteActual.etapas[etapaIdx].detalle = {
-        defectos:   [],
-        materiales: [document.getElementById('comp-obs').value].filter(Boolean)
-      };
-      // Pasar siguiente a en_curso
-      if (etapaIdx + 1 < _loteActual.etapas.length) {
-        _loteActual.etapas[etapaIdx + 1].estado = 'en_curso';
-      }
-      _loteActual.pasos_completados = (parseInt(_loteActual.pasos_completados)||0) + 1;
-      renderTrazabilidad(_loteActual);
-
-      // Actualizar stats
-      var scrapN = parseInt(scrap) || 0;
-      _loteActual.dies_activos -= scrapN;
-      _loteActual.scrap += scrapN;
-      _loteActual.yield_pct = parseFloat(((_loteActual.dies_activos / _loteActual.dies_iniciales) * 100).toFixed(1));
-      document.getElementById('lote-stat-act').textContent   = _loteActual.dies_activos;
-      document.getElementById('lote-stat-scrap').textContent = _loteActual.scrap;
-      var yEl = document.getElementById('lote-stat-yield');
-      yEl.textContent = _loteActual.yield_pct + '%';
-      yEl.style.color = _loteActual.yield_pct >= 95 ? '#16A85E' : _loteActual.yield_pct >= 75 ? '#F5A623' : '#EF5350';
+function selectResultadoComp(val) {
+  _compResultado = val;
+  var configs = {
+    aprobado:  {bg:'#D4EDDA', color:'#155724', border:'#16A85E'},
+    rechazado: {bg:'#F8D7DA', color:'#721C24', border:'#EF5350'},
+    hold:      {bg:'#FFF3CD', color:'#856404', border:'#F5A623'},
+  };
+  ['aprobado','rechazado','hold'].forEach(function(o) {
+    var btn = document.getElementById('btn-res-'+o);
+    if (!btn) return;
+    if (o === val) {
+      var c = configs[o];
+      btn.style.border = '1.5px solid '+c.border;
+      btn.style.background = c.bg;
+      btn.style.color = c.color;
+    } else {
+      btn.style.border = '1.5px solid #CBD5E0';
+      btn.style.background = '#fff';
+      btn.style.color = '#718096';
     }
-  }
-
-  // Toast de confirmación
-  showToast('Etapa "' + etapa + '" completada exitosamente', 'success');
+  });
 }
 
+function calcularYieldPreviewComp() {
+  var sub   = document.getElementById('comp-modal-sub').textContent;
+  var match = sub.match(/(\d+)\s*dies/);
+  var total = match ? parseInt(match[1]) : 0;
+  var scrap = parseInt(document.getElementById('comp-scrap').value) || 0;
+  var el    = document.getElementById('yield-preview-comp');
+  if (total > 0 && scrap <= total) {
+    var y = (((total-scrap)/total)*100).toFixed(1);
+    el.style.color = y >= 90 ? '#16A85E' : y >= 75 ? '#F5A623' : '#EF5350';
+    el.textContent = 'Yield estimado: ' + y + '%';
+  } else { el.textContent = ''; }
+}
+
+function agregarDefectoComp() {
+  _defCompCount++;
+  var list = document.getElementById('defectos-comp-list');
+  var row  = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 80px 120px 32px;gap:8px;align-items:center;';
+  row.innerHTML =
+    '<select class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">' +
+      '<option value="">Tipo de defecto…</option>' +
+      _catalogoDefectos.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
+    '</select>' +
+    '<input type="number" class="form-control" min="1" value="1" placeholder="Cant." style="background:#fff;color:#1A202C;border-color:#CBD5E0;">' +
+    '<select class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;"><option value="scrap">Scrap</option><option value="rework">Rework</option><option value="hold">Hold</option></select>' +
+    '<button type="button" onclick="this.closest(\'div\').remove()" style="background:none;border:none;color:#EF5350;cursor:pointer;font-size:18px;line-height:1;">✕</button>';
+  list.appendChild(row);
+}
+
+function submitCompletarEtapa() {
+  if (!_loteActual) { showToast('No hay lote cargado', 'error'); return; }
+  var etapaIdx = _loteActual.etapas.findIndex(function(e){ return e.estado === 'en_curso'; });
+  if (etapaIdx < 0) { showToast('No hay etapa en curso', 'error'); return; }
+
+  var scrap = parseInt(document.getElementById('comp-scrap').value) || 0;
+
+  _loteActual.etapas[etapaIdx].estado = _compResultado === 'aprobado' ? 'aprobado' : _compResultado;
+  _loteActual.etapas[etapaIdx].meta   = 'Completado · ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+
+  if (_compResultado === 'aprobado' && etapaIdx + 1 < _loteActual.etapas.length) {
+    _loteActual.etapas[etapaIdx+1].estado = 'en_curso';
+  }
+
+  _loteActual.pasos_completados = (_loteActual.pasos_completados||0) + 1;
+  _loteActual.scrap        = (_loteActual.scrap||0) + scrap;
+  _loteActual.dies_activos = Math.max(0, (_loteActual.dies_activos||0) - scrap);
+  _loteActual.yield_pct    = _loteActual.dies_iniciales > 0
+    ? parseFloat((_loteActual.dies_activos/_loteActual.dies_iniciales*100).toFixed(1)) : 0;
+
+  renderTrazabilidad(_loteActual);
+
+  var yEl = document.getElementById('lote-stat-yield');
+  document.getElementById('lote-stat-act').textContent   = _loteActual.dies_activos;
+  document.getElementById('lote-stat-scrap').textContent = _loteActual.scrap;
+  yEl.textContent = _loteActual.yield_pct + '%';
+  yEl.style.color = _loteActual.yield_pct >= 95 ? '#16A85E' : _loteActual.yield_pct >= 75 ? '#F5A623' : '#EF5350';
+
+  closeModal('modal-completar-etapa');
+  var msg = _compResultado === 'aprobado' ? 'Etapa completada ✓' : _compResultado === 'hold' ? 'Lote puesto en Hold' : 'Etapa marcada como rechazada';
+  showToast(msg, _compResultado === 'aprobado' ? 'success' : 'warning');
+}
+
+// ── Navegación ──
 function volverAOrdenes() {
   document.getElementById('vista-ordenes').style.display = 'block';
   document.getElementById('vista-detalle-orden').style.display = 'none';
   document.getElementById('vista-detalle-lote').style.display = 'none';
   _ordenActual = null; _loteActual = null;
 }
-
 function volverAOrden() {
   if (_ordenActual) abrirOrden(_ordenActual.pk, _ordenActual.numero, _ordenActual.proceso, _ordenActual.fi, _ordenActual.ff, _ordenActual.estado);
 }
 
+// ── Registrar lote ──
 function irPaso2() {
   if (!document.getElementById('p1-num-oblea').value || !document.getElementById('p1-tecnologia').value) {
     alert('Completa los campos requeridos'); return;
@@ -821,18 +649,14 @@ function irPaso2() {
   document.getElementById('lote-paso-2').style.display = 'block';
   document.getElementById('p2-codigo-lote').textContent = 'LOT-2026-00' + (Math.floor(Math.random()*90)+10);
 }
-
 function irPaso1() {
   document.getElementById('lote-paso-1').style.display = 'block';
   document.getElementById('lote-paso-2').style.display = 'none';
 }
-
 function registrarLote() {
-  closeModal('modal-agregar-lote');
-  irPaso1();
+  closeModal('modal-agregar-lote'); irPaso1();
   showToast('Lote registrado exitosamente', 'success');
 }
-
 function confirmarHold() {
   var motivo = document.getElementById('hold-motivo').value;
   if (!motivo.trim()) { alert('El motivo es requerido'); return; }

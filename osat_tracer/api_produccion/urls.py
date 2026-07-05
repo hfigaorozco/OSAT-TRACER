@@ -31,6 +31,7 @@ urlpatterns = [
     path('v1/create/Paso/', views.CreatePasoAPIView.as_view(), name='create_Paso'),
     path('v1/detail/Paso/<str:pk>/', views.DetailPasoAPIView.as_view(), name='detail_Paso'),
     path('v1/update/Paso/<str:pk>/', views.UpdatePasoAPIView.as_view(), name='update_Paso'),
+    path('v1/list/pasos/', views.ListPasoAPIView.as_view(), name='list_pasos'),
     #Orden
     path('v1/list/Orden/', views.ListOrdenAPIView.as_view(), name='list_Ordens'),
     path('v1/create/Orden/', views.CreateOrdenAPIView.as_view(), name='create_Orden'),

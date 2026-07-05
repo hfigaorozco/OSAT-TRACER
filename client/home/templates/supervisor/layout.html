@@ -1,28 +1,35 @@
 {% extends "base/base.html" %}
 {% load static %}
-
 {% block title %}{% block page_title %}Supervisor{% endblock %} — OSAT Tracer{% endblock %}
-
 {% block body %}
 <div class="app-shell">
-
   {% include "components/sidebar_supervisor.html" %}
-
   <div class="main-wrap">
     {% include "components/topbar.html" %}
-
     <main class="main-content">
-      {% if messages %}
-        {% for message in messages %}
-          <div class="banner banner-{{ message.tags }}" style="margin-bottom:1rem;">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-
       {% block content %}{% endblock %}
     </main>
   </div>
-
 </div>
+
+{# Convertir Django messages en toasts JS — igual que admin #}
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% for message in messages %}
+  {% if message.tags == 'success' %}
+    showToast("{{ message|escapejs }}", "success");
+  {% elif message.tags == 'error' or message.tags == 'danger' %}
+    showToast("{{ message|escapejs }}", "error");
+  {% elif message.tags == 'warning' %}
+    showToast("{{ message|escapejs }}", "warning");
+  {% else %}
+    showToast("{{ message|escapejs }}", "info");
+  {% endif %}
+  {% endfor %}
+});
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
 {% endblock %}
