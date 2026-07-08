@@ -1,10 +1,13 @@
 from django.shortcuts import render
-from home.views import _base_ctx, _get
+from home.views import _base_ctx, _get, _get_many
 
 
 def _build_reporte_data(ctx_role, dash_url):
-    reportes_bd = _get('/v1/list/reportes/', [])
-    ordenes_bd  = _get('/v1/list/Orden/', [])
+    reportes_bd, ordenes_bd, alertas_bd = _get_many(
+        '/v1/list/reportes/',
+        '/v1/list/Orden/',
+        '/v1/list/alertas/',
+    )
 
     ordenes = [
         {
@@ -52,16 +55,35 @@ def _build_reporte_data(ctx_role, dash_url):
             {'label': 'Dashboard', 'url': dash_url},
             {'label': 'Reportes',  'url': ''},
         ],
+    }, alertas_bd
+
+
+def _base_ctx_from_alertas(role, alertas_bd):
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    return {
+        'user_role': role,
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
     }
 
 
 def admin_reportes(request):
-    ctx = _base_ctx('Administrador')
-    ctx.update(_build_reporte_data('Administrador', '/admin-dash/'))
+    reporte_data, alertas_bd = _build_reporte_data('Administrador', '/admin-dash/')
+    ctx = _base_ctx_from_alertas('Administrador', alertas_bd)
+    ctx.update(reporte_data)
     return render(request, 'admin/reportes.html', ctx)
 
 
 def supervisor_reportes(request):
-    ctx = _base_ctx('Supervisor')
-    ctx.update(_build_reporte_data('Supervisor', '/supervisor/'))
+    reporte_data, alertas_bd = _build_reporte_data('Supervisor', '/supervisor/')
+    ctx = _base_ctx_from_alertas('Supervisor', alertas_bd)
+    ctx.update(reporte_data)
     return render(request, 'supervisor/reportes.html', ctx)

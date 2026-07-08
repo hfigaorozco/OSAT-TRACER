@@ -1,6 +1,7 @@
+import time
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _post, _patch, _FakeObj, _build_semaforo
+from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
 
 
 # ════════════════════════════════════════════════════════════════
@@ -8,14 +9,33 @@ from home.views import _base_ctx, _get, _post, _patch, _FakeObj, _build_semaforo
 # ════════════════════════════════════════════════════════════════
 
 def admin_dashboard(request):
-    ctx = _base_ctx('Administrador')
+    t0 = time.time()
 
-    empleados  = _get('/v1/list/empleados/', [])
-    maquinas   = _get('/v1/list/maquinaria/', [])
-    kpis       = _get('/v1/list/kpis/', [])
-    obleas     = _get('/v1/list/Oblea/', [])
-    ordenes_bd = _get('/v1/list/Orden/', [])
-    alertas_bd = _get('/v1/list/alertas/', [])
+    empleados, maquinas, kpis, obleas, ordenes_bd, alertas_bd = _get_many(
+        '/v1/list/empleados/',
+        '/v1/list/maquinaria/',
+        '/v1/list/kpis/',
+        '/v1/list/Oblea/',
+        '/v1/list/Orden/',
+        '/v1/list/alertas/',
+    )
+    t1 = time.time()
+    print(f"_get_many tardó: {t1-t0:.3f}s")
+
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     lotes_hold = sum(
         1 for o in obleas
@@ -62,7 +82,14 @@ def admin_dashboard(request):
         'alertas_activas': alertas_activas,
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}],
     })
-    return render(request, 'admin/dashboard.html', ctx)
+    t2 = time.time()
+    print(f"ctx.update tardó: {t2-t1:.3f}s")
+
+    result = render(request, 'admin/dashboard.html', ctx)
+    t3 = time.time()
+    print(f"render tardó: {t3-t2:.3f}s")
+    print(f"TOTAL: {t3-t0:.3f}s")
+    return result
 
 
 # ════════════════════════════════════════════════════════════════
@@ -70,8 +97,24 @@ def admin_dashboard(request):
 # ════════════════════════════════════════════════════════════════
 
 def admin_personal(request):
-    ctx = _base_ctx('Administrador')
-    empleados_bd = _get('/v1/list/empleados/', [])
+    empleados_bd, alertas_bd = _get_many(
+        '/v1/list/empleados/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     empleados = [
         {
@@ -147,10 +190,25 @@ def admin_cuentas_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_dashboard(request):
-    ctx = _base_ctx('Supervisor')
-
-    kpis   = _get('/v1/list/kpis/', [])
-    obleas = _get('/v1/list/Oblea/', [])
+    kpis, obleas, alertas_bd = _get_many(
+        '/v1/list/kpis/',
+        '/v1/list/Oblea/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     lotes_hold = sum(
         1 for o in obleas

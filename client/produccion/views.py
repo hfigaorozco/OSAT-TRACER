@@ -1,17 +1,20 @@
 import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _post, _patch, _FakeObj
+from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj
 
 
 # ── Helper compartido para construir ordenes y lotes ─────────────────────────
 
 def _build_ordenes_lotes():
-    ordenes_bd     = _get('/v1/list/Orden/', [])
-    obleas_bd      = _get('/v1/list/Oblea/', [])
-    procesos_bd    = _get('/v1/list/Proceso/', [])
-    pasos_bd       = _get('/v1/list/PasoProceso/', [])
-    pasos_catalogo = _get('/v1/list/pasos/', [])
+    ordenes_bd, obleas_bd, procesos_bd, pasos_bd, pasos_catalogo, alertas_bd = _get_many(
+        '/v1/list/Orden/',
+        '/v1/list/Oblea/',
+        '/v1/list/Proceso/',
+        '/v1/list/PasoProceso/',
+        '/v1/list/pasos/',
+        '/v1/list/alertas/',
+    )
     catalogo_map   = {str(p.get('codigo', '')): p for p in pasos_catalogo}
 
     ordenes = []
@@ -104,7 +107,7 @@ def _build_ordenes_lotes():
         for p in procesos_bd
     ]
 
-    return ordenes, lotes, plantillas
+    return ordenes, lotes, plantillas, alertas_bd
 
 
 # ════════════════════════════════════════════════════════════════
@@ -112,8 +115,21 @@ def _build_ordenes_lotes():
 # ════════════════════════════════════════════════════════════════
 
 def admin_produccion(request):
-    ctx = _base_ctx('Administrador')
-    ordenes, lotes, plantillas = _build_ordenes_lotes()
+    ordenes, lotes, plantillas, alertas_bd = _build_ordenes_lotes()
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     ctx.update({
         'ordenes':              ordenes,
         'lotes':                lotes,
@@ -139,12 +155,27 @@ def admin_produccion_plantilla_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def admin_organizacion(request):
-    ctx = _base_ctx('Administrador')
-
-    procesos_bd = _get('/v1/list/Proceso/', [])
-    tipos_oblea = _get('/v1/list/TipoOblea/', [])
-    lineas_bd   = _get('/v1/list/Linea/', [])
-    kpis        = _get('/v1/list/kpis/', [])
+    procesos_bd, tipos_oblea, lineas_bd, kpis, alertas_bd = _get_many(
+        '/v1/list/Proceso/',
+        '/v1/list/TipoOblea/',
+        '/v1/list/Linea/',
+        '/v1/list/kpis/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     plantillas = [
         {
@@ -262,10 +293,26 @@ def admin_organizacion_linea_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_ordenes(request):
-    ctx = _base_ctx('Supervisor')
-    ordenes_bd  = _get('/v1/list/Orden/', [])
-    obleas_bd   = _get('/v1/list/Oblea/', [])
-    procesos_bd = _get('/v1/list/Proceso/', [])
+    ordenes_bd, obleas_bd, procesos_bd, alertas_bd = _get_many(
+        '/v1/list/Orden/',
+        '/v1/list/Oblea/',
+        '/v1/list/Proceso/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     # Construir lista de órdenes con los campos que espera supervisor/ordenes.html
     ordenes = []
@@ -387,10 +434,26 @@ def supervisor_lote_scrap(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_orden_detalle(request, pk):
-    ctx = _base_ctx('Supervisor')
-    ordenes_bd = _get('/v1/list/Orden/', [])
-    obleas_bd  = _get('/v1/list/Oblea/', [])
-    procesos_bd = _get('/v1/list/Proceso/', [])
+    ordenes_bd, obleas_bd, procesos_bd, alertas_bd = _get_many(
+        '/v1/list/Orden/',
+        '/v1/list/Oblea/',
+        '/v1/list/Proceso/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(pk)), {})
     if not orden_data:
@@ -476,12 +539,28 @@ def _parse_tiempo_estimado_segundos(tiempo_val):
 
 
 def supervisor_lote_detalle(request, pk):
-    ctx = _base_ctx('Supervisor')
-    obleas_bd        = _get('/v1/list/Oblea/', [])
-    ordenes_bd       = _get('/v1/list/Orden/', [])
-    pasos_bd         = _get('/v1/list/PasoProceso/', [])
-    pasos_catalogo   = _get('/v1/list/pasos/', [])   # catálogo con tiempoEstimado
-    pasos_realizados = _get('/v1/list/PasoRealizado/', [])
+    obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados, alertas_bd = _get_many(
+        '/v1/list/Oblea/',
+        '/v1/list/Orden/',
+        '/v1/list/PasoProceso/',
+        '/v1/list/pasos/',
+        '/v1/list/PasoRealizado/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     ob = next((o for o in obleas_bd if str(o.get('numero')) == str(pk)), {})
     if not ob:
