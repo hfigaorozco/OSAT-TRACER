@@ -49,3 +49,7 @@ python manage.py shell
 >>> Oblea.objects.count()      # 4
 >>> Paso_Realizado.objects.count()  # 18
 ```
+
+## Comandos para correr el backend
+pip install waitress
+waitress-serve --port=8001 --threads=8 osat_tracer.wsgi:application
