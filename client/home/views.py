@@ -68,10 +68,10 @@ def _patch(endpoint, data):
 # ── Objeto falso para templates ───────────────────────────────────────────────
 
 class _FakeObj:
-    def __init__(self, **kwargs):
+    def _init_(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-    def __str__(self):
+    def _str_(self):
         return str(getattr(self, 'nombre', getattr(self, 'descripcion', '')))
 
 
