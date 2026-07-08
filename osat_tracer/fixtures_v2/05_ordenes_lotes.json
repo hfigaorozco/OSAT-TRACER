@@ -5,7 +5,7 @@
     "fields": {
       "horaIni": "2026-08-03T08:00:00Z",
       "horaFin": "2026-08-03T16:00:00Z",
-      "fechaReg": "2026-08-03T07:00:00Z",
+      "fecha": "2026-08-03T07:00:00Z",
       "proceso": "ens-1",
       "estado": "cerra",
       "empleado": 5,
@@ -18,7 +18,7 @@
     "fields": {
       "horaIni": "2026-08-03T08:00:00Z",
       "horaFin": "2026-08-03T16:00:00Z",
-      "fechaReg": "2026-08-03T07:00:00Z",
+      "fecha": "2026-08-03T07:00:00Z",
       "proceso": "ens-1",
       "estado": "proce",
       "empleado": 5,
@@ -31,7 +31,7 @@
     "fields": {
       "horaIni": "2026-08-03T09:00:00Z",
       "horaFin": "2026-08-03T17:00:00Z",
-      "fechaReg": "2026-08-03T07:00:00Z",
+      "fecha": "2026-08-03T07:00:00Z",
       "proceso": "ens-2",
       "estado": "abier",
       "empleado": 5,
