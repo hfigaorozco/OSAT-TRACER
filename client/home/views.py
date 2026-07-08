@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-
+from django.http import HttpResponseRedirect
 BACKEND_URL = 'http://localhost:8001/api'
 
 
@@ -135,28 +135,63 @@ def _build_semaforo(kpi_list):
 # AUTH
 # ════════════════════════════════════════════════════════════════
 
+
+
+
 def login_view(request):
     if request.method == 'POST':
-        user = authenticate(
-            request,
-            username=request.POST.get('username'),
-            password=request.POST.get('password'),
-        )
-        if user:
-            login(request, user)
-            empleados = _get('/v1/list/empleados/', [])
-            rol = 'administrador'
-            for e in empleados:
-                if e.get('username') == user.username:
-                    rol = (e.get('rol') or '').lower()
-                    break
-            if 'supervisor' in rol:
-                return redirect('supervisor_dashboard')
-            return redirect('admin_dashboard')
-        messages.error(request, 'Usuario o contraseña incorrectos.')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        payload = {
+            'username': username,
+            'password': password
+        }
+        
+        try:
+            response = requests.post('http://127.0.0.1:8001/api/v1/auth/login/web', json=payload, timeout=5)
+
+            if response.status_code == 200:
+                data = response.json()
+                usuarioRol = data['user']['rol'].lower()
+                usuarioNombre = data['user']['username'].lower()
+                usuarioID = data['user']['id']
+                
+                
+                request.session['user_id'] = usuarioID 
+                request.session['user_name'] = usuarioNombre 
+                request.session['user_rol'] = usuarioRol 
+                
+                if 'supervisor' in usuarioRol:
+                    response_redirect = redirect('supervisor_dashboard')
+                elif 'admin' in usuarioRol:
+                    response_redirect = redirect('admin_dashboard')
+                
+                for cookie_name, cookie_value in response.cookies.items(): #Clonar las cookies en el servidor
+                    response_redirect.set_cookie(
+                        cookie_name,
+                        cookie_value,
+                        httponly = True,
+                        domain = '127.0.0.1'
+                    )
+                    
+                return response_redirect
+            elif response.status_code == 401:
+                messages.error(request, 'Usuario o contraseña incorrectos.')
+            else:
+                messages.error(request, 'Error en el servidor. Porfavor contactar al administrador')
+                
+        except requests.exceptions.RequestException:
+            messages.error(request, 'La conexion al servidor es inestable.')
+            
     return render(request, 'base/login.html')
 
 
 def logout_view(request):
-    logout(request)
-    return redirect('login')
+    response = requests.post("http://127.0.0.1:8001/api/v1/auth/logout/web", cookies= request.COOKIES, timeout=5)
+    request.session.flush()
+    response_redirect = redirect('login')
+    
+    response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
+    
+    return response_redirect

@@ -11,4 +11,9 @@ urlpatterns = [
     #Auth Movil
     path('v1/auth/login/', obtain_auth_token, name='login'),
     path('v1/auth/logout/', views.LogoutAPIView.as_view(), name='logout'),
+    
+    #Auth Web
+    path('v1/auth/login/web', views.LoginAPIViewWeb.as_view(), name='login_web'),
+    path('v1/auth/logout/web', views.LogoutAPIViewWeb.as_view(), name='logout_web')
+
 ]
