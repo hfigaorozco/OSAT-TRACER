@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-
+from django.http import HttpResponseRedirect
 BACKEND_URL = 'http://localhost:8001/api'
 
 
@@ -163,9 +163,19 @@ def login_view(request):
                 request.session['user_rol'] = usuarioRol 
                 
                 if 'supervisor' in usuarioRol:
-                    return redirect('supervisor_dashboard')
-                return redirect('admin_dashboard')
+                    response_redirect = redirect('supervisor_dashboard')
+                elif 'admin' in usuarioRol:
+                    response_redirect = redirect('admin_dashboard')
                 
+                for cookie_name, cookie_value in response.cookies.items(): #Clonar las cookies en el servidor
+                    response_redirect.set_cookie(
+                        cookie_name,
+                        cookie_value,
+                        httponly = True,
+                        domain = '127.0.0.1'
+                    )
+                    
+                return response_redirect
             elif response.status_code == 401:
                 messages.error(request, 'Usuario o contraseña incorrectos.')
             else:
@@ -178,5 +188,10 @@ def login_view(request):
 
 
 def logout_view(request):
-    logout(request)
-    return redirect('login')
+    response = requests.post("http://127.0.0.1:8001/api/v1/auth/logout/web", cookies= request.COOKIES, timeout=5)
+    request.session.flush()
+    response_redirect = redirect('login')
+    
+    response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
+    
+    return response_redirect
