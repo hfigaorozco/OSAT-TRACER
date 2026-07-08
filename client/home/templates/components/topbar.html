@@ -30,7 +30,10 @@
     </script>
 
     <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
-      {{ request.session.user_name |default:user.username|default:"Nombre Empleado" }}
+      {{ request.session.user_name|default:"Empleado" }}
+    </span>
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:13px;color:#C4C5D0;">
+      {{ request.session.user_rol|default:"" }}
     </span>
 
     <div style="position:relative;">
