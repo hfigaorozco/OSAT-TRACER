@@ -1,161 +1,326 @@
 {% extends "supervisor/layout.html" %}
 {% load static %}
-{% block page_title %}Lote {{ lote.folio }}{% endblock %}
-{% block content %}
-<nav class="breadcrumb"><a href="{% url 'supervisor_ordenes' %}" class="breadcrumb-link">Órdenes</a><span class="breadcrumb-sep">/</span>{% if lote.orden %}<a href="{% url 'supervisor_orden_detalle' lote.orden.pk %}" class="breadcrumb-link">{{ lote.orden.numero }}</a><span class="breadcrumb-sep">/</span>{% endif %}<span class="breadcrumb-current">{{ lote.folio }}</span></nav>
+{% block page_title %}{{ lote.folio }}{% endblock %}
 
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+{% block content %}
+<nav style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);margin-bottom:20px;">
+  <a href="{% url 'supervisor_ordenes' %}" style="color:var(--text-muted);text-decoration:none;">Órdenes</a>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  {% if lote.orden %}
+  <a href="{% url 'supervisor_orden_detalle' lote.orden.pk %}" style="color:var(--text-muted);text-decoration:none;">{{ lote.orden.numero }}</a>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  {% endif %}
+  <span style="color:#fff;font-weight:500;">{{ lote.folio }}</span>
+</nav>
+
+<!-- Header: título blanco + botones grandes + solo Hold (sin Scrap) -->
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <h1 style="font-size:24px;font-weight:700;color:#1A202C;font-family:monospace;">{{ lote.folio }}</h1>
-    {% if lote.orden %}<span class="badge" style="background:#009EAF15;color:#007A89;">{{ lote.orden.numero }}</span>{% endif %}
-    {% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% elif lote.estado.nombre == 'Rechazado' %}<span class="badge badge-rechazado">Rechazado</span>{% else %}<span class="badge">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
+    <h1 style="font-size:24px;font-weight:700;color:#fff;margin:0;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;">{{ lote.folio }}</h1>
+    {% if lote.orden %}<span style="background:#009EAF20;color:#009EAF;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:500;">{{ lote.orden.numero }}</span>{% endif %}
+    {% if lote.estado.nombre == 'En proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">En proceso</span>
+    {% elif lote.estado.nombre == 'Hold' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Hold</span>
+    {% elif lote.estado.nombre == 'Completado' or lote.estado.nombre == 'Aprobado' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Completado</span>
+    {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
   </div>
-  <div style="display:flex;gap:8px;">
-    <button class="btn btn-warning btn-sm" onclick="openModal('modal-hold')">Poner en Hold</button>
-    <button class="btn btn-outline btn-sm" style="border-color:#EF5350;color:#EF5350;" onclick="openModal('modal-scrap')">Registrar scrap</button>
-  </div>
+  <!-- Solo Hold, sin botón Scrap -->
+  <button onclick="document.getElementById('modal-hold').style.display='flex'"
+          style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    Poner en Hold
+  </button>
 </div>
 
-<!-- Stats -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-  <div class="card kpi-card"><div class="kpi-label">Dies iniciales</div><div class="kpi-value">{{ lote.dies_iniciales|default:"—" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">Dies activos</div><div class="kpi-value">{{ lote.dies_activos|default:"—" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">Scrap total</div><div class="kpi-value" style="color:#EF5350;">{{ lote.scrap_total|default:"0" }}</div></div>
-  <div class="card kpi-card">
-    <div class="kpi-label">Yield</div>
+<!-- KPI Stats -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
+  <div class="card" style="padding:16px;">
+    <div style="font-size:11px;color:#718096;margin-bottom:4px;">Dies iniciales</div>
+    <div style="font-size:24px;font-weight:700;color:#1A202C;">{{ lote.dies_iniciales|default:"—" }}</div>
+  </div>
+  <div class="card" style="padding:16px;">
+    <div style="font-size:11px;color:#718096;margin-bottom:4px;">Dies activos</div>
+    <div style="font-size:24px;font-weight:700;color:#1A202C;">{{ lote.dies_activos|default:"—" }}</div>
+  </div>
+  <div class="card" style="padding:16px;">
+    <div style="font-size:11px;color:#718096;margin-bottom:4px;">Scrap total</div>
+    <div style="font-size:24px;font-weight:700;color:#EF5350;">{{ lote.scrap_total|default:"0" }}</div>
+  </div>
+  <div class="card" style="padding:16px;">
+    <div style="font-size:11px;color:#718096;margin-bottom:4px;">Yield</div>
     {% with y=lote.yield_pct|default:0 %}
-    <div class="kpi-value" style="color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>
+    <div style="font-size:24px;font-weight:700;color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>
     {% endwith %}
   </div>
 </div>
 
-<!-- Stepper + Detalle -->
-<div style="display:flex;gap:24px;align-items:flex-start;">
-  <!-- Stepper -->
-  <div style="width:260px;flex-shrink:0;">
-    <div class="card" style="padding:16px;">
-      <h3 style="font-weight:600;font-size:14px;margin:0 0 16px;">Pasos del proceso</h3>
-      <div class="stepper">
-        {% for etapa in lote.etapas %}
-        <div class="stepper-item {% if etapa.completado %}completed{% elif etapa.activo %}active{% else %}pending{% endif %}">
-          <div class="step-circle {% if etapa.completado %}done{% elif etapa.activo %}current{% else %}todo{% endif %}">
-            {% if etapa.completado %}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-            {% elif etapa.activo %}
-              <div style="width:8px;height:8px;border-radius:50%;background:currentColor;"></div>
-            {% else %}
-              {{ forloop.counter }}
-            {% endif %}
+<!-- Trazabilidad -->
+<div class="card">
+  <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    {% for etapa in lote.etapas %}
+    {% if etapa.completado %}
+    <!-- Etapa completada -->
+    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;cursor:default;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#16A85E;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <div style="flex:1;padding-left:10px;">
-            <div style="font-size:13px;color:{% if etapa.completado %}#16A85E{% elif etapa.activo %}#1A202C{% else %}#718096{% endif %};">
-              {{ etapa.nombre }}
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:14px;font-weight:400;color:#1A202C;">{{ etapa.nombre }}</span>
+              <span style="background:#D4EDDA;color:#155724;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;">Aprobado</span>
             </div>
+            {% if etapa.hora_inicio_iso %}<div style="font-size:12px;color:#718096;margin-top:2px;">{{ etapa.hora_inicio_iso }}</div>{% endif %}
           </div>
         </div>
-        {% empty %}
-        <div style="padding:16px;text-align:center;color:#718096;font-size:13px;">Sin etapas definidas</div>
-        {% endfor %}
       </div>
     </div>
+
+    {% elif etapa.activo %}
+    <!-- Etapa activa: barra de progreso + botón completar -->
+    <div style="border-radius:10px;padding:14px 16px;background:#E0F7FA;border:1.5px solid #B2EBF2;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#009EAF;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#fff;"></div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:14px;font-weight:600;color:#1A202C;">{{ etapa.nombre }}</span>
+              <span style="background:#E0F7FA;color:#006064;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;">En curso</span>
+            </div>
+
+            {% if etapa.tiempo_estimado_seg > 0 %}
+            <!-- Barra de progreso -->
+            <div style="margin-top:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:11px;color:#718096;">Progreso del paso</span>
+                <span id="sup-pct-label-{{ forloop.counter }}" style="font-size:11px;font-weight:700;color:#009EAF;">0%</span>
+              </div>
+              <div style="height:6px;background:#B2EBF2;border-radius:999px;overflow:hidden;margin-bottom:4px;">
+                <div id="sup-pct-bar-{{ forloop.counter }}"
+                     style="height:100%;width:0%;border-radius:999px;transition:width .4s;background:linear-gradient(90deg,#009EAF,#16A85E);"></div>
+              </div>
+              <div style="font-size:11px;color:#718096;">
+                <span id="sup-elapsed-{{ forloop.counter }}">00:00</span> transcurrido
+                · estimado: {{ etapa.tiempo_estimado_seg }}s
+              </div>
+            </div>
+            <script>
+            (function(){
+              var estimado = {{ etapa.tiempo_estimado_seg }};
+              var horaInicio = "{{ etapa.hora_inicio_iso }}";
+              var barEl   = document.getElementById('sup-pct-bar-{{ forloop.counter }}');
+              var pctEl   = document.getElementById('sup-pct-label-{{ forloop.counter }}');
+              var elapsEl = document.getElementById('sup-elapsed-{{ forloop.counter }}');
+              // Si no hay hora de inicio registrada, usar la hora actual como base
+              var _startTime = horaInicio ? (function(){
+                var now = new Date(), parts = horaInicio.split(':');
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+                  parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]||0));
+              })() : new Date();
+
+              function calcElapsed(){
+                return Math.max(0, Math.floor((new Date() - _startTime) / 1000));
+              }
+              function fmt(s){
+                var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+                return h>0?h+'h '+String(m).padStart(2,'0')+'m':String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+              }
+              function update(){
+                var elapsed=calcElapsed(), pct=Math.min(100,Math.round(elapsed/estimado*100));
+                barEl.style.width=pct+'%';
+                barEl.style.background=pct>=100?'linear-gradient(90deg,#F5A623,#EF5350)':pct>=80?'linear-gradient(90deg,#F5A623,#F59E0B)':'linear-gradient(90deg,#009EAF,#16A85E)';
+                pctEl.style.color=pct>=100?'#EF5350':pct>=80?'#F5A623':'#009EAF';
+                pctEl.textContent=pct+'%';
+                elapsEl.textContent=fmt(elapsed);
+                if (pct >= 100 && !window['_alerted_sup_{{ forloop.counter }}']) {
+                  window['_alerted_sup_{{ forloop.counter }}'] = true;
+                  showToast('Tiempo estimado completado — {{ etapa.nombre|escapejs }}', 'warning');
+                }
+              }
+              update(); setInterval(update,10000);
+            })();
+            </script>
+            {% else %}
+            <div style="margin-top:6px;font-size:11px;color:#718096;font-style:italic;">Sin tiempo estimado configurado</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Botón completar etapa — mismo nivel que el paso, grande -->
+        <button onclick="document.getElementById('modal-completar').style.display='flex'"
+                style="padding:12px 22px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+          ✓ Completar etapa
+        </button>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Etapa pendiente -->
+    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;opacity:.45;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:#E2E8F0;color:#718096;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">{{ forloop.counter }}</div>
+        <span style="font-size:14px;color:#A0AEC0;">{{ etapa.nombre }}</span>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
   </div>
+</div>
 
-  <!-- Detalle -->
-  <div style="flex:1;min-width:0;">
-    {% if lote.etapa_activa %}
-      {% if lote.etapa_activa.completado %}
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span class="badge badge-aprobado">Completado</span><h3 style="font-weight:600;margin:0;">{{ lote.etapa_activa.nombre }}</h3></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
-          <div><span style="font-size:12px;color:#718096;">Operador</span><div style="font-weight:500;">{{ lote.etapa_activa.operador_nombre|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Inicio</span><div style="font-weight:500;">{{ lote.etapa_activa.iniciado_en|date:"d/m/Y H:i"|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Fin</span><div style="font-weight:500;">{{ lote.etapa_activa.completado_en|date:"d/m/Y H:i"|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Máquina</span><div style="font-weight:500;">{{ lote.etapa_activa.maquina|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Scrap</span><div style="font-weight:500;color:#EF5350;">{{ lote.etapa_activa.scrap|default:"0" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Yield etapa</span><div style="font-weight:500;color:#16A85E;">{{ lote.etapa_activa.yield_pct|floatformat:1|default:"—" }}%</div></div>
-        </div>
-        {% if lote.etapa_activa.notas %}<div style="margin-top:16px;"><span style="font-size:12px;color:#718096;">Notas</span><div style="margin-top:4px;padding:12px;background:#F4F6F9;border-radius:6px;font-size:13px;color:#4A5568;">{{ lote.etapa_activa.notas }}</div></div>{% endif %}
-      </div>
-      {% else %}
-      <div class="card" style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span class="badge badge-en-proceso">En curso</span><h3 style="font-weight:600;margin:0;">{{ lote.etapa_activa.nombre }}</h3></div>
-        <p style="font-size:13px;color:#4A5568;margin-bottom:12px;">{{ lote.etapa_activa.descripcion|default:"Sin descripción." }}</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
-          <div><span style="font-size:12px;color:#718096;">Tipo de máquina</span><div style="font-weight:500;">{{ lote.etapa_activa.tipo_maquina|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Inicio</span><div style="font-weight:500;">{{ lote.etapa_activa.iniciado_en|date:"d/m H:i"|default:"—" }}</div></div>
-          <div><span style="font-size:12px;color:#718096;">Operador</span><div style="font-weight:500;">{{ lote.etapa_activa.operador_nombre|default:"—" }}</div></div>
-        </div>
-      </div>
-      <div style="background:#E8F5EE;border:1px solid #B2DFCB;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:13px;color:#155724;">
-          El avance puede registrarse desde la <strong>app móvil</strong> con escaneo QR o ingresando el código del lote manualmente desde esta pantalla.
-        </div>
-      </div>
 
-      <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;margin-bottom:16px;">
-        <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:8px;">
-          Registrar avance — Ingresa el código del lote
-        </label>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="input-codigo-lote" class="form-control"
-                 placeholder="Ej. LOT-2026-0047"
-                 value="{{ lote.folio }}"
-                 style="flex:1;background:#fff;color:#1A202C;border-color:#CBD5E0;">
-          <button class="btn btn-primary" onclick="confirmarAvanceManual()">
-            Confirmar avance
+<!-- ═══ MODAL COMPLETAR ETAPA ═══ -->
+<div id="modal-completar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin:0 0 2px;">Completar — {% if lote.etapa_activa %}{{ lote.etapa_activa.nombre }}{% endif %}</h2>
+        <div style="font-size:12px;color:#718096;">{{ lote.folio }} · {{ lote.dies_activos }} dies activos</div>
+      </div>
+      <button onclick="document.getElementById('modal-completar').style.display='none'" style="background:none;border:none;cursor:pointer;color:#718096;padding:4px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{% url 'supervisor_etapa_completar' lote.pk %}">{% csrf_token %}
+      {% if lote.etapa_activa %}<input type="hidden" name="paso" value="{{ lote.etapa_activa.codigo }}">{% endif %}
+      <div style="padding:20px 24px;">
+
+        <!-- Resultado -->
+        <div style="margin-bottom:20px;">
+          <label style="font-size:13px;font-weight:600;color:#2D3748;display:block;margin-bottom:8px;">Resultado <span style="color:#EF5350;">*</span></label>
+          <div style="display:flex;gap:10px;">
+            <label style="flex:1;cursor:pointer;">
+              <input type="radio" name="resultado" value="aprobado" checked style="display:none;" id="sup-res-aprobado">
+              <div id="sup-btn-aprobado" onclick="supSelectRes('aprobado')"
+                   style="border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#D4EDDA;color:#155724;font-weight:600;font-size:13px;">
+                ✓ Aprobado
+              </div>
+            </label>
+            <label style="flex:1;cursor:pointer;">
+              <input type="radio" name="resultado" value="rechazado" style="display:none;" id="sup-res-rechazado">
+              <div id="sup-btn-rechazado" onclick="supSelectRes('rechazado')"
+                   style="border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#fff;color:#718096;font-weight:600;font-size:13px;">
+                ✕ Rechazado
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Scrap -->
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Unidades con scrap en esta etapa</label>
+          <input type="number" name="scrap" class="form-control" min="0" value="0" style="max-width:180px;background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:13px;">
+        </div>
+
+        <!-- Defectos -->
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Defectos detectados</label>
+          <div id="sup-defectos-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+          <button type="button" onclick="supAgregarDefecto()"
+                  style="background:none;border:1px dashed #CBD5E0;color:#718096;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar defecto
           </button>
         </div>
-        <span style="font-size:11.5px;color:#718096;margin-top:6px;display:block;">
-          El código se pre-llena con el lote actual. Cámbialo si quieres registrar otro lote.
-        </span>
-      </div>
-      {% endif %}
-    {% else %}
-    <div class="card"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Etapa pendiente de inicio</p><span style="font-size:13px;color:#718096;">El operador inicia desde la app móvil.</span></div></div>
-    {% endif %}
-  </div>
-</div>
 
-<!-- Modal Hold -->
-<div class="modal-overlay" id="modal-hold" style="display:none;" onclick="if(event.target===this)closeModal('modal-hold')">
-  <div class="modal-card modal-md">
-    <div class="modal-header"><h2>Poner lote en Hold</h2><button class="modal-close" onclick="closeModal('modal-hold')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <form method="post" action="{% url 'supervisor_lote_hold' lote.pk %}">{% csrf_token %}
-      <div class="modal-body">
-        <div class="banner banner-warning" style="margin-bottom:16px;">El lote <strong>{{ lote.folio }}</strong> quedará suspendido y el operador recibirá una notificación.</div>
-        <div class="form-group"><label class="form-label">Motivo <span class="required">*</span></label><textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo…" required></textarea></div>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-hold')">Cancelar</button><button type="submit" class="btn btn-warning">Confirmar Hold</button></div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal Scrap -->
-<div class="modal-overlay" id="modal-scrap" style="display:none;" onclick="if(event.target===this)closeModal('modal-scrap')">
-  <div class="modal-card modal-md">
-    <div class="modal-header"><h2>Registrar scrap</h2><button class="modal-close" onclick="closeModal('modal-scrap')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <form method="post" action="{% url 'supervisor_lote_scrap' lote.pk %}">{% csrf_token %}
-      <div class="modal-body">
-        <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Cantidad de dies <span class="required">*</span></label><input type="number" name="cantidad" class="form-control" min="1" max="{{ lote.dies_activos }}" required><span class="form-hint">Máximo: {{ lote.dies_activos|default:"N/A" }}</span></div>
-          <div class="form-group"><label class="form-label">Causa <span class="required">*</span></label><select name="causa" class="form-control" required><option value="">Seleccionar…</option>{% for d in tipos_defecto %}<option value="{{ d.pk }}">{{ d.nombre }}</option>{% endfor %}<option value="otro">Otro</option></select></div>
+        <!-- Comentarios -->
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Comentarios</label>
+          <textarea name="observaciones" class="form-control" rows="3" placeholder="Observaciones sobre esta etapa…"
+                    style="background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:13px;width:100%;resize:vertical;box-sizing:border-box;"></textarea>
         </div>
-        <div class="form-group"><label class="form-label">Notas</label><textarea name="notas" class="form-control" rows="2"></textarea></div>
       </div>
-      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-scrap')">Cancelar</button><button type="submit" class="btn btn-danger">Registrar scrap</button></div>
+
+      <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" onclick="document.getElementById('modal-completar').style.display='none'"
+                style="padding:10px 20px;background:#fff;color:#4A5568;border:1.5px solid #CBD5E0;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">
+          Cancelar
+        </button>
+        <button type="submit"
+                style="padding:10px 28px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;min-width:150px;">
+          ✓ Confirmar
+        </button>
+      </div>
     </form>
   </div>
 </div>
+
+
+<!-- ═══ MODAL HOLD ═══ -->
+<div id="modal-hold" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:460px;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin:0;">Poner lote en Hold</h2>
+      <button onclick="document.getElementById('modal-hold').style.display='none'" style="background:none;border:none;cursor:pointer;color:#718096;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <form method="post" action="{% url 'supervisor_lote_hold' lote.pk %}">{% csrf_token %}
+      <div style="padding:20px 24px;">
+        <div style="background:#FFF3CD;border:1px solid #FBBF24;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#92400E;">
+          El lote <strong>{{ lote.folio }}</strong> quedará detenido hasta resolver el motivo.
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Motivo <span style="color:#EF5350;">*</span></label>
+          <textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo del Hold…" required
+                    style="background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:13px;width:100%;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" onclick="document.getElementById('modal-hold').style.display='none'" style="padding:10px 20px;background:#fff;color:#4A5568;border:1.5px solid #CBD5E0;border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
+        <button type="submit" style="padding:10px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Confirmar Hold</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 {% block extra_js %}
 <script>
-function confirmarAvanceManual() {
-  var codigo = document.getElementById('input-codigo-lote').value.trim();
-  if (!codigo) { alert('Ingresa el código del lote'); return; }
-  if (confirm('¿Confirmar avance de la etapa actual para el lote ' + codigo + '?')) {
-    // En producción: POST al backend
-    alert('Avance registrado para ' + codigo);
-  }
+var _supDefCount = 0;
+var _supCatalogo = [
+  {codigo:'defic', descripcion:'Wire bonding deficiente'},
+  {codigo:'delam', descripcion:'Delaminación de encapsulado'},
+  {codigo:'griet', descripcion:'Grieta en die'},
+  {codigo:'desal', descripcion:'Desalineación en die'},
+];
+
+function supSelectRes(val) {
+  var configs = {
+    aprobado:  {bg:'#D4EDDA', color:'#155724', border:'#16A85E'},
+    rechazado: {bg:'#F8D7DA', color:'#721C24', border:'#EF5350'},
+  };
+  ['aprobado','rechazado'].forEach(function(o) {
+    var btn = document.getElementById('sup-btn-' + o);
+    var inp = document.getElementById('sup-res-' + o);
+    if (!btn) return;
+    inp.checked = o === val;
+    if (o === val) {
+      btn.style.border = '1.5px solid ' + configs[o].border;
+      btn.style.background = configs[o].bg;
+      btn.style.color = configs[o].color;
+    } else {
+      btn.style.border = '1.5px solid #CBD5E0';
+      btn.style.background = '#fff';
+      btn.style.color = '#718096';
+    }
+  });
+}
+
+function supAgregarDefecto() {
+  _supDefCount++;
+  var list = document.getElementById('sup-defectos-list');
+  var row  = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 80px 120px 32px;gap:8px;align-items:center;';
+  row.innerHTML =
+    '<select name="def_tipo_'+_supDefCount+'" style="padding:8px 10px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13px;background:#fff;color:#1A202C;">' +
+      '<option value="">Tipo de defecto…</option>' +
+      _supCatalogo.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
+    '</select>' +
+    '<input type="number" name="def_cant_'+_supDefCount+'" min="1" value="1" style="padding:8px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13px;background:#fff;color:#1A202C;width:100%;">' +
+    '<select name="def_accion_'+_supDefCount+'" style="padding:8px 10px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13px;background:#fff;color:#1A202C;"><option value="scrap">Scrap</option><option value="rework">Rework</option><option value="hold">Hold</option></select>' +
+    '<button type="button" onclick="this.closest(\'div\').remove()" style="background:none;border:none;color:#EF5350;cursor:pointer;font-size:18px;">✕</button>';
+  list.appendChild(row);
 }
 </script>
 {% endblock %}
