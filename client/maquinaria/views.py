@@ -1,14 +1,30 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _post, _FakeObj
+from home.views import _base_ctx, _get, _get_many, _post, _FakeObj
 
 
 def admin_maquinaria(request):
-    ctx = _base_ctx('Administrador')
-    maquinas_bd     = _get('/v1/list/maquinaria/', [])
-    tipos_maquina   = _get('/v1/list/tipo_maquinaria/', [])
-    estados_maquina = _get('/v1/list/estado_maquinaria/', [])
-    lineas_bd       = _get('/v1/list/Linea/', [])
+    maquinas_bd, tipos_maquina, estados_maquina, lineas_bd, alertas_bd = _get_many(
+        '/v1/list/maquinaria/',
+        '/v1/list/tipo_maquinaria/',
+        '/v1/list/estado_maquinaria/',
+        '/v1/list/Linea/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
 
     maquinas = [
         {

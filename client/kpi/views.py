@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _patch, _FakeObj
+from home.views import _base_ctx, _get, _get_many, _patch, _FakeObj
 
 
 def _build_alertas(historiales):
@@ -49,8 +49,24 @@ def _build_alertas(historiales):
 # ════════════════════════════════════════════════════════════════
 
 def admin_notificaciones(request):
-    ctx = _base_ctx('Administrador')
-    historiales = _get('/v1/list/historiales_alertas/', [])
+    historiales, alertas_bd = _get_many(
+        '/v1/list/historiales_alertas/',
+        '/v1/list/alertas/',
+    )
+    unread_bd = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread_bd,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     alertas = _build_alertas(historiales)
     unread  = sum(1 for a in alertas if not a['leida'])
     ctx.update({
@@ -70,8 +86,24 @@ def admin_notificaciones(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_notificaciones(request):
-    ctx = _base_ctx('Supervisor')
-    historiales = _get('/v1/list/historiales_alertas/', [])
+    historiales, alertas_bd = _get_many(
+        '/v1/list/historiales_alertas/',
+        '/v1/list/alertas/',
+    )
+    unread_bd = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread_bd,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     alertas = _build_alertas(historiales)
     unread  = sum(1 for a in alertas if not a['leida'])
     ctx.update({
@@ -91,8 +123,24 @@ def supervisor_notificaciones(request):
 # ════════════════════════════════════════════════════════════════
 
 def admin_configuracion(request):
-    ctx = _base_ctx('Administrador')
-    defectos = _get('/v1/list/Defecto/', [])
+    defectos, alertas_bd = _get_many(
+        '/v1/list/Defecto/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     ctx.update({
         'kpi_configs':   [],
         'tipos_defecto': [
