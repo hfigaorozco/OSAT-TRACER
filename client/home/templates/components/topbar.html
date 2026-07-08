@@ -30,7 +30,7 @@
     </script>
 
     <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
-      {{ user.get_full_name|default:user.username|default:"Nombre Empleado" }}
+      {{ request.session.user_name |default:user.username|default:"Nombre Empleado" }}
     </span>
 
     <div style="position:relative;">

@@ -135,25 +135,45 @@ def _build_semaforo(kpi_list):
 # AUTH
 # ════════════════════════════════════════════════════════════════
 
+
+
+
 def login_view(request):
     if request.method == 'POST':
-        user = authenticate(
-            request,
-            username=request.POST.get('username'),
-            password=request.POST.get('password'),
-        )
-        if user:
-            login(request, user)
-            empleados = _get('/v1/list/empleados/', [])
-            rol = 'administrador'
-            for e in empleados:
-                if e.get('username') == user.username:
-                    rol = (e.get('rol') or '').lower()
-                    break
-            if 'supervisor' in rol:
-                return redirect('supervisor_dashboard')
-            return redirect('admin_dashboard')
-        messages.error(request, 'Usuario o contraseña incorrectos.')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        payload = {
+            'username': username,
+            'password': password
+        }
+        
+        try:
+            response = requests.post('http://127.0.0.1:8001/api/v1/auth/login/web', json=payload, timeout=5)
+
+            if response.status_code == 200:
+                data = response.json()
+                usuarioRol = data['user']['rol'].lower()
+                usuarioNombre = data['user']['username'].lower()
+                usuarioID = data['user']['id']
+                
+                
+                request.session['user_id'] = usuarioID 
+                request.session['user_name'] = usuarioNombre 
+                request.session['user_rol'] = usuarioRol 
+                
+                if 'supervisor' in usuarioRol:
+                    return redirect('supervisor_dashboard')
+                return redirect('admin_dashboard')
+                
+            elif response.status_code == 401:
+                messages.error(request, 'Usuario o contraseña incorrectos.')
+            else:
+                messages.error(request, 'Error en el servidor. Porfavor contactar al administrador')
+                
+        except requests.exceptions.RequestException:
+            messages.error(request, 'La conexion al servidor es inestable.')
+            
     return render(request, 'base/login.html')
 
 
