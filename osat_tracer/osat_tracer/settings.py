@@ -128,6 +128,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
+
 #Auth Movil con Tokens
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

@@ -200,3 +200,7 @@ def logout_view(request):
     response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
     
     return response_redirect
+
+
+def errorview404(request, exception = None):
+    return render(request,'base/404page.html', status=404)
