@@ -25,7 +25,7 @@
 
   {"model": "api_kpi.kpi", "fields": {
     "clave": "yie", "nombre": "Yield",
-    "descripcion": "Dies buenos sobre el total de dies generados",
+    "descripcion": "Dies buenos sobre dies generados",
     "unidad": "%",
     "umbralVerde": 90, "umbralAmarillo": 80, "umbralRojo": 70
   }},
@@ -36,8 +36,8 @@
     "umbralVerde": 500, "umbralAmarillo": 300, "umbralRojo": 150
   }},
   {"model": "api_kpi.kpi", "fields": {
-    "clave": "oee", "nombre": "Overall Equipment Effectiveness",
-    "descripcion": "Eficiencia global (disponibilidad x rendimiento x calidad)",
+    "clave": "oee", "nombre": "OEE",
+    "descripcion": "Eficiencia global",
     "unidad": "%",
     "umbralVerde": 85, "umbralAmarillo": 70, "umbralRojo": 55
   }},
