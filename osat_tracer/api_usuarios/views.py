@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
@@ -52,7 +52,7 @@ class LogoutAPIView(APIView):
     
 ## Login api view
 
-class LoginAPIView(APIView):
+class LoginAPIViewWeb(APIView):
     permission_classes = [AllowAny] 
     def post(self, request, *args, **kwargs):
             username = request.data.get('username')
@@ -60,6 +60,7 @@ class LoginAPIView(APIView):
             user = authenticate(username = username,  password=password)
             
             if user is not None and user.is_active:
+                login(request,user)
                 empleado = Empleado.objects.get(numero = user.id)
                 empleado_data = serializers.EmpleadoListSerializer(empleado).data
                 rol = empleado_data.get('rol').lower()
@@ -78,3 +79,10 @@ class LoginAPIView(APIView):
             'message': 'Credenciales inválidas'
             }, 
             status=status.HTTP_401_UNAUTHORIZED)
+            
+class LogoutAPIViewWeb(APIView):
+    def post(self, request, *args, **kwargs ):
+        logout(request)
+        return Response ({'status' : 'success', 'message' : 'sesión cerrada'}, status= status.HTTP_200_OK)
+    
+    
