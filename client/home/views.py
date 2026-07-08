@@ -1,4 +1,7 @@
 import requests
+from requests.adapters import HTTPAdapter
+from requests.sessions import Session
+from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -6,20 +9,42 @@ from django.contrib import messages
 BACKEND_URL = 'http://localhost:8001/api'
 
 
-# ── Helpers HTTP ─────────────────────────────────────────────────────────────
+# ── Helpers HTTP ──────────────────────────────────────────────────────────────
+
+# Sesión compartida con keep-alive y connection pooling: reutiliza las
+# conexiones TCP en vez de abrir una nueva por request.
+_session = Session()
+_adapter = HTTPAdapter(
+    pool_connections=10,
+    pool_maxsize=20,
+    max_retries=1,
+)
+_session.mount('http://', _adapter)
+_session.mount('https://', _adapter)
+
 
 def _get(endpoint, default=None):
     try:
-        r = requests.get(f'{BACKEND_URL}{endpoint}', timeout=5)
+        r = _session.get(f'{BACKEND_URL}{endpoint}', timeout=5)
         r.raise_for_status()
         return r.json()
     except Exception:
         return default if default is not None else []
 
 
+def _get_many(*endpoints):
+    """
+    Lanza todas las llamadas en paralelo — siempre datos frescos, sin cache.
+    Devuelve los resultados en el mismo orden que los endpoints recibidos.
+    """
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = [ex.submit(_get, ep, []) for ep in endpoints]
+        return [f.result() for f in futures]
+
+
 def _post(endpoint, data):
     try:
-        r = requests.post(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
+        r = _session.post(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
         r.raise_for_status()
         return True, r.json()
     except requests.HTTPError as e:
@@ -33,14 +58,14 @@ def _post(endpoint, data):
 
 def _patch(endpoint, data):
     try:
-        r = requests.patch(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
+        r = _session.patch(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
         r.raise_for_status()
         return True, r.json()
     except Exception as e:
         return False, str(e)
 
 
-# ── Objeto falso para templates que esperan atributos de modelo ──────────────
+# ── Objeto falso para templates ───────────────────────────────────────────────
 
 class _FakeObj:
     def __init__(self, **kwargs):
@@ -54,7 +79,8 @@ class _FakeObj:
 
 def _base_ctx(role='Administrador'):
     alertas = _get('/v1/list/alertas/', [])
-    unread  = sum(1 for a in alertas if str(a.get('estadoAlerta', '')).lower() == 'activo')
+    unread  = sum(1 for a in alertas
+                  if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     return {
         'user_role':            role,
         'unread_count':         unread,
@@ -62,7 +88,8 @@ def _base_ctx(role='Administrador'):
             {
                 'titulo': a.get('descripcion', ''),
                 'tipo':   'alerta',
-                'leida':  str(a.get('estadoAlerta', '')).lower() != 'activo',
+                'leida':  str(a.get('estadoAlerta', '')).lower()
+                          not in ('activo', 'sinre'),
             }
             for a in alertas[:5]
         ],
@@ -70,12 +97,13 @@ def _base_ctx(role='Administrador'):
     }
 
 
-# ── Semáforo KPI reutilizable ─────────────────────────────────────────────────
+# ── Semáforo KPI ──────────────────────────────────────────────────────────────
 
 def _semaforo_color(valor, kpi_dict, unidad='%'):
     val_str = f'{valor:.1f}' if isinstance(valor, float) else str(valor)
     if not kpi_dict:
-        return {'bg': '#E9ECEF', 'color': '#495057', 'valor': val_str, 'unidad': unidad}
+        return {'bg': '#E9ECEF', 'color': '#495057',
+                'valor': val_str, 'unidad': unidad}
     if valor >= kpi_dict.get('umbralVerde', 0):
         bg, color = '#D4EDDA', '#155724'
     elif valor >= kpi_dict.get('umbralAmarillo', 0):

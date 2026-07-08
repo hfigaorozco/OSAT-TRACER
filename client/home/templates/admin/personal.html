@@ -63,7 +63,7 @@
                 <div style="width:32px;height:32px;border-radius:50%;background:#2E3D52;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C4C5D0;flex-shrink:0;">
                   {{ emp.primer_nombre|slice:":1"|upper }}
                 </div>
-                <span style="color:#fff;font-weight:500;">{{ emp.primer_nombre }} {{ emp.apellido_paterno }} {{ emp.apellido_materno }}</span>
+                <span style="color:#1A202C;font-weight:500;">{{ emp.primer_nombre }} {{ emp.apellido_paterno }} {{ emp.apellido_materno }}</span>
               </div>
             </td>
             <td style="font-family:monospace;font-size:13px;">{{ emp.rfc|upper }}</td>
@@ -117,7 +117,7 @@
                 <div style="width:32px;height:32px;border-radius:50%;background:#2E3D52;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C4C5D0;">
                   {{ cuenta.user.get_full_name|default:cuenta.user.username|slice:":1"|upper }}
                 </div>
-                <span style="font-weight:500;color:#fff;">{{ cuenta.user.username }}</span>
+                <span style="font-weight:500;color:#1A202C;">{{ cuenta.user.username }}</span>
               </div>
             </td>
             <td>{{ cuenta.user.get_full_name|default:"—" }}</td>

@@ -119,7 +119,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 /* Botón hamburguesa/flecha */
 .sidebar-toggle-btn {
   width: 100%;
-  height: 56px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   justify-content: flex-start;

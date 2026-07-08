@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _post, _patch
+from home.views import _base_ctx, _get, _get_many, _post, _patch
 
 
 # ════════════════════════════════════════════════════════════════
@@ -8,8 +8,24 @@ from home.views import _base_ctx, _get, _post, _patch
 # ════════════════════════════════════════════════════════════════
 
 def admin_inventario(request):
-    ctx = _base_ctx('Administrador')
-    piezas_bd = _get('/v1/list/piezas/', [])
+    piezas_bd, alertas_bd = _get_many(
+        '/v1/list/piezas/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     piezas = [
         {
             'pk':             p.get('codigo', ''),
@@ -80,8 +96,24 @@ def admin_inventario_movimiento(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_inventario(request):
-    ctx = _base_ctx('Supervisor')
-    piezas_bd = _get('/v1/list/piezas/', [])
+    piezas_bd, alertas_bd = _get_many(
+        '/v1/list/piezas/',
+        '/v1/list/alertas/',
+    )
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Supervisor',
+        'unread_count': unread,
+        'recent_notifications': [
+            {
+                'titulo': a.get('descripcion', ''),
+                'tipo': 'alerta',
+                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
+            }
+            for a in alertas_bd[:5]
+        ],
+        'breadcrumbs': [],
+    }
     piezas = [
         {
             'pk':           p.get('codigo', ''),

@@ -13,8 +13,21 @@
   <div style="display:flex;align-items:center;gap:32px;">
 
     <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
-      {% now "d/m/Y" %}
+      {% now "d/m/Y" %} &nbsp;
+      <span id="topbar-hora">--:--</span>
     </span>
+    <script>
+    (function(){
+      function actualizarHora(){
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2,'0');
+        var m = String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('topbar-hora').textContent = h + ':' + m;
+      }
+      actualizarHora();
+      setInterval(actualizarHora, 10000);
+    })();
+    </script>
 
     <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
       {{ user.get_full_name|default:user.username|default:"Nombre Empleado" }}
