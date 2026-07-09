@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-z&89rde8#e0um#4u=6rxl86!#u5q$em+7im%g%ri^yp@qgcrkh
 DEBUG = True
 
 
-##Agreguen sus ips si usaran la app movil
+## localhost, y emulador
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 
@@ -81,14 +81,14 @@ WSGI_APPLICATION = 'osat_tracer.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-DATABASES = {
+DATABASES = {#### database de MariaBD FABIAN
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'osattracer_db',
-        'USER' : 'root',
-        'PASSWORD' : '',
-        'HOST': 'localhost',
-        'PORT' : '3306',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '3306',
     }
 }
 
@@ -127,6 +127,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
 
 #Auth Movil con Tokens
 REST_FRAMEWORK = {

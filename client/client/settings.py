@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-tp^m!md(t(tqyz7%aaaqty6==t=f-d^xm13a1haf_-5pwi)1f#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -38,7 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home',
+
+    # Apps del cliente OSAT Tracer
+    'home',        # auth, helpers compartidos
+    'usuarios',    # personal, cuentas, dashboards
+    'maquinaria',  # máquinas y tipos
+    'inventario',  # piezas, entradas, salidas
+    'produccion',  # órdenes, lotes, organización
+    'kpi',         # alertas, configuración KPI
+    'reportes',    # reportes de producción e inventario
 ]
 
 MIDDLEWARE = [
@@ -49,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'client.middleware.AccesoPorRol'
 ]
 
 ROOT_URLCONF = 'client.urls'
@@ -76,8 +85,12 @@ WSGI_APPLICATION = 'client.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'osattracer_db',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '3306',
     }
 }
 
