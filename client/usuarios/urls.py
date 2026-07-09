@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     # Admin dashboard
-    path('admin-dash/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/dash/', views.admin_dashboard, name='admin_dashboard'),
 
     # Cuentas y personal
     path('admin/cuentas/', views.admin_cuentas, name='admin_cuentas'),
@@ -15,3 +15,4 @@ urlpatterns = [
     path('supervisor/', views.supervisor_dashboard, name='supervisor_dashboard'),
     path('supervisor/configuracion/', views.supervisor_configuracion, name='supervisor_configuracion'),
 ]
+

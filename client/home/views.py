@@ -68,10 +68,10 @@ def _patch(endpoint, data):
 # ── Objeto falso para templates ───────────────────────────────────────────────
 
 class _FakeObj:
-    def __init__(self, **kwargs):
+    def _init_(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-    def __str__(self):
+    def _str_(self):
         return str(getattr(self, 'nombre', getattr(self, 'descripcion', '')))
 
 
@@ -150,6 +150,7 @@ def login_view(request):
         
         try:
             response = requests.post('http://127.0.0.1:8001/api/v1/auth/login/web', json=payload, timeout=5)
+            print(response.cookies)  # justo después del requests.post
 
             if response.status_code == 200:
                 data = response.json()
@@ -167,12 +168,16 @@ def login_view(request):
                 elif 'admin' in usuarioRol:
                     response_redirect = redirect('admin_dashboard')
                 
-                for cookie_name, cookie_value in response.cookies.items(): #Clonar las cookies en el servidor
+                DJANGO_RESERVED_COOKIES = {'sessionid', 'csrftoken'}
+
+                for cookie_name, cookie_value in response.cookies.items():
+                    if cookie_name in DJANGO_RESERVED_COOKIES:
+                        continue
                     response_redirect.set_cookie(
                         cookie_name,
                         cookie_value,
-                        httponly = True,
-                        domain = '127.0.0.1'
+                        httponly=True,
+                        domain='127.0.0.1'
                     )
                     
                 return response_redirect
@@ -195,3 +200,7 @@ def logout_view(request):
     response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
     
     return response_redirect
+
+
+def errorview404(request, exception = None):
+    return render(request,'base/404page.html', status=404)
