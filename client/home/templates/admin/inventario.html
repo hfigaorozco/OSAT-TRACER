@@ -54,16 +54,21 @@
 
 <!-- Tabla -->
 <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-  <table style="width:100%;border-collapse:collapse;font-size:13.5px;" id="inv-table">
+  <table style="width:100%;border-collapse:collapse;font-size:13.5px;table-layout:fixed;" id="inv-table">
+    <colgroup>
+      <col style="width:25%;">
+      <col style="width:39%;">
+      <col style="width:13%;">
+      <col style="width:13%;">
+      <col style="width:9%;">
+    </colgroup>
     <thead>
       <tr style="background:#F7FAFC;">
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">ID</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tipo de máquina</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Línea</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Operador asignado</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha registro</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
+        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
       </tr>
     </thead>
     <tbody id="inv-tbody">
@@ -73,22 +78,12 @@
           style="cursor:pointer;transition:background .12s;"
           onclick="openDetalle({{ pieza.pk }}, '{{ pieza.nombre }}', '{{ pieza.descripcion|default:'' }}', {{ pieza.stock }}, {{ pieza.stock_minimo }}, '{% if pieza.stock == 0 %}Crítico{% elif pieza.stock < pieza.stock_minimo %}Bajo{% else %}OK{% endif %}')"
           onmouseover="this.style.background='#F0FBF6'" onmouseout="this.style.background=''">
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">{{ pieza.codigo }}</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.nombre }}</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ pieza.linea|default:"Línea A" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;word-wrap:break-word;overflow-wrap:break-word;">{{ pieza.nombre }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#718096;word-wrap:break-word;overflow-wrap:break-word;">{{ pieza.descripcion }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.stock_minimo }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.stock }}</td>
         <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-          {% if pieza.stock == 0 %}
-            <span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Activo</span>
-          {% elif pieza.stock < pieza.stock_minimo %}
-            <span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Bajo</span>
-          {% else %}
-            <span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Activo</span>
-          {% endif %}
-        </td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ pieza.operador|default:"Sin asignar" }}</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#718096;">{{ pieza.fecha_registro|date:"Y-m-d"|default:"2024-01-10" }}</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-          <button onclick="event.stopPropagation();openDetalle({{ pieza.pk }}, '{{ pieza.nombre }}', '{{ pieza.descripcion|default:'' }}', {{ pieza.stock }}, {{ pieza.stock_minimo }}, 'OK')"
+          <button onclick="event.stopPropagation();openDetalle({{ pieza.pk }}, '{{ pieza.nombre }}', '{{ pieza.descripcion|default:'' }}', {{ pieza.stock }}, {{ pieza.stock_minimo }}, '{% if pieza.stock == 0 %}Crítico{% elif pieza.stock < pieza.stock_minimo %}Bajo{% else %}OK{% endif %}')"
                   style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
@@ -96,7 +91,7 @@
       </tr>
       {% empty %}
       <tr>
-        <td colspan="7" style="padding:48px;text-align:center;color:#718096;font-size:14px;">
+        <td colspan="5" style="padding:48px;text-align:center;color:#718096;font-size:14px;">
           No hay materiales en inventario
         </td>
       </tr>
