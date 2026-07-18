@@ -72,10 +72,10 @@ def _patch(endpoint, data):
 # ── Objeto falso para templates ───────────────────────────────────────────────
 
 class _FakeObj:
-    def __init__(self, **kwargs):
+    def _init_(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-    def __str__(self):
+    def _str_(self):
         return str(getattr(self, 'nombre', getattr(self, 'descripcion', '')))
 
 
@@ -149,6 +149,7 @@ def login_view(request):
         }
         try:
             response = requests.post('http://127.0.0.1:8001/api/v1/auth/login/web', json=payload, timeout=5)
+            print(response.cookies)  # justo después del requests.post
 
             if response.status_code == 200:
                 data = response.json()
@@ -162,12 +163,17 @@ def login_view(request):
                     response_redirect = redirect('supervisor_dashboard')
                 elif 'admin' in usuarioRol:
                     response_redirect = redirect('admin_dashboard')
-                for cookie_name, cookie_value in response.cookies.items(): #Clonar las cookies en el servidor
+                
+                DJANGO_RESERVED_COOKIES = {'sessionid', 'csrftoken'}
+
+                for cookie_name, cookie_value in response.cookies.items():
+                    if cookie_name in DJANGO_RESERVED_COOKIES:
+                        continue
                     response_redirect.set_cookie(
                         cookie_name,
                         cookie_value,
-                        httponly = True,
-                        domain = '127.0.0.1'
+                        httponly=True,
+                        domain='127.0.0.1'
                     )
                 return response_redirect
             elif response.status_code == 401:
@@ -188,116 +194,6 @@ def logout_view(request):
 
     return response_redirect
 
-def registro_view(request):
-    """
-    GET  — muestra la landing page con el wizard
-    POST — crea el empleado admin y hace login automático
-    """
-    if request.method == 'POST':
-        # Recoger datos del formulario
-        empresa_nombre = request.POST.get('empresa_nombre', '').strip()
-        empresa_rfc    = request.POST.get('empresa_rfc', '').strip().upper()
-        empresa_sector = request.POST.get('empresa_sector', '').strip()
 
-        nombre    = request.POST.get('nombre', '').strip()
-        apell1    = request.POST.get('apellido_paterno', '').strip()
-        apell2    = request.POST.get('apellido_materno', '').strip()
-        username  = request.POST.get('username', '').strip().lower()
-        email     = request.POST.get('email', '').strip()
-        password  = request.POST.get('password', '')
-
-        # Validaciones básicas del lado servidor
-        errores = []
-        if not empresa_nombre: errores.append('El nombre de la empresa es obligatorio.')
-        if not empresa_rfc or len(empresa_rfc) != 13: errores.append('El RFC debe tener 13 caracteres.')
-        if not nombre:   errores.append('El nombre es obligatorio.')
-        if not apell1:   errores.append('El apellido paterno es obligatorio.')
-        if not username: errores.append('El usuario es obligatorio.')
-        if not email:    errores.append('El correo es obligatorio.')
-        if not password or len(password) < 8: errores.append('La contraseña debe tener al menos 8 caracteres.')
-
-        if errores:
-            return render(request, 'base/registro.html', {
-                'errores': errores,
-                'post': request.POST,  # para repoblar el form
-            })
-
-        # Crear empleado en el backend
-        payload = {
-            'nombre':      nombre,
-            'primerApell': apell1,
-            'seguApell':   apell2 if apell2 else '',
-            'rfc': request.POST.get('rfc', '').strip().upper(),
-            'estado':      'act',
-            'rol':         'admin',
-            'username':    username,
-            'password':    password,
-            'email':       email,
-        }
-
-        try:
-            r = requests.post(
-                f'{BACKEND_URL}/v1/create/empleado/',
-                json=payload,
-                timeout=10
-            )
-            if r.status_code == 201:
-                # En vez de authenticate() local, usar el endpoint de login del backend
-                login_r = requests.post(
-                    f'{BACKEND_URL}/v1/auth/login/web',
-                    json={'username': username, 'password': password},
-                    timeout=10
-                )
-                if login_r.status_code == 200:
-                    data = login_r.json()
-                    request.session['user_id']        = data['user']['id']
-                    request.session['user_name']      = data['user']['username']
-                    request.session['user_rol']       = data['user']['rol']
-                    request.session['empresa_nombre'] = empresa_nombre
-                    return redirect('admin_dashboard')
-                else:
-                    return render(request, 'base/registro.html', {
-                        'errores': ['Cuenta creada. Inicia sesión manualmente.'],
-                        'post': request.POST,
-                    })
-            else:
-                # Error del backend
-                try:
-                    detalle = r.json()
-                    # Extraer mensajes de error del DRF
-                    msgs = []
-                    for campo, errlist in detalle.items():
-                        if isinstance(errlist, list):
-                            for e in errlist:
-                                if 'already exists' in str(e) or 'ya existe' in str(e):
-                                    if campo == 'rfc':
-                                        msgs.append('El RFC ya está registrado.')
-                                    elif 'username' in str(e).lower():
-                                        msgs.append('El nombre de usuario ya está en uso. Elige otro.')
-                                    else:
-                                        msgs.append(f'{campo}: {e}')
-                                else:
-                                    msgs.append(f'{e}')
-                        else:
-                            msgs.append(str(errlist))
-                    return render(request, 'base/registro.html', {
-                        'errores': msgs or ['Error al crear la cuenta. Intenta de nuevo.'],
-                        'post': request.POST,
-                    })
-                except Exception:
-                    return render(request, 'base/registro.html', {
-                        'errores': [f'Error del servidor ({r.status_code}). Intenta de nuevo.'],
-                        'post': request.POST,
-                    })
-        except requests.exceptions.ConnectionError:
-            return render(request, 'base/registro.html', {
-                'errores': ['No se pudo conectar al servidor. Verifica que el backend esté corriendo.'],
-                'post': request.POST,
-            })
-        except Exception as e:
-            return render(request, 'base/registro.html', {
-                'errores': [f'Error inesperado: {str(e)}'],
-                'post': request.POST,
-            })
-
-    return render(request, 'base/registro.html')
+def errorview404(request, exception = None):
+    return render(request,'base/404page.html', status=404)
