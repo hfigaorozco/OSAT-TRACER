@@ -86,8 +86,8 @@ DATABASES = {#### database de MariaBD FABIAN
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'osattracer_db',
         'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
         'PORT': '3306',
     }
 }

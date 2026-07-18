@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSAT Tracer — Crear cuenta</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:#16A85E; --teal:#009EAF; --dark:#0A0F1A;
+      --border-g:rgba(255,255,255,.1); --text-dim:rgba(255,255,255,.6); --radius:10px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Montserrat',sans-serif; background:var(--dark); color:#fff; min-height:100vh; overflow-x:hidden; }
+
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 48px; height:60px;
+      background:rgba(10,15,26,.85); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border-g);
+    }
+    .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nav-logo-icon { width:34px; height:34px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; }
+    .nav-logo-text { font-size:13px; font-weight:500; color:#fff; line-height:1; }
+    .nav-logo-sub  { font-size:10px; color:var(--text-dim); font-weight:300; }
+    .nav-links { display:flex; align-items:center; gap:32px; }
+    .nav-links a { font-size:13px; color:var(--text-dim); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover { color:#fff; }
+    .nav-cta { padding:8px 20px; border-radius:999px; background:var(--teal); color:#fff !important; font-size:13px; font-weight:500; text-decoration:none; }
+    .nav-cta:hover { background:#007A89 !important; }
+
+    /* HERO */
+    .hero {
+      position:relative; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:120px 24px 80px; overflow:hidden;
+    }
+    .hero-bg {
+      position:absolute; inset:0; z-index:0;
+      /* ── REEMPLAZA ESTO CON TU IMAGEN ──
+         background-image: url('ruta/a/tu-imagen.jpg');
+         background-size: cover;
+         background-position: center;
+      */
+      background: linear-gradient(135deg, #0A0F1A 0%, #0D1B2A 40%, #091520 100%);
+    }
+    .hero-bg::after { content:''; position:absolute; inset:0; background:rgba(0,0,0,.4); }
+    .hero-placeholder {
+      position:absolute; inset:0; z-index:0;
+      display:flex; align-items:center; justify-content:center; pointer-events:none;
+    }
+    .hero-placeholder span {
+      border:2px dashed rgba(255,255,255,.12); padding:16px 32px; border-radius:10px;
+      font-size:12px; color:rgba(255,255,255,.2);
+    }
+    .hero-overlay {
+      position:absolute; inset:0; z-index:1;
+      background:linear-gradient(to bottom, rgba(10,15,26,.2) 0%, rgba(10,15,26,.1) 40%, rgba(10,15,26,.75) 75%, rgba(10,15,26,1) 100%);
+    }
+    .hero-content { position:relative; z-index:2; max-width:780px; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:6px; padding:5px 16px; border-radius:999px;
+      border:1px solid rgba(0,158,175,.4); background:rgba(0,158,175,.1);
+      font-size:12px; font-weight:500; color:#67E8F9; margin-bottom:28px;
+    }
+    .hero-badge span { width:6px; height:6px; border-radius:50%; background:#67E8F9; display:inline-block; }
+    h1 { font-size:clamp(34px,6vw,62px); font-weight:600; line-height:1.1; letter-spacing:-.02em; margin-bottom:20px; }
+    h1 .accent { color:var(--teal); }
+    .hero-sub { font-size:17px; font-weight:300; color:var(--text-dim); line-height:1.7; max-width:560px; margin:0 auto 40px; }
+    .hero-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+    .btn-primary-hero { padding:14px 32px; border-radius:999px; background:var(--teal); color:#fff; font-size:14px; font-weight:500; text-decoration:none; border:none; cursor:pointer; transition:background .2s, transform .15s; display:inline-block; }
+    .btn-primary-hero:hover { background:#007A89; transform:translateY(-1px); }
+    .btn-outline-hero { padding:14px 32px; border-radius:999px; background:transparent; color:#fff; font-size:14px; font-weight:400; text-decoration:none; border:1px solid rgba(255,255,255,.3); cursor:pointer; transition:all .2s; }
+    .btn-outline-hero:hover { border-color:rgba(255,255,255,.7); background:rgba(255,255,255,.05); }
+    .hero-stats { display:flex; gap:48px; justify-content:center; margin-top:64px; flex-wrap:wrap; }
+    .stat-num   { font-size:28px; font-weight:600; }
+    .stat-label { font-size:12px; color:var(--text-dim); margin-top:4px; }
+
+    /* FEATURES */
+    .features { padding:96px 48px; max-width:1200px; margin:0 auto; }
+    .section-label { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--teal); margin-bottom:16px; text-align:center; }
+    .section-title { font-size:clamp(24px,4vw,38px); font-weight:600; text-align:center; margin-bottom:14px; }
+    .section-sub   { font-size:15px; color:var(--text-dim); text-align:center; max-width:500px; margin:0 auto 60px; line-height:1.7; }
+    .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .feat-card { background:rgba(255,255,255,.03); border:1px solid var(--border-g); border-radius:16px; padding:32px 28px; transition:border-color .25s, background .25s; }
+    .feat-card:hover { border-color:rgba(0,158,175,.35); background:rgba(0,158,175,.05); }
+    .feat-icon { width:44px; height:44px; border-radius:10px; background:rgba(0,158,175,.12); display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+    .feat-icon.g { background:rgba(22,168,94,.12); }
+    .feat-icon.p { background:rgba(124,58,237,.12); }
+    .feat-title { font-size:15px; font-weight:600; margin-bottom:8px; }
+    .feat-desc  { font-size:13.5px; color:var(--text-dim); line-height:1.6; }
+
+    /* WIZARD */
+    .register-section { padding:80px 24px 96px; display:flex; flex-direction:column; align-items:center; }
+    .wizard-wrap { width:100%; max-width:880px; background:rgba(255,255,255,.03); border:1px solid var(--border-g); border-radius:20px; overflow:hidden; }
+    .wizard-header { padding:36px 48px 28px; border-bottom:1px solid var(--border-g); display:flex; align-items:flex-start; justify-content:space-between; }
+    .wizard-header h2 { font-size:20px; font-weight:600; margin-bottom:4px; }
+    .wizard-header p  { font-size:13px; color:var(--text-dim); }
+    .wsteps { display:flex; align-items:center; gap:8px; }
+    .wstep  { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:var(--text-dim); }
+    .wstep-num { width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:11px; transition:all .3s; }
+    .wstep.active .wstep-num { border-color:var(--teal); background:var(--teal); color:#fff; }
+    .wstep.done   .wstep-num { border-color:var(--green); background:var(--green); color:#fff; }
+    .wstep.active { color:#fff; }
+    .wstep-sep { width:32px; height:1px; background:rgba(255,255,255,.15); }
+    .wizard-body   { padding:40px 48px; }
+    .paso-title    { font-size:17px; font-weight:600; margin-bottom:6px; }
+    .paso-sub      { font-size:13px; color:var(--text-dim); margin-bottom:28px; line-height:1.6; }
+    .field-g       { margin-bottom:18px; }
+    .field-row     { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+    .field-row-3   { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:18px; }
+    label.fl       { display:block; font-size:11.5px; font-weight:500; color:var(--text-dim); margin-bottom:6px; letter-spacing:.04em; text-transform:uppercase; }
+    .req           { color:#EF5350; }
+    input[type=text], input[type=email], input[type=password], select {
+      width:100%; height:42px; padding:0 14px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius); color:#fff; font-size:14px; font-family:'Montserrat',sans-serif;
+      outline:none; transition:border-color .2s, background .2s; appearance:none;
+    }
+    input::placeholder { color:rgba(255,255,255,.25); }
+    input:focus, select:focus { border-color:var(--teal); background:rgba(0,158,175,.08); }
+    select option { background:#1C2433; color:#fff; }
+    .field-hint    { font-size:11.5px; color:rgba(255,255,255,.3); margin-top:5px; }
+    .server-errors {
+      background:rgba(239,83,80,.1); border:1px solid rgba(239,83,80,.3);
+      border-radius:var(--radius); padding:14px 16px; margin-bottom:20px;
+    }
+    .server-errors ul { padding-left:16px; }
+    .server-errors li { font-size:13px; color:#FC8181; line-height:1.8; }
+    .field-error   { font-size:12px; color:#FC8181; background:rgba(239,83,80,.1); border-radius:6px; padding:9px 12px; margin-top:14px; display:none; }
+    .wizard-footer { padding:24px 48px; border-top:1px solid var(--border-g); display:flex; align-items:center; justify-content:space-between; }
+    .btn-back { padding:11px 24px; border-radius:999px; background:transparent; color:var(--text-dim); border:1px solid rgba(255,255,255,.15); font-size:13.5px; font-family:'Montserrat',sans-serif; cursor:pointer; transition:all .2s; }
+    .btn-back:hover { color:#fff; border-color:rgba(255,255,255,.4); }
+    .btn-next { padding:12px 32px; border-radius:999px; background:var(--teal); color:#fff; border:none; font-size:14px; font-weight:500; font-family:'Montserrat',sans-serif; cursor:pointer; transition:background .2s; }
+    .btn-next:hover { background:#007A89; }
+    .btn-next.green { background:var(--green); }
+    .btn-next.green:hover { background:#0f7a44; }
+    .success-panel { text-align:center; padding:48px 40px; }
+    .success-circle { width:72px; height:72px; border-radius:50%; background:rgba(22,168,94,.15); border:1.5px solid rgba(22,168,94,.4); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+
+    footer { border-top:1px solid var(--border-g); padding:28px 48px; display:flex; align-items:center; justify-content:space-between; font-size:12px; color:rgba(255,255,255,.3); }
+    footer a { color:rgba(255,255,255,.3); text-decoration:none; }
+    footer a:hover { color:rgba(255,255,255,.6); }
+
+    @media (max-width:768px) {
+      nav { padding:0 20px; } .nav-links { display:none; }
+      .features { padding:64px 20px; } .feat-grid { grid-template-columns:1fr; }
+      .wizard-header { flex-direction:column; gap:20px; padding:24px 20px 18px; }
+      .wizard-body { padding:24px 20px; } .wizard-footer { padding:18px 20px; }
+      .field-row, .field-row-3 { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    </div>
+    <div>
+      <div class="nav-logo-text">O.S.A.T. Tracer</div>
+      <div class="nav-logo-sub">Trazabilidad de Semiconductores</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Características</a>
+    <a href="#registro">Precios</a>
+    <a href="#registro">Documentación</a>
+    <a href="#registro" class="nav-cta">Comenzar gratis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg" style="background-image:url('\static\img\semiconductor morado.jpg');background-size:cover;background-position:center;"></div>
+  <div class="hero-placeholder">
+    <span>Reemplaza .hero-bg con tu imagen de fondo</span>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span></span>Plataforma de trazabilidad para OSAT</div>
+    <h1>Visibilidad total<br>en tu línea de <span class="accent">ensamblado</span></h1>
+    <p class="hero-sub">Controla cada etapa del proceso, monitorea KPIs en tiempo real y gestiona tu equipo desde una sola plataforma diseñada para la industria de semiconductores.</p>
+    <div class="hero-btns">
+      <a href="#registro" class="btn-primary-hero">Crear mi cuenta gratis</a>
+      <a href="#features" class="btn-outline-hero">Ver características</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num">12</div><div class="stat-label">Etapas de proceso</div></div>
+      <div><div class="stat-num">3</div><div class="stat-label">KPIs en tiempo real</div></div>
+      <div><div class="stat-num">100%</div><div class="stat-label">Trazabilidad por lote</div></div>
+      <div><div class="stat-num">QR</div><div class="stat-label">App móvil operadores</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Características</div>
+  <h2 class="section-title">Todo lo que necesita tu planta</h2>
+  <p class="section-sub">Desde la recepción de la oblea hasta el empaque final, OSAT Tracer digitaliza cada paso.</p>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="feat-title">Trazabilidad en tiempo real</div>
+      <div class="feat-desc">Cada oblea tiene un historial completo de pasos, operadores, máquinas y defectos detectados.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <div class="feat-title">Semáforo KPI</div>
+      <div class="feat-desc">Yield, Throughput y OEE con umbrales verde-amarillo-rojo configurables por línea de producción.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon p"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+      <div class="feat-title">Alertas automáticas</div>
+      <div class="feat-desc">Notificaciones inmediatas cuando el scrap supera umbrales, inventario baja del mínimo o KPI cae a rojo.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+      <div class="feat-title">App móvil para operadores</div>
+      <div class="feat-desc">Los operadores escanean el QR del lote con su tablet, registran avances y reportan defectos sin papel.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+      <div class="feat-title">Control de inventario</div>
+      <div class="feat-desc">Stock en tiempo real con alertas de reposición automáticas vinculadas a órdenes de producción.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon p"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+      <div class="feat-title">Reportes de producción</div>
+      <div class="feat-desc">Reportes por orden con dies aprobados, scrap total y yield calculado automáticamente.</div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTRO -->
+<section class="register-section" id="registro">
+  <div class="section-label" style="margin-bottom:14px;">Registro</div>
+  <h2 class="section-title" style="margin-bottom:12px;">Crea tu cuenta de administrador</h2>
+  <p class="section-sub">Configura tu empresa y tu acceso en menos de 2 minutos.</p>
+
+  <div class="wizard-wrap">
+
+    <!-- Header -->
+    <div class="wizard-header" id="wizard-header">
+      <div>
+        <h2 id="wiz-title">Datos de la empresa</h2>
+        <p  id="wiz-desc">Información que identifica tu organización en el sistema</p>
+      </div>
+      <div class="wsteps">
+        <div class="wstep active" id="ws1"><div class="wstep-num" id="wn1">1</div><span>Empresa</span></div>
+        <div class="wstep-sep"></div>
+        <div class="wstep pending" id="ws2"><div class="wstep-num" id="wn2">2</div><span>Administrador</span></div>
+      </div>
+    </div>
+
+    <!-- Errores del servidor (Django messages) -->
+    {% if errores %}
+    <div style="padding:0 48px;margin-top:24px;">
+      <div class="server-errors">
+        <ul>{% for e in errores %}<li>{{ e }}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- FORM real Django — envuelve ambos pasos -->
+    <form method="post" action="{% url 'registro' %}" id="registro-form">
+      {% csrf_token %}
+
+      <!-- PASO 1 -->
+      <div class="wizard-body" id="paso-1">
+        <div class="paso-title">Datos de la empresa</div>
+        <div class="paso-sub">Esta información identifica a tu organización dentro del sistema.</div>
+
+        <div class="field-g">
+          <label class="fl">Nombre de la empresa <span class="req">*</span></label>
+          <input type="text" name="empresa_nombre" placeholder="Semiconductores del Norte S.A. de C.V." value="{{ post.empresa_nombre|default:'' }}" required>
+        </div>
+        <div class="field-row">
+          <div class="field-g">
+            <label class="fl">RFC empresarial <span class="req">*</span></label>
+            <input type="text" name="empresa_rfc" placeholder="SEN800101XXX" maxlength="13" value="{{ post.empresa_rfc|default:'' }}" oninput="this.value=this.value.toUpperCase()">
+            <div class="field-hint">13 caracteres</div>
+          </div>
+          <div class="field-g">
+            <label class="fl">Sector <span class="req">*</span></label>
+            <select name="empresa_sector">
+              <option value="">Seleccionar…</option>
+              <option {% if post.empresa_sector == 'Ensamblado OSAT' %}selected{% endif %}>Ensamblado OSAT</option>
+              <option {% if post.empresa_sector == 'Fabricación (Fab)' %}selected{% endif %}>Fabricación (Fab)</option>
+              <option {% if post.empresa_sector == 'Manufactura EMS' %}selected{% endif %}>Manufactura EMS</option>
+              <option {% if post.empresa_sector == 'Diseño de chips' %}selected{% endif %}>Diseño de chips</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field-g">
+            <label class="fl">Ciudad</label>
+            <input type="text" name="empresa_ciudad" placeholder="Tijuana" value="{{ post.empresa_ciudad|default:'' }}">
+          </div>
+          <div class="field-g">
+            <label class="fl">Estado</label>
+            <input type="text" name="empresa_estado" placeholder="Baja California" value="{{ post.empresa_estado|default:'' }}">
+          </div>
+          <div class="field-g">
+            <label class="fl">País</label>
+            <select name="empresa_pais">
+              <option>México</option><option>Estados Unidos</option>
+              <option>Taiwán</option><option>China</option><option>Otro</option>
+            </select>
+          </div>
+        </div>
+        <div id="err-p1" class="field-error"></div>
+      </div>
+
+      <!-- PASO 2 (oculto hasta que el usuario avance) -->
+      <div class="wizard-body" id="paso-2" style="display:none;">
+        <div class="paso-title">Cuenta de administrador</div>
+        <div class="paso-sub">Esta será la cuenta principal con acceso total al sistema.</div>
+
+        <div class="field-row">
+          <div class="field-g">
+            <label class="fl">Nombre <span class="req">*</span></label>
+            <input type="text" name="nombre" id="f-nombre" placeholder="Juan" value="{{ post.nombre|default:'' }}">
+          </div>
+          <div class="field-g">
+            <label class="fl">Apellido paterno <span class="req">*</span></label>
+            <input type="text" name="apellido_paterno" id="f-apell" placeholder="Pérez" value="{{ post.apellido_paterno|default:'' }}">
+          </div>
+        </div>
+        <div class="field-g">
+          <label class="fl">Apellido materno</label>
+          <input type="text" name="apellido_materno" placeholder="López (opcional)" value="{{ post.apellido_materno|default:'' }}">
+        </div>
+        <div class="field-row">
+        <div class="field-g">
+          <label class="fl">Usuario del sistema <span class="req">*</span></label>
+          <input type="text" name="username" id="f-user" placeholder="juan.perez" value="{{ post.username|default:'' }}" oninput="this.value=this.value.toLowerCase().replace(/\s/g,'')">
+          <div class="field-hint">Sin espacios. Ej: juan.perez</div>
+        </div>
+        <div class="field-g">
+          <label class="fl">Correo electrónico <span class="req">*</span></label>
+          <input type="email" name="email" id="f-email" placeholder="juan@empresa.com" value="{{ post.email|default:'' }}">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-g">
+          <label class="fl">RFC personal <span class="req">*</span></label>
+          <input type="text" name="rfc" id="f-rfc" placeholder="PELJ800101XXX" maxlength="13" value="{{ post.rfc|default:'' }}" oninput="this.value=this.value.toUpperCase()">
+          <div class="field-hint">13 caracteres alfanuméricos</div>
+        </div>
+      </div>
+        <div class="field-row">
+          <div class="field-g">
+            <label class="fl">Contraseña <span class="req">*</span></label>
+            <div style="position:relative;">
+              <input type="password" name="password" id="f-pw" placeholder="Mínimo 8 caracteres" style="padding-right:56px;">
+              <button type="button" onclick="togglePw('f-pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;font-family:'Montserrat',sans-serif;cursor:pointer;">Ver</button>
+            </div>
+          </div>
+        </div>
+        <!-- Campo oculto que confirma que el paso 2 ya fue validado en JS -->
+        <input type="hidden" name="paso2_validado" id="paso2-flag" value="0">
+        <div id="err-p2" class="field-error"></div>
+      </div>
+
+      <!-- Footer paso 1 -->
+      <div class="wizard-footer" id="footer-1">
+        <div style="font-size:12px;color:rgba(255,255,255,.3);">
+          ¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color:var(--teal);text-decoration:none;">Inicia sesión</a>
+        </div>
+        <button type="button" class="btn-next" onclick="irPaso2()">Continuar →</button>
+      </div>
+
+      <!-- Footer paso 2 -->
+      <div class="wizard-footer" id="footer-2" style="display:none;">
+        <button type="button" class="btn-back" onclick="volverPaso1()">← Regresar</button>
+        <button type="button" class="btn-next green" onclick="if(validarP2()) document.getElementById('registro-form').submit();">Crear cuenta y entrar</button>
+      </div>
+
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div>© 2026 O.S.A.T. Tracer — Todos los derechos reservados</div>
+  <div style="display:flex;gap:24px;">
+    <a href="#">Términos de uso</a>
+    <a href="#">Privacidad</a>
+    <a href="#">Soporte</a>
+  </div>
+</footer>
+
+<script>
+// Si hay errores del servidor, ir directo al paso 2
+{% if errores %}
+window.addEventListener('DOMContentLoaded', function() { irPaso2(true); });
+{% endif %}
+
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideErr(id) { document.getElementById(id).style.display = 'none'; }
+
+function irPaso2(force) {
+  if (!force) {
+    var nombre = document.querySelector('[name=empresa_nombre]').value.trim();
+    var rfc    = document.querySelector('[name=empresa_rfc]').value.trim();
+    var sector = document.querySelector('[name=empresa_sector]').value;
+    hideErr('err-p1');
+    if (!nombre) { showErr('err-p1','El nombre de la empresa es obligatorio.'); return; }
+    if (!rfc || rfc.length !== 13) { showErr('err-p1','El RFC debe tener exactamente 13 caracteres.'); return; }
+    if (!/^[A-Z0-9]{13}$/.test(rfc)) { showErr('err-p1','El RFC solo puede contener letras mayúsculas y números.'); return; }
+    if (!sector) { showErr('err-p1','Selecciona el sector de tu empresa.'); return; }
+  }
+  document.getElementById('paso-1').style.display    = 'none';
+  document.getElementById('footer-1').style.display  = 'none';
+  document.getElementById('paso-2').style.display    = 'block';
+  document.getElementById('footer-2').style.display  = 'flex';
+  document.getElementById('wiz-title').textContent   = 'Cuenta de administrador';
+  document.getElementById('wiz-desc').textContent    = 'Esta será la cuenta principal con acceso total al sistema';
+  var ws1 = document.getElementById('ws1'); ws1.classList.remove('active'); ws1.classList.add('done');
+  document.getElementById('wn1').textContent = '✓';
+  var ws2 = document.getElementById('ws2'); ws2.classList.remove('pending'); ws2.classList.add('active');
+}
+
+function volverPaso1() {
+  document.getElementById('paso-2').style.display    = 'none';
+  document.getElementById('footer-2').style.display  = 'none';
+  document.getElementById('paso-1').style.display    = 'block';
+  document.getElementById('footer-1').style.display  = 'flex';
+  document.getElementById('wiz-title').textContent   = 'Datos de la empresa';
+  document.getElementById('wiz-desc').textContent    = 'Información que identifica tu organización en el sistema';
+  var ws1 = document.getElementById('ws1'); ws1.classList.remove('done'); ws1.classList.add('active');
+  document.getElementById('wn1').textContent = '1';
+  var ws2 = document.getElementById('ws2'); ws2.classList.remove('active'); ws2.classList.add('pending');
+}
+
+function validarP2() {
+  var n  = document.getElementById('f-nombre').value.trim();
+  var a  = document.getElementById('f-apell').value.trim();
+  var u  = document.getElementById('f-user').value.trim();
+  var e  = document.getElementById('f-email').value.trim();
+  var pw = document.getElementById('f-pw').value;
+  hideErr('err-p2');
+  if (!n || !a) { showErr('err-p2','El nombre y apellido paterno son obligatorios.'); return false; }
+  if (!u) { showErr('err-p2','El nombre de usuario es obligatorio.'); return false; }
+  if (!/^[a-z0-9._-]+$/.test(u)) { showErr('err-p2','El usuario solo puede tener letras minúsculas, números, puntos y guiones.'); return false; }
+  if (!e || e.indexOf('@') < 1) { showErr('err-p2','Ingresa un correo electrónico válido.'); return false; }
+  if (!pw || pw.length < 8) { showErr('err-p2','La contraseña debe tener al menos 8 caracteres.'); return false; }
+  document.getElementById('paso2-flag').value = '1';
+  return true;
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    var t = document.querySelector(this.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior:'smooth' }); }
+  });
+});
+
+function togglePw(id, btn) {
+  var inp = document.getElementById(id);
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'Ocultar' : 'Ver';
+  btn.style.color = show ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.4)';
+}
+
+</script>
+</body>
+</html>
