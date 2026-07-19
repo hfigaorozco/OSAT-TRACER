@@ -9,6 +9,13 @@ class EmpleadoCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
 
+    # seguApell es opcional, puede venir vacío o nulo
+    seguApell = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default='',
+    )
+
     class Meta:
         model = models.Empleado
         fields = [
@@ -20,18 +27,24 @@ class EmpleadoCreateSerializer(serializers.ModelSerializer):
             'rol',
             'username',
             'password',
-            'email'
+            'email',
         ]
 
+    def validate_username(self, value):
+        from django.contrib.auth.models import User
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('Este nombre de usuario ya está en uso.')
+        return value
 
     @transaction.atomic
     def create(self, validated_data):
         username = validated_data.pop('username')
         password = validated_data.pop('password')
-        email = validated_data.pop('email')
-        user = User.objects.create_user(username=username, email=email, password=password)
+        email    = validated_data.pop('email')
+        # seguApell puede venir vacío
+        validated_data.setdefault('seguApell', '')
+        user     = User.objects.create_user(username=username, email=email, password=password)
         empleado = models.Empleado.objects.create(usuario=user, **validated_data)
-
         return empleado
 
 
@@ -61,6 +74,7 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='usuario.username', required=False)
     email = serializers.EmailField(source='usuario.email', required=False)
     password = serializers.CharField(write_only=True, required=False)
+    seguApell = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = models.Empleado
@@ -70,6 +84,7 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
             'seguApell',
             'estado',
             'username',
+            'email',
             'password'
         ]
 

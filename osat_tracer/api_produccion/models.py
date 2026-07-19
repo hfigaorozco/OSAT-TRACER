@@ -20,6 +20,7 @@ class Tipo_Oblea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(max_length=25)
     cantidadDies = models.IntegerField(default=0, unique=True)
+    activo = models.BooleanField(default=True)
 
 
 class Estado_Paso(models.Model):
@@ -55,40 +56,44 @@ class Estado_Oblea(models.Model):
         return self.descripcion
 
 
-class Linea(models.Model):
-    codigo = models.CharField(primary_key=True, max_length=5)
-    nombre = models.CharField(unique=True, max_length=20)
-    
-    class Meta:
-        db_table = 'linea'
-        
-    def __str__(self):
-        return self.nombre
-    
-    
 class Proceso(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=80)
-    
+    activo = models.BooleanField(default=True)
+
     class Meta:
         db_table = 'proceso'
-        
+
     def __str__(self):
         return self.nombre
-    
-    
+
+
+class Linea(models.Model):
+    codigo = models.CharField(primary_key=True, max_length=5)
+    nombre = models.CharField(unique=True, max_length=20)
+    proceso = models.ForeignKey(Proceso, null=True, blank=True, on_delete=models.SET_NULL, related_name='lineas')
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'linea'
+
+    def __str__(self):
+        return self.nombre
+
+
 class Paso(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=80)
     tiempoEstimado = models.DurationField()
-    
+    activo = models.BooleanField(default=True)
+
     class Meta:
-        db_table = 'paso' 
-    
+        db_table = 'paso'
+
     def __str__(self):
-        return self.nombre 
+        return self.nombre
   
 
 class Orden(models.Model):

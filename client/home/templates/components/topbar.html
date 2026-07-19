@@ -32,9 +32,17 @@
     <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
       {{ request.session.user_name|default:"Empleado" }}
     </span>
-    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:13px;color:#C4C5D0;">
-      {{ request.session.user_rol|default:"" }}
-    </span>
+    {% with rol=request.session.user_rol|default:"" %}
+    {% if 'admin' in rol %}
+      <span style="background:#E9D8FD;color:#553C9A;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Administrador</span>
+    {% elif 'super' in rol %}
+      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Supervisor</span>
+    {% elif 'opera' in rol %}
+      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Operador</span>
+    {% else %}
+      <span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">{{ rol }}</span>
+    {% endif %}
+    {% endwith %}
 
     <div style="position:relative;">
       <button class="topbar-bell" onclick="toggleNotifDropdown()" aria-label="Notificaciones">
