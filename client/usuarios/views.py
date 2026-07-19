@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
-
+from django.core.paginator import Paginator
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
@@ -78,8 +78,14 @@ def admin_personal(request):
         _FakeObj(pk='ina', nombre='Inactivo'),
     ]
 
+    empleados_lista = _build_empleados(empleados_bd)
+    paginator = Paginator(empleados_lista, 8)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     ctx.update({
-        'empleados':        _build_empleados(empleados_bd),
+        'empleados':        page_obj,
+        'page_obj':         page_obj,
         'roles_list':       roles_list,
         'estados_empleado': estados_empleado,
     })
