@@ -21,6 +21,9 @@ class Tipo_Oblea(models.Model):
     descripcion = models.CharField(max_length=25)
     cantidadDies = models.IntegerField(default=0, unique=True)
     activo = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'tipo_oblea' 
 
 
 class Estado_Paso(models.Model):
@@ -201,6 +204,7 @@ class Paso_Realizado(models.Model):
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
     observaciones = models.CharField(max_length=200)
+    scrap = models.IntegerField(default=0)
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
