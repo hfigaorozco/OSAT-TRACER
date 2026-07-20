@@ -8,8 +8,8 @@ urlpatterns = [
     ## Maquinaria
     path('v1/create/maquinaria/', views.CreateMaquinaAPIView.as_view(), name="create_maquinaria"),
     path('v1/list/maquinaria/', views.ListMaquinaAPIView.as_view(), name="list_maquinaria"),
-    path('v1/detail/maquinaria/<int:pk>/', views.DetailMaquinaAPIView.as_view(), name="detail_maquinaria"),
-    path('v1/update/maquinaria/<int:pk>/', views.UpdateMaquinaAPIView.as_view(), name="update_maquinaria"),
+    path('v1/detail/maquinaria/<str:pk>/', views.DetailMaquinaAPIView.as_view(), name="detail_maquinaria"),
+    path('v1/update/maquinaria/<str:pk>/', views.UpdateMaquinaAPIView.as_view(), name="update_maquinaria"),
     
     ## Estado_Maquinaria
     path('v1/create/estado_maquinaria/', views.CreateEstadoMaquinaAPIView.as_view(), name="create_estado_maquinaria"),

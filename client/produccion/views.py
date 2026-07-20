@@ -279,7 +279,7 @@ def admin_organizacion(request):
     kpi_cards = [
         {
             'nombre':         k.get('nombre', ''),
-            'key':            k.get('nombre', '').lower(),
+            'key':            k.get('clave', ''),
             'unidad':         '%',
             'verde':          k.get('umbralVerde', 0),
             'amarillo':       k.get('umbralAmarillo', 0),
@@ -291,7 +291,31 @@ def admin_organizacion(request):
         for k in kpis
     ]
 
-    # Filtro de estado para la pestaña Pasos (no afecta el banco de pasos activos de Plantillas)
+    # Filtros de estado (activo/inactivo) para cada listado de la pestaña correspondiente
+    estado_plantillas = request.GET.get('estado_plantillas', 'todos')
+    if estado_plantillas == 'activo':
+        plantillas_filtradas = [p for p in plantillas if p['activo']]
+    elif estado_plantillas == 'inactivo':
+        plantillas_filtradas = [p for p in plantillas if not p['activo']]
+    else:
+        plantillas_filtradas = plantillas
+
+    estado_lineas = request.GET.get('estado_lineas', 'todos')
+    if estado_lineas == 'activo':
+        lineas_filtradas = [l for l in lineas if l['activo']]
+    elif estado_lineas == 'inactivo':
+        lineas_filtradas = [l for l in lineas if not l['activo']]
+    else:
+        lineas_filtradas = lineas
+
+    estado_obleas = request.GET.get('estado_obleas', 'todos')
+    if estado_obleas == 'activo':
+        obleas_filtradas = [o for o in tipos_oblea_front if o['activo']]
+    elif estado_obleas == 'inactivo':
+        obleas_filtradas = [o for o in tipos_oblea_front if not o['activo']]
+    else:
+        obleas_filtradas = tipos_oblea_front
+
     estado_pasos = request.GET.get('estado_pasos', 'todos')
     if estado_pasos == 'activo':
         pasos_filtrados = [p for p in pasos if p['activo']]
@@ -300,17 +324,23 @@ def admin_organizacion(request):
     else:
         pasos_filtrados = pasos
 
-    plantillas_page = Paginator(plantillas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page', 1))
-    lineas_page     = Paginator(lineas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_lineas', 1))
-    obleas_page     = Paginator(tipos_oblea_front, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_obleas', 1))
+    plantillas_page = Paginator(plantillas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page', 1))
+    lineas_page     = Paginator(lineas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_lineas', 1))
+    obleas_page     = Paginator(obleas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_obleas', 1))
     pasos_page      = Paginator(pasos_filtrados, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_pasos', 1))
 
     ctx.update({
         'plantillas':       plantillas,
         'plantillas_page':  plantillas_page,
+        'estado_plantillas': estado_plantillas,
+        'plantillas_extra_params': f'tab=plantillas&estado_plantillas={estado_plantillas}&',
         'tipos_oblea':      obleas_page,
+        'estado_obleas':    estado_obleas,
+        'obleas_extra_params': f'tab=obleas&estado_obleas={estado_obleas}&',
         'lineas':           lineas,
         'lineas_page':      lineas_page,
+        'estado_lineas':    estado_lineas,
+        'lineas_extra_params': f'tab=lineas&estado_lineas={estado_lineas}&',
         'pasos':            pasos_page,
         'estado_pasos':     estado_pasos,
         'pasos_extra_params': f'tab=pasos&estado_pasos={estado_pasos}&',

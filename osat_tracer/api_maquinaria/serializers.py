@@ -13,6 +13,7 @@ class CreateMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
+            "activo",
         ]
 #LIST
 class ListMaquinaSerializer(serializers.ModelSerializer):
@@ -21,6 +22,12 @@ class ListMaquinaSerializer(serializers.ModelSerializer):
         fields = [
             "numSerie",
             "nombre",
+            "fechaReg",
+            "tipoMaquina",
+            "estado",
+            "empleado",
+            "linea",
+            "activo",
         ]
 #DETAIL
 class DetalMaquinaSerializer(serializers.ModelSerializer):
@@ -34,15 +41,18 @@ class DetalMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
+            "activo",
         ]
 #UPDATE
 class UpdateMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
+            "nombre",
             "estado",
             "empleado",
             "linea",
+            "activo",
         ]
         
         
