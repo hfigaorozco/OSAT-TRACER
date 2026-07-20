@@ -10,7 +10,7 @@
   </div>
   <div class="page-actions">
     <button class="btn btn-outline" onclick="openModal('modal-tipos-maquina')">Tipos</button>
-    <button class="btn btn-primary" onclick="openModal('modal-create-maquina')">
+    <button class="btn btn-primary" onclick="openNuevaMaquina()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nueva máquina
     </button>
@@ -21,18 +21,18 @@
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
     <select name="tipo" class="form-control" style="width:180px;">
       <option value="">Todos los tipos</option>
-      {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}" {% if request.GET.tipo == tipo.pk|stringformat:"s" %}selected{% endif %}>{{ tipo.nombre }}</option>{% endfor %}
+      {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}" {% if tipo_filtro == tipo.pk %}selected{% endif %}>{{ tipo.nombre }}</option>{% endfor %}
     </select>
     <select name="estado" class="form-control" style="width:160px;">
       <option value="">Todos los estados</option>
-      {% for est in estados_maquina %}<option value="{{ est.pk }}" {% if request.GET.estado == est.pk|stringformat:"s" %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
+      {% for est in estados_maquina %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
     <select name="linea" class="form-control" style="width:160px;">
       <option value="">Todas las líneas</option>
-      {% for linea in lineas %}<option value="{{ linea.pk }}" {% if request.GET.linea == linea.pk|stringformat:"s" %}selected{% endif %}>{{ linea.nombre }}</option>{% endfor %}
+      {% for linea in lineas %}<option value="{{ linea.pk }}" {% if linea_filtro == linea.pk %}selected{% endif %}>{{ linea.nombre }}</option>{% endfor %}
     </select>
     <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
-    {% if request.GET.tipo or request.GET.estado or request.GET.linea %}
+    {% if tipo_filtro or estado_filtro or linea_filtro %}
       <a href="{% url 'admin_maquinaria' %}" class="btn btn-ghost btn-sm">Limpiar</a>
     {% endif %}
   </form>
@@ -42,63 +42,77 @@
   <div class="table-wrap">
     <table class="data-table">
       <thead>
-        <tr><th>ID Máquina</th><th>Tipo</th><th>Línea</th><th>Estado</th><th>Operador asignado</th><th>Fecha registro</th><th>Acciones</th></tr>
+        <tr><th>ID Máquina</th><th>Nombre</th><th>Tipo</th><th>Línea</th><th>Estado</th><th>Operador asignado</th><th>Fecha registro</th><th>Activo</th><th>Acciones</th></tr>
       </thead>
       <tbody>
-        {% for maq in maquinas %}
+        {% for maq in maquinas_page %}
         <tr>
-          <td style="font-family:monospace;font-weight:600;">{{ maq.id_maquina }}</td>
-          <td>{{ maq.tipo.nombre|default:"—" }}</td>
-          <td>{{ maq.linea.nombre|default:"—" }}</td>
+          <td style="font-family:monospace;font-weight:600;">{{ maq.pk }}</td>
+          <td>{{ maq.nombre }}</td>
+          <td>{{ maq.tipo_nombre }}</td>
+          <td>{{ maq.linea_nombre|default:"—" }}</td>
           <td>
-            {% if maq.estado.nombre == 'Disponible' %}<span class="badge badge-activo">Disponible</span>
-            {% elif maq.estado.nombre == 'Ocupada' %}<span class="badge badge-en-proceso">Ocupada</span>
-            {% elif maq.estado.nombre == 'Mantenimiento' %}<span class="badge badge-hold">Mantenimiento</span>
-            {% else %}<span class="badge badge-inactivo">{{ maq.estado.nombre|default:"—" }}</span>{% endif %}
+            {% if maq.estado_nombre == 'Disponible' %}<span class="badge badge-activo">Disponible</span>
+            {% elif maq.estado_nombre == 'Ocupada' %}<span class="badge badge-en-proceso">Ocupada</span>
+            {% elif maq.estado_nombre == 'Mantenimiento' %}<span class="badge badge-hold">Mantenimiento</span>
+            {% else %}<span class="badge badge-inactivo">{{ maq.estado_nombre|default:"—" }}</span>{% endif %}
           </td>
           <td>
-            {% if maq.operador_actual %}{{ maq.operador_actual.primer_nombre }} {{ maq.operador_actual.apellido_paterno }}
+            {% if maq.empleado_nombre %}{{ maq.empleado_nombre }}
             {% else %}<span style="color:#718096;">Sin asignar</span>{% endif %}
           </td>
-          <td>{{ maq.created_at|date:"d/m/Y"|default:"—" }}</td>
+          <td>{{ maq.fecha_reg|date:"d/m/Y"|default:"—" }}</td>
+          <td>
+            {% if maq.activo %}<span class="badge badge-activo">Activo</span>
+            {% else %}<span class="badge badge-inactivo">Inactivo</span>{% endif %}
+          </td>
           <td class="table-actions">
-            <button class="action-btn" title="Ver detalle" onclick="openModal('modal-detalle-maq-{{ maq.pk }}')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-            <button class="action-btn" title="Editar" onclick="openModal('modal-edit-maq-{{ maq.pk }}')">
+            <button class="action-btn" title="Editar" onclick="openEditarMaquina('{{ maq.pk|escapejs }}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg><p>No se encontraron máquinas</p></div></td></tr>
+        <tr><td colspan="9"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg><p>No se encontraron máquinas</p></div></td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  {% include "components/pagination.html" with page_obj=maquinas_page extra_params=maquinaria_extra_params %}
 </div>
 
-<!-- Modal nueva máquina -->
-<div class="modal-overlay" id="modal-create-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-create-maquina')">
+<!-- Modal nueva / editar máquina -->
+<div class="modal-overlay" id="modal-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-maquina')">
   <div class="modal-card modal-md">
     <div class="modal-header">
-      <h2>Nueva máquina</h2>
-      <button class="modal-close" onclick="closeModal('modal-create-maquina')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 id="maquina-modal-title">Nueva máquina</h2>
+      <button class="modal-close" onclick="closeModal('modal-maquina')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <form method="post" action="{% url 'admin_maquinaria_crear' %}">
+    <form method="post" id="maquina-form" action="{% url 'admin_maquinaria_crear' %}">
       {% csrf_token %}
       <div class="modal-body">
         <div class="form-grid-2">
           <div class="form-group">
+            <label class="form-label">Número de serie <span class="required">*</span></label>
+            <input type="text" name="num_serie" id="maquina-numserie-input" class="form-control" maxlength="5" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre <span class="required">*</span></label>
+            <input type="text" name="nombre" id="maquina-nombre-input" class="form-control" maxlength="30" required>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
             <label class="form-label">Tipo de máquina <span class="required">*</span></label>
-            <select name="tipo" class="form-control" required>
+            <select name="tipo" id="maquina-tipo-input" class="form-control" required>
               <option value="">Seleccionar…</option>
               {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}">{{ tipo.nombre }}</option>{% endfor %}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Línea de producción <span class="required">*</span></label>
-            <select name="linea" class="form-control" required>
+            <select name="linea" id="maquina-linea-input" class="form-control" required>
               <option value="">Seleccionar…</option>
               {% for linea in lineas %}<option value="{{ linea.pk }}">{{ linea.nombre }}</option>{% endfor %}
             </select>
@@ -106,28 +120,37 @@
         </div>
         <div class="form-grid-2">
           <div class="form-group">
-            <label class="form-label">ID Máquina</label>
-            <input type="text" class="form-control" value="(Autogenerado)" readonly style="background:#F4F6F9;color:#718096;">
+            <label class="form-label">Estado <span class="required">*</span></label>
+            <select name="estado" id="maquina-estado-input" class="form-control" required>
+              <option value="">Seleccionar…</option>
+              {% for est in estados_maquina %}<option value="{{ est.pk }}">{{ est.nombre }}</option>{% endfor %}
+            </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Estado inicial</label>
-            <input type="text" class="form-control" value="Disponible" readonly style="background:#F4F6F9;color:#718096;">
+            <label class="form-label">Operador asignado <span class="required">*</span></label>
+            <select name="empleado" id="maquina-empleado-input" class="form-control" required>
+              <option value="">Seleccionar…</option>
+              {% for emp in empleados %}<option value="{{ emp.pk }}">{{ emp.nombre }}</option>{% endfor %}
+            </select>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notas</label>
-          <textarea name="notas" class="form-control" rows="2" placeholder="Opcional…"></textarea>
+          <label class="form-label">Estado del registro</label>
+          <select name="activo" id="maquina-activo-input" class="form-control">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-create-maquina')">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Registrar máquina</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-maquina')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Modal tipos de máquina -->
+<!-- Modal tipos de máquina (solo lectura) -->
 <div class="modal-overlay" id="modal-tipos-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-tipos-maquina')">
   <div class="modal-card modal-md">
     <div class="modal-header">
@@ -135,17 +158,13 @@
       <button class="modal-close" onclick="closeModal('modal-tipos-maquina')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-        <button class="btn btn-outline btn-sm" onclick="addCatalogRow('tipos-tbody',[{placeholder:'Código'},{placeholder:'Descripción'}])">+ Agregar tipo</button>
-      </div>
       <table class="data-table">
-        <thead><tr><th>Código</th><th>Descripción</th><th></th></tr></thead>
-        <tbody id="tipos-tbody">
+        <thead><tr><th>Código</th><th>Descripción</th></tr></thead>
+        <tbody>
           {% for tipo in tipos_maquina %}
           <tr>
-            <td style="font-family:monospace;">{{ tipo.codigo|default:tipo.pk }}</td>
+            <td style="font-family:monospace;">{{ tipo.pk }}</td>
             <td>{{ tipo.nombre }}</td>
-            <td><button class="action-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -156,4 +175,47 @@
     </div>
   </div>
 </div>
+
+{{ maquinas|json_script:"maquinas-data" }}
+
+{% block extra_js %}
+<script>
+var MAQUINAS_DATA = JSON.parse(document.getElementById('maquinas-data').textContent);
+var URL_MAQUINA_EDITAR = "{% url 'admin_maquinaria_editar' pk='0' %}".replace('/0/', '/__PK__/');
+
+function getMaquina(pk) {
+  return MAQUINAS_DATA.find(function(m){ return String(m.pk) === String(pk); });
+}
+
+function openNuevaMaquina() {
+  document.getElementById('maquina-modal-title').textContent = 'Nueva máquina';
+  document.getElementById('maquina-numserie-input').value = '';
+  document.getElementById('maquina-numserie-input').disabled = false;
+  document.getElementById('maquina-nombre-input').value = '';
+  document.getElementById('maquina-tipo-input').value = '';
+  document.getElementById('maquina-linea-input').value = '';
+  document.getElementById('maquina-estado-input').value = '';
+  document.getElementById('maquina-empleado-input').value = '';
+  document.getElementById('maquina-activo-input').value = 'true';
+  document.getElementById('maquina-form').action = "{% url 'admin_maquinaria_crear' %}";
+  openModal('modal-maquina');
+}
+
+function openEditarMaquina(pk) {
+  var m = getMaquina(pk);
+  if (!m) return;
+  document.getElementById('maquina-modal-title').textContent = 'Editar: ' + m.nombre;
+  document.getElementById('maquina-numserie-input').value = m.pk;
+  document.getElementById('maquina-numserie-input').disabled = true;
+  document.getElementById('maquina-nombre-input').value = m.nombre;
+  document.getElementById('maquina-tipo-input').value = m.tipo_pk;
+  document.getElementById('maquina-linea-input').value = m.linea_pk;
+  document.getElementById('maquina-estado-input').value = m.estado_pk;
+  document.getElementById('maquina-empleado-input').value = m.empleado_pk;
+  document.getElementById('maquina-activo-input').value = m.activo ? 'true' : 'false';
+  document.getElementById('maquina-form').action = URL_MAQUINA_EDITAR.replace('__PK__', pk);
+  openModal('modal-maquina');
+}
+</script>
+{% endblock %}
 {% endblock %}
