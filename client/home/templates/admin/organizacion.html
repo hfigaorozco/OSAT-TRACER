@@ -56,8 +56,11 @@
       </div>
       <div style="position:relative;">
         <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
-        <select style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
-          <option>Select</option><option>Activo</option><option>Inactivo</option>
+        <select id="plantillas-estado-filter" onchange="filtrarPlantillasPorEstado(this.value)"
+          style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
+          <option value="todos" {% if estado_plantillas == 'todos' %}selected{% endif %}>Todos</option>
+          <option value="activo" {% if estado_plantillas == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="inactivo" {% if estado_plantillas == 'inactivo' %}selected{% endif %}>Inactivo</option>
         </select>
       </div>
     </div>
@@ -87,7 +90,7 @@
     {% endfor %}
   </div>
 
-  {% include "components/pagination.html" with page_obj=plantillas_page page_param='page' extra_params='tab=plantillas&' %}
+  {% include "components/pagination.html" with page_obj=plantillas_page page_param='page' extra_params=plantillas_extra_params %}
 </div>
 
 <!-- ═══ TAB LÍNEAS DE PRODUCCIÓN ═══ -->
@@ -96,6 +99,15 @@
     <div style="position:relative;">
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    </div>
+    <div style="position:relative;">
+      <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+      <select id="lineas-estado-filter" onchange="filtrarLineasPorEstado(this.value)"
+        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
+        <option value="todos" {% if estado_lineas == 'todos' %}selected{% endif %}>Todos</option>
+        <option value="activo" {% if estado_lineas == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if estado_lineas == 'inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
     </div>
   </div>
 
@@ -131,7 +143,7 @@
     </table>
   </div>
 
-  {% include "components/pagination.html" with page_obj=lineas_page page_param='page_lineas' extra_params='tab=lineas&' %}
+  {% include "components/pagination.html" with page_obj=lineas_page page_param='page_lineas' extra_params=lineas_extra_params %}
 </div>
 
 <!-- ═══ TAB TIPOS DE OBLEA ═══ -->
@@ -140,6 +152,15 @@
     <div style="position:relative;">
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    </div>
+    <div style="position:relative;">
+      <label style="position:absolute;top:-18px;left:0;font-size:11px;color:var(--text-muted);">Estado</label>
+      <select id="obleas-estado-filter" onchange="filtrarObleasPorEstado(this.value)"
+        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
+        <option value="todos" {% if estado_obleas == 'todos' %}selected{% endif %}>Todos</option>
+        <option value="activo" {% if estado_obleas == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if estado_obleas == 'inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
     </div>
   </div>
 
@@ -177,7 +198,7 @@
     </table>
   </div>
 
-  {% include "components/pagination.html" with page_obj=tipos_oblea page_param='page_obleas' extra_params='tab=obleas&' %}
+  {% include "components/pagination.html" with page_obj=tipos_oblea page_param='page_obleas' extra_params=obleas_extra_params %}
 </div>
 
 <!-- ═══ TAB PASOS ═══ -->
@@ -239,51 +260,51 @@
 
 <!-- ═══ TAB KPI ═══ -->
 <div id="org-tab-kpi" style="display:none;">
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;">
 
     {% for kpi_item in kpi_cards %}
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <h3 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">{{ kpi_item.nombre }}</h3>
-        <div style="display:flex;gap:5px;">
-          <div style="width:14px;height:14px;border-radius:50%;background:#16A85E;"></div>
-          <div style="width:14px;height:14px;border-radius:50%;background:#F5A623;"></div>
-          <div style="width:14px;height:14px;border-radius:50%;background:#EF5350;"></div>
+    <div class="card" style="padding:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <h3 style="font-size:19px;font-weight:700;color:#1A202C;margin:0;">{{ kpi_item.nombre }}</h3>
+        <div style="display:flex;gap:6px;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#16A85E;"></div>
+          <div style="width:16px;height:16px;border-radius:50%;background:#F5A623;"></div>
+          <div style="width:16px;height:16px;border-radius:50%;background:#EF5350;"></div>
         </div>
       </div>
       <form method="post" action="{% url 'admin_config_kpi_save' %}">{% csrf_token %}
         <input type="hidden" name="kpi" value="{{ kpi_item.key }}">
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Verde ({{ kpi_item.label_verde }})</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:10px;height:10px;border-radius:50%;background:#16A85E;flex-shrink:0;"></div>
+        <div style="margin-bottom:18px;">
+          <div style="font-size:13.5px;color:#718096;margin-bottom:8px;">Verde ({{ kpi_item.label_verde }})</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#16A85E;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="padding-right:32px;">
-              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="height:44px;font-size:15px;padding-right:40px;">
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Amarillo ({{ kpi_item.label_amarillo }})</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:10px;height:10px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
+        <div style="margin-bottom:18px;">
+          <div style="font-size:13.5px;color:#718096;margin-bottom:8px;">Amarillo ({{ kpi_item.label_amarillo }})</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="padding-right:32px;">
-              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:15px;padding-right:40px;">
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px;color:#718096;margin-bottom:6px;">Rojo ({{ kpi_item.label_rojo }})</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:10px;height:10px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
+        <div style="margin-bottom:22px;">
+          <div style="font-size:13.5px;color:#718096;margin-bottom:8px;">Rojo ({{ kpi_item.label_rojo }})</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="padding-right:32px;">
-              <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="height:44px;font-size:15px;padding-right:40px;">
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Guardar umbrales</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:14.5px;">Guardar umbrales</button>
       </form>
     </div>
     {% endfor %}
@@ -887,6 +908,18 @@ function openEditarOblea(pk, nombre, dies, activo) {
 
 function filtrarPasosPorEstado(estado) {
   window.location.href = "{% url 'admin_organizacion' %}?tab=pasos&estado_pasos=" + encodeURIComponent(estado);
+}
+
+function filtrarPlantillasPorEstado(estado) {
+  window.location.href = "{% url 'admin_organizacion' %}?tab=plantillas&estado_plantillas=" + encodeURIComponent(estado);
+}
+
+function filtrarLineasPorEstado(estado) {
+  window.location.href = "{% url 'admin_organizacion' %}?tab=lineas&estado_lineas=" + encodeURIComponent(estado);
+}
+
+function filtrarObleasPorEstado(estado) {
+  window.location.href = "{% url 'admin_organizacion' %}?tab=obleas&estado_obleas=" + encodeURIComponent(estado);
 }
 
 function openNuevoPaso() {

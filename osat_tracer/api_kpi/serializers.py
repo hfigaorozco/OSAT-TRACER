@@ -79,6 +79,7 @@ class ListKpiSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Kpi
         fields = [
+            'clave',
             'nombre',
             'unidad',
             'umbralVerde',
