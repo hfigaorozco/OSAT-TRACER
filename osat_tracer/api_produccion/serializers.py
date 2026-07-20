@@ -453,13 +453,9 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
 #SERIALIZERS  PasoRealizado
 #CREATE
 class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
-    defectos = serializers.ListField(
-        child=serializers.DictField(), required=False, write_only=True
-    )
+    defectos = serializers.ListField(child=serializers.DictField(), required=False, write_only=True)
     unidades_defecto = serializers.IntegerField(required=False, write_only=True, default=0)
-    observaciones = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True, write_only=True
-    )
+    observaciones = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = models.Paso_Realizado
@@ -673,7 +669,13 @@ class PasoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Paso
-        fields = ['codigo', 'nombre', 'descripcion', 'tiempoEstimado', 'activo']
+        fields = [
+            'codigo', 
+            'nombre', 
+            'descripcion', 
+            'tiempoEstimado', 
+            'activo'
+        ]
 
     def get_tiempoEstimado(self, obj):
         if obj.tiempoEstimado is None:
