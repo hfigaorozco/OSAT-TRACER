@@ -1,0 +1,63 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}OSAT Tracer - Acceso no autorizado{% endblock %}
+
+{% block extra_css %}
+<style>
+.aviso-wrap {
+  min-height: 100vh;
+  background: var(--bg-app);
+  display: flex; align-items: center; justify-content: center; padding: 2rem;
+}
+.aviso-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 2.5rem 2rem;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  text-align: center;
+}
+.login-logo {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.login-logo img { width: 56px; height: 48px; object-fit: contain; }
+.login-logo h1 {
+  font-family: var(--font-main); font-weight: 700; font-size: 22px; color: var(--text-primary);
+}
+.login-tagline {
+  text-align: center; color: #718096; font-size: 13px; margin-bottom: 28px;
+  font-family: var(--font-main); font-weight: 300;
+}
+.texto-red-no-autorizada {
+  margin-top: 24px;
+}
+.texto-red-no-autorizada p {
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 15px;
+  color: #4A5568;
+  margin: 0;
+  line-height: 1.6;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="aviso-wrap">
+  <div class="aviso-card">
+
+    <div class="login-logo">
+      <img src="{% static 'img/logo.png' %}" alt="OSAT Tracer">
+      <h1>OSAT Tracer</h1>
+    </div>
+    <p class="login-tagline">Sistema de Trazabilidad de Ensamblado de Semiconductores</p>
+
+    <div class="texto-red-no-autorizada">
+        <p>No fue posible cargar el sistema.</p>
+        <p>Red no autorizada.</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

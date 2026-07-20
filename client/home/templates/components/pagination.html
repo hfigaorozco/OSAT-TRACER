@@ -1,23 +1,25 @@
-{% if page_obj and page_obj.paginator.num_pages > 1 %}
-<div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px;">
-  {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}" class="pag-btn">‹</a>
-  {% else %}
-    <span class="pag-btn disabled">‹</span>
-  {% endif %}
-  {% for num in page_obj.paginator.page_range %}
-    {% if num == page_obj.number %}
-      <span class="pag-btn active">{{ num }}</span>
+{% if page_obj %}
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px;">
+    {% if page_obj.has_previous %}
+      <a href="?{{ extra_params }}{{ page_param|default:'page' }}={{ page_obj.previous_page_number }}" class="pag-btn">‹</a>
     {% else %}
-      <a href="?page={{ num }}" class="pag-btn">{{ num }}</a>
+      <span class="pag-btn disabled">‹</span>
     {% endif %}
-  {% endfor %}
-  {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}" class="pag-btn">›</a>
-  {% else %}
-    <span class="pag-btn disabled">›</span>
+    {% for num in page_obj.paginator.page_range %}
+      {% if num == page_obj.number %}
+        <span class="pag-btn active">{{ num }}</span>
+      {% else %}
+        <a href="?{{ extra_params }}{{ page_param|default:'page' }}={{ num }}" class="pag-btn">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a href="?{{ extra_params }}{{ page_param|default:'page' }}={{ page_obj.next_page_number }}" class="pag-btn">›</a>
+    {% else %}
+      <span class="pag-btn disabled">›</span>
+    {% endif %}
+  </div>
   {% endif %}
-</div>
 {% else %}
 <!-- Paginación de ejemplo cuando no hay page_obj real -->
 <div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px;">

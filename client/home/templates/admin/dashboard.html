@@ -72,11 +72,11 @@
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead style="background:#F7FAFC;">
         <tr>
-          <th style="padding:10px 20px;text-align:left;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;width:120px;">KPI</th>
-          <th style="padding:10px 20px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea A</th>
-          <th style="padding:10px 20px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea B</th>
-          <th style="padding:10px 20px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea C</th>
-          <th style="padding:10px 20px;text-align:center;font-size:11px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Global</th>
+          <th style="padding:10px 20px;text-align:left;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;width:120px;">KPI</th>
+          <th style="padding:10px 20px;text-align:center;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea A</th>
+          <th style="padding:10px 20px;text-align:center;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea B</th>
+          <th style="padding:10px 20px;text-align:center;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea C</th>
+          <th style="padding:10px 20px;text-align:center;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Global</th>
         </tr>
       </thead>
       <tbody>
@@ -85,7 +85,7 @@
           <td style="padding:14px 20px;font-weight:600;color:#2D3748;white-space:nowrap;font-size:13px;">{{ row.nombre }}</td>
           {% for celda in row.celdas %}
           <td style="padding:14px 20px;text-align:center;">
-            <span style="display:inline-block;padding:5px 20px;border-radius:6px;font-weight:600;font-size:13px;background:{{ celda.bg }};color:{{ celda.color }};">
+            <span style="display:inline-block;width:90px;padding:8px 0;text-align:center;border-radius:6px;font-weight:700;font-size:15px;background:{{ celda.bg }};color:{{ celda.color }};">
               {{ celda.valor }}{{ celda.unidad }}
             </span>
           </td>
