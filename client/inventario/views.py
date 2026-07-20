@@ -1,99 +1,107 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from home.views import _base_ctx, _get, _get_many, _post, _patch
+from django.views import generic
+from django.http import JsonResponse
+
+from home.views import _base_ctx, _get, _get_many, _post, _patch, _post_file
+import requests
 
 
-# ════════════════════════════════════════════════════════════════
 # ADMIN — INVENTARIO
-# ════════════════════════════════════════════════════════════════
 
-def admin_inventario(request):
-    piezas_bd, alertas_bd = _get_many(
-        '/v1/list/piezas/',
-        '/v1/list/alertas/',
-    )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {
-        'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
-        'breadcrumbs': [],
-    }
-    piezas = [
-        {
-            'pk':             p.get('codigo', ''),
-            'codigo':         p.get('codigo', '—'),
-            'nombre':         p.get('nombre', '—'),
-            'descripcion':    p.get('descripcion', ''),
-            'stock':          p.get('stockActual', 0),
-            'stock_minimo':   p.get('stockMinimo', 0),
-            'linea':          '—',
-            'operador':       '—',
-            'fecha_registro': '—',
-        }
-        for p in piezas_bd
-    ]
-    ctx.update({
-        'piezas':     piezas,
-        'categorias': [],
-        'breadcrumbs': [
-            {'label': 'Dashboard',  'url': '/admin-dash/'},
-            {'label': 'Inventario', 'url': '/admin/inventario/'},
-        ],
-    })
-    return render(request, 'admin/inventario.html', ctx)
+class AdminInventario(generic.View):
+    template_name = 'admin/inventario.html'
+    url_base = 'http://localhost:8001/api/v1/list/piezas/'
+    context = {}
+    response = None
+    
+    def get(self, request):
+        self.request = requests.get(url=self.url_base).json()
+        self.context = {"piezas": self.request}
+        
+        return render(request, self.template_name, self.context)
+    
 
+class AdminInventarioDetail(generic.View):
+
+    url_base = "http://localhost:8001/api/v1/detail/pieza/"
+
+    def get(self, request, codigo):
+
+        response = requests.get(f"{self.url_base}{codigo}/")
+
+        return JsonResponse(response.json())
+    
 
 def admin_inventario_crear(request):
     if request.method == 'POST':
-        ok, resp = _post('/v1/create/pieza/', {
-            'codigo':      request.POST.get('codigo', ''),
-            'nombre':      request.POST.get('nombre', ''),
+        data = {
+            'codigo': request.POST.get('codigo', ''),
+            'nombre': request.POST.get('nombre', ''),
             'descripcion': request.POST.get('descripcion', ''),
-            'stockActual': int(request.POST.get('stock', 0)),
-            'stockMinimo': int(request.POST.get('stock_minimo', 0)),
-        })
+            'stockActual': request.POST.get('stock', 0),
+            'stockMinimo': request.POST.get('stock_minimo', 0),
+        }
+        files = {}
+        
+        if request.FILES.get('imagen'):
+            files['imagen'] = request.FILES['imagen']
+        ok, resp = _post_file(
+            '/v1/create/pieza/',
+            data,
+            files
+        )
+
         if ok:
-            messages.success(request, 'Pieza creada correctamente.')
+            messages.success(request, 'Pieza creada correctamente')
         else:
             messages.error(request, f'Error: {resp}')
+
+
     return redirect('admin_inventario')
 
 
 def admin_inventario_movimiento(request):
+    
     if request.method == 'POST':
         pieza_id = request.POST.get('pieza_id', '')
-        tipo     = request.POST.get('tipo_mov', '')
+        tipo = request.POST.get('tipo_mov', '')
         cantidad = int(request.POST.get('cantidad', 0))
+        cantidad_minima = int(request.POST.get('cantidad_minima', 0))
 
-        pieza        = _get(f'/v1/detail/pieza/{pieza_id}/', {})
+        pieza = _get(f'/v1/detail/pieza/{pieza_id}/', {})
         stock_actual = pieza.get('stockActual', 0)
+        stock_minimo_actual = pieza.get('stockMinimo', 0)
+
+        nuevo_stock = stock_actual
+        nuevo_stock_minimo = stock_minimo_actual
 
         if tipo == 'entrada':
             nuevo_stock = stock_actual + cantidad
+
         elif tipo == 'salida':
             nuevo_stock = max(0, stock_actual - cantidad)
-        else:
-            nuevo_stock = cantidad
 
-        ok, resp = _patch(f'/v1/update/pieza/{pieza_id}/', {'stockActual': nuevo_stock})
+        elif tipo == 'ajuste':
+            nuevo_stock_minimo = cantidad_minima
+
+        ok, resp = _patch(
+            f'/v1/update/pieza/{pieza_id}/',
+            {
+                'stockActual': nuevo_stock,
+                'stockMinimo': nuevo_stock_minimo
+            }
+        )
+
         if ok:
-            messages.success(request, 'Movimiento registrado.')
+            messages.success(request, 'Movimiento registrado')
         else:
             messages.error(request, f'Error: {resp}')
+
     return redirect('admin_inventario')
 
 
-# ════════════════════════════════════════════════════════════════
 # SUPERVISOR — INVENTARIO (solo entradas, sin crear piezas)
-# ════════════════════════════════════════════════════════════════
 
 def supervisor_inventario(request):
     piezas_bd, alertas_bd = _get_many(
@@ -116,11 +124,11 @@ def supervisor_inventario(request):
     }
     piezas = [
         {
-            'pk':           p.get('codigo', ''),
-            'codigo':       p.get('codigo', '—'),
-            'nombre':       p.get('nombre', '—'),
-            'descripcion':  p.get('descripcion', ''),
-            'stock':        p.get('stockActual', 0),
+            'pk': p.get('codigo', ''),
+            'codigo': p.get('codigo', '—'),
+            'nombre': p.get('nombre', '—'),
+            'descripcion': p.get('descripcion', ''),
+            'stock': p.get('stockActual', 0),
             'stock_minimo': p.get('stockMinimo', 0),
         }
         for p in piezas_bd
@@ -128,7 +136,7 @@ def supervisor_inventario(request):
     ctx.update({
         'piezas': piezas,
         'breadcrumbs': [
-            {'label': 'Dashboard',  'url': '/supervisor/'},
+            {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Inventario', 'url': '/supervisor/inventario/'},
         ],
     })
@@ -137,14 +145,14 @@ def supervisor_inventario(request):
 
 def supervisor_inventario_entrada(request):
     if request.method == 'POST':
-        pieza_id     = request.POST.get('pieza_id', '')
-        cantidad     = int(request.POST.get('cantidad', 0))
-        pieza        = _get(f'/v1/detail/pieza/{pieza_id}/', {})
+        pieza_id = request.POST.get('pieza_id', '')
+        cantidad = int(request.POST.get('cantidad', 0))
+        pieza = _get(f'/v1/detail/pieza/{pieza_id}/', {})
         stock_actual = pieza.get('stockActual', 0)
-        nuevo_stock  = stock_actual + cantidad
+        nuevo_stock = stock_actual + cantidad
         ok, resp = _patch(f'/v1/update/pieza/{pieza_id}/', {'stockActual': nuevo_stock})
         if ok:
-            messages.success(request, 'Entrada registrada.')
+            messages.success(request, 'Entrada registrada')
         else:
             messages.error(request, f'Error: {resp}')
     return redirect('supervisor_inventario')
