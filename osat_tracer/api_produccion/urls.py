@@ -8,6 +8,8 @@ urlpatterns = [
     #TipoOblea
     path('v1/list/TipoOblea/', views.ListTipoObleaAPIView.as_view(), name='list_TipoObleas'),
     path('v1/create/TipoOblea/', views.CreateTipoObleaAPIView.as_view(), name='create_TipoOblea'),
+    path('v1/detail/TipoOblea/<str:pk>/', views.DetailTipoObleaAPIView.as_view(), name='detail_TipoOblea'),
+    path('v1/update/TipoOblea/<str:pk>/', views.UpdateTipoObleaAPIView.as_view(), name='update_TipoOblea'),
     #EstadoPaso
     path('v1/list/EstadoPaso/', views.ListEstadoPasoAPIView.as_view(), name='list_EstadoPasos'),
     path('v1/create/EstadoPaso/', views.CreateEstadoPasoAPIView.as_view(), name='create_EstadoPaso'),
@@ -21,6 +23,7 @@ urlpatterns = [
     path('v1/list/Linea/', views.ListLineaAPIView.as_view(), name='list_Lineas'),
     path('v1/create/Linea/', views.CreateLineaAPIView.as_view(), name='create_Linea'),
     path('v1/detail/Linea/<str:pk>/', views.DetailLineaAPIView.as_view(), name='detail_Linea'),
+    path('v1/update/Linea/<str:pk>/', views.UpdateLineaAPIView.as_view(), name='update_Linea'),
     #Proceso
     path('v1/list/Proceso/', views.ListProcesoAPIView.as_view(), name='list_Procesos'),
     path('v1/create/Proceso/', views.CreateProcesoAPIView.as_view(), name='create_Proceso'),
@@ -52,11 +55,13 @@ urlpatterns = [
     path('v1/create/PasoProceso/', views.CreatePasoProcesoAPIView.as_view(), name='create_PasoProceso'),
     path('v1/detail/PasoProceso/<str:pk>/', views.DetailPasoProcesoAPIView.as_view(), name='detail_PasoProceso'),
     path('v1/update/PasoProceso/<str:pk>/', views.UpdatePasoProcesoAPIView.as_view(), name='update_PasoProceso'),
+    path('v1/delete/PasoProceso/<int:pk>/', views.DeletePasoProcesoAPIView.as_view(), name='delete_PasoProceso'),
     #ProcesoPieza
     path('v1/list/ProcesoPieza/', views.ListProcesoPiezaAPIView.as_view(), name='list_ProcesoPiezas'),
     path('v1/create/ProcesoPieza/', views.CreateProcesoPiezaAPIView.as_view(), name='create_ProcesoPieza'),
     path('v1/detail/ProcesoPieza/<str:pk>/', views.DetailProcesoPiezaAPIView.as_view(), name='detail_ProcesoPieza'),
     path('v1/update/ProcesoPieza/<str:pk>/', views.UpdateProcesoPiezaAPIView.as_view(), name='update_ProcesoPieza'),
+    path('v1/delete/ProcesoPieza/<int:pk>/', views.DeleteProcesoPiezaAPIView.as_view(), name='delete_ProcesoPieza'),
     #MaquinaPaso
     path('v1/list/MaquinaPaso/', views.ListMaquinaPasoAPIView.as_view(), name='list_MaquinaPasos'),
     path('v1/create/MaquinaPaso/', views.CreateMaquinaPasoAPIView.as_view(), name='create_MaquinaPaso'),

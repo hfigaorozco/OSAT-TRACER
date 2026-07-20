@@ -22,6 +22,7 @@ class ListPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Pieza
         fields = [
+            'codigo',
             'nombre',
             'descripcion',
             'stockMinimo',
