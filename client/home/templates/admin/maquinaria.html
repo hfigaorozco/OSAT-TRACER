@@ -42,7 +42,7 @@
   <div class="table-wrap">
     <table class="data-table">
       <thead>
-        <tr><th>ID Máquina</th><th>Nombre</th><th>Tipo</th><th>Línea</th><th>Estado</th><th>Operador asignado</th><th>Fecha registro</th><th>Activo</th><th>Acciones</th></tr>
+        <tr><th>ID Máquina</th><th>Nombre</th><th>Tipo</th><th>Línea</th><th>Estado</th><th>Operador asignado</th><th>Fecha registro</th><th>Acciones</th></tr>
       </thead>
       <tbody>
         {% for maq in maquinas_page %}
@@ -52,9 +52,8 @@
           <td>{{ maq.tipo_nombre }}</td>
           <td>{{ maq.linea_nombre|default:"—" }}</td>
           <td>
-            {% if maq.estado_nombre == 'Disponible' %}<span class="badge badge-activo">Disponible</span>
-            {% elif maq.estado_nombre == 'Ocupada' %}<span class="badge badge-en-proceso">Ocupada</span>
-            {% elif maq.estado_nombre == 'Mantenimiento' %}<span class="badge badge-hold">Mantenimiento</span>
+            {% if maq.estado_nombre == 'Activa' %}<span class="badge badge-activo">Activa</span>
+            {% elif maq.estado_nombre == 'Inactiva' %}<span class="badge badge-en-proceso">Inactiva</span>
             {% else %}<span class="badge badge-inactivo">{{ maq.estado_nombre|default:"—" }}</span>{% endif %}
           </td>
           <td>
@@ -62,10 +61,6 @@
             {% else %}<span style="color:#718096;">Sin asignar</span>{% endif %}
           </td>
           <td>{{ maq.fecha_reg|date:"d/m/Y"|default:"—" }}</td>
-          <td>
-            {% if maq.activo %}<span class="badge badge-activo">Activo</span>
-            {% else %}<span class="badge badge-inactivo">Inactivo</span>{% endif %}
-          </td>
           <td class="table-actions">
             <button class="action-btn" title="Editar" onclick="openEditarMaquina('{{ maq.pk|escapejs }}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -134,13 +129,6 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Estado del registro</label>
-          <select name="activo" id="maquina-activo-input" class="form-control">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-maquina')">Cancelar</button>
@@ -196,7 +184,6 @@ function openNuevaMaquina() {
   document.getElementById('maquina-linea-input').value = '';
   document.getElementById('maquina-estado-input').value = '';
   document.getElementById('maquina-empleado-input').value = '';
-  document.getElementById('maquina-activo-input').value = 'true';
   document.getElementById('maquina-form').action = "{% url 'admin_maquinaria_crear' %}";
   openModal('modal-maquina');
 }
@@ -208,14 +195,16 @@ function openEditarMaquina(pk) {
   document.getElementById('maquina-numserie-input').value = m.pk;
   document.getElementById('maquina-numserie-input').disabled = true;
   document.getElementById('maquina-nombre-input').value = m.nombre;
+  document.getElementById('maquina-nombre-input').disabled = true;
   document.getElementById('maquina-tipo-input').value = m.tipo_pk;
+  document.getElementById('maquina-tipo-input').disabled = true;
   document.getElementById('maquina-linea-input').value = m.linea_pk;
   document.getElementById('maquina-estado-input').value = m.estado_pk;
   document.getElementById('maquina-empleado-input').value = m.empleado_pk;
-  document.getElementById('maquina-activo-input').value = m.activo ? 'true' : 'false';
   document.getElementById('maquina-form').action = URL_MAQUINA_EDITAR.replace('__PK__', pk);
   openModal('modal-maquina');
 }
+
 </script>
 {% endblock %}
 {% endblock %}
