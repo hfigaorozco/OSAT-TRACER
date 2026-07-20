@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from . import models, serializers
 
@@ -12,6 +13,7 @@ from . import models, serializers
 ## Create Pieza
 class CreatePiezaAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreatePiezaSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
 
 ## List Pieza

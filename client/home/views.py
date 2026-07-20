@@ -58,6 +58,28 @@ def _post(endpoint, data):
             return False, str(e)
     except Exception as e:
         return False, str(e)
+    
+    
+def _post_file(endpoint, data, files):
+    try:
+        r = _session.post(
+            f'{BACKEND_URL}{endpoint}',
+            data=data,
+            files=files,
+            timeout=5
+        )
+
+        r.raise_for_status()
+        return True, r.json()
+
+    except requests.HTTPError as e:
+        try:
+            return False, str(e.response.json())
+        except Exception:
+            return False, str(e)
+
+    except Exception as e:
+        return False, str(e)
 
 
 def _patch(endpoint, data):

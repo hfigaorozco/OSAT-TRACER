@@ -3,10 +3,11 @@
     "model": "api_inventario.pieza",
     "pk": "strce",
     "fields": {
-      "nombre": "Sustrato ce",
+      "nombre": "Sustrato cerámico",
       "descripcion": "Base de montaje para el die",
-      "stockMinimo": 5,
-      "stockActual": 20
+      "stockMinimo": 200,
+      "stockActual": 1500,
+      "imagen": "piezas/sustrato ceramico.jpg"
     }
   },
   {
@@ -15,18 +16,20 @@
     "fields": {
       "nombre": "Hilo oro 25",
       "descripcion": "Hilo conductor de oro 25μm para el wire bonding",
-      "stockMinimo": 10,
-      "stockActual": 50
+      "stockMinimo": 450,
+      "stockActual": 1750,
+      "imagen": "piezas/hilo de oro.jpg"
     }
   },
   {
     "model": "api_inventario.pieza",
     "pk": "resep",
     "fields": {
-      "nombre": "Resina epox",
+      "nombre": "Resina epóxica",
       "descripcion": "Compuesto epóxico para encapsulado del die",
-      "stockMinimo": 8,
-      "stockActual": 30
+      "stockMinimo": 80,
+      "stockActual": 320,
+      "imagen": "piezas/resina epoxica.jpg"
     }
   },
   {
