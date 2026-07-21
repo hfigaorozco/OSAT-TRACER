@@ -128,16 +128,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-<<<<<<< HEAD
-# Facilita el llenar catalogos con .json desde la carpeta de fixtures_v2
-FIXTURE_DIRS = [
-    BASE_DIR / "fixtures_v2",
-]
-=======
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
->>>>>>> pruebas_v1
 
 #Auth Movil con Tokens
 REST_FRAMEWORK = {
@@ -148,6 +141,3 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',  # por ahora abierto para cualquiera
     ],
 }
-
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
