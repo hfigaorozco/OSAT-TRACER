@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.files import File
 
 from reportlab.lib.units import mm
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
@@ -20,7 +21,7 @@ def generarQR(oblea):
     carpeta.mkdir(parents=True, exist_ok=True)
 
     # Nombre del archivo
-    nombre_archivo = f"lote_{oblea.numero}.png"
+    nombre_archivo = f"lote_{oblea.pk}.png"
     
     # Ruta completa donde se guardará
     ruta_archivo = carpeta / nombre_archivo
@@ -32,7 +33,7 @@ def generarQR(oblea):
         box_size=10,
         border=4
     )
-    qr.add_data(str(oblea.id))
+    qr.add_data(str(oblea.pk))
     qr.make(fit=True)
     imagen = qr.make_image(
         fill_color="black",
@@ -43,17 +44,19 @@ def generarQR(oblea):
     imagen.save(ruta_archivo)
 
     # Guardar la ruta relativa en la BD
-    oblea.qr = f"qr_obleas/{nombre_archivo}"
-    oblea.save(update_fields=["qr"])
+    oblea.codigoQR = f"qr_obleas/{nombre_archivo}"
+    oblea.save(update_fields=["codigoQR"])
     return ruta_archivo
 
 
 def generar_pdf_etiquetas_QR(id_orden):
     obleas = Oblea.objects.filter(orden_id=id_orden)
     buffer = BytesIO()
-    pdf = canvas.Canvas(buffer)
-    x = 400 * mm
-    y = 400 * mm
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    page_width, page_height = A4
+    x = 20 * mm
+    y = page_height - 60 * mm
+
     for oblea in obleas:
         ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
         imagen = ImageReader(str(ruta))
@@ -72,14 +75,15 @@ def generar_pdf_etiquetas_QR(id_orden):
 
         x += 70 * mm
 
-        if x > 150 * mm:
+        if x > page_width - 60 * mm:
             x = 20 * mm
             y -= 60 * mm
 
         if y < 40 * mm:
             pdf.showPage()
             x = 20 * mm
-            y = 260 * mm
+            y = page_height - 60 * mm
+
     pdf.save()
     buffer.seek(0)
     return buffer

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from . import models
 from api_kpi.models import Alerta
+from .services import generarQR
 
 #SERIALIZERS defecto
 #CREATE
@@ -302,8 +303,16 @@ class CreateObleaSerializer(serializers.ModelSerializer):
             "diesGenerados",
             "orden",
             "estado",
-            "tipo",
+            "codigoQR",
         ]
+        read_only_fields = ["codigoQR"]
+        
+    def create(self, validated_data):
+        oblea = super().create(validated_data)
+
+        # Generar el QR y guardar la ruta en codigoQR
+        generarQR(oblea)
+        return oblea
 
 #LIST
 class ListObleaSerializer(serializers.ModelSerializer):
