@@ -111,8 +111,10 @@ class Orden(models.Model):
 class Oblea(models.Model):
     numero = models.AutoField(primary_key=True)
     diesGenerados = models.IntegerField(default=(0))
+    codigoQR = models.CharField(max_length=255, null=True, blank=True)
     orden = models.ForeignKey(Orden, on_delete=models.RESTRICT, related_name='oblea')
     estado = models.ForeignKey(Estado_Oblea, on_delete=models.RESTRICT, related_name='oblea')
+    
 
     class Meta:
         db_table = 'oblea' 

@@ -27,7 +27,7 @@ DEBUG = True
 
 
 ## localhost, y emulador
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2','192.168.1.68']
 
 
 # Application definition
@@ -128,7 +128,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
+# Facilita el llenar catalogos con .json desde la carpeta de fixtures_v2
+FIXTURE_DIRS = [
+    BASE_DIR / "fixtures_v2",
+]
 
 #Auth Movil con Tokens
 REST_FRAMEWORK = {
@@ -139,3 +142,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',  # por ahora abierto para cualquiera
     ],
 }
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
