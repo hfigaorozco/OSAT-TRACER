@@ -11,7 +11,6 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 from .models import Oblea
-import views
 
 # Generar QR de una oblea y guardar la ruta de la imagen en la DD
 
@@ -21,7 +20,7 @@ def generarQR(oblea):
     carpeta.mkdir(parents=True, exist_ok=True)
 
     # Nombre del archivo
-    nombre_archivo = f"lote_{oblea.id}.png"
+    nombre_archivo = f"lote_{oblea.numero}.png"
     
     # Ruta completa donde se guardará
     ruta_archivo = carpeta / nombre_archivo
@@ -56,7 +55,7 @@ def generar_pdf_etiquetas_QR(id_orden):
     x = 400 * mm
     y = 400 * mm
     for oblea in obleas:
-        ruta = Path(settings.MEDIA_ROOT) / oblea.qr
+        ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
         imagen = ImageReader(str(ruta))
         pdf.drawImage(
             imagen,
@@ -68,7 +67,7 @@ def generar_pdf_etiquetas_QR(id_orden):
         pdf.drawString(
             x,
             y - 5 * mm,
-            f"Lote {oblea.id}"
+            f"Lote {oblea.numero}"
         )
 
         x += 70 * mm
