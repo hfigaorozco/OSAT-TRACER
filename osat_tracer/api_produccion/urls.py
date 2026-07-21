@@ -71,4 +71,7 @@ urlpatterns = [
     #HistorialDefecto
     path('v1/list/HistorialDefecto/', views.ListHistorialDefectoAPIView.as_view(), name='list_HistorialDefectoss'),
     path('v1/create/HistorialDefecto/', views.CreateHistorialDefectoAPIView.as_view(), name='create_HistorialDefectos'),
+    
+    #Servicios
+    path('v1/orden/<int:id_orden>/etiquetas/QR/', views.GenerarEtiquetasQRView.as_view(), name='generar_etiquetas_qr'),
 ]

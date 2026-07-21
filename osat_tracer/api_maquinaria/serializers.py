@@ -30,7 +30,7 @@ class ListMaquinaSerializer(serializers.ModelSerializer):
         ]
         
 #DETAIL
-class DetalMaquinaSerializer(serializers.ModelSerializer):
+class DetailMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
