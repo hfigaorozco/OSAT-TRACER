@@ -49,7 +49,7 @@ def generarQR(oblea):
     return ruta_archivo
 
 
-def generar_pdf_etiquetasQR(id_orden):
+def generar_pdf_etiquetas_QR(id_orden):
     obleas = Oblea.objects.filter(orden_id=id_orden)
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer)

@@ -2,7 +2,10 @@ from django.shortcuts import render
 from . import serializers, models
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics, status
+from django.http import FileResponse
+
+from .services import generar_pdf_etiquetas_QR
 
 # Create your views here.
 # Vistas Defecto 
@@ -371,3 +374,20 @@ class ListHistorialDefectoAPIView(APIView):
 class ListPasoAPIView(generics.ListAPIView):
     queryset = models.Paso.objects.all()
     serializer_class = serializers.PasoSerializer
+
+
+class GenerarEtiquetasQRView(APIView):
+    def get(self, request, id_orden):
+        try:
+            pdf = generar_pdf_etiquetas_QR(id_orden)
+            return FileResponse(
+                pdf,
+                as_attachment=True,
+                filename=f"Orden_{id_orden}.pdf",
+                content_type="application/pdf"
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
