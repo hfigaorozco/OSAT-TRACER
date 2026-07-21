@@ -87,7 +87,7 @@ DATABASES = {#### database de MariaBD FABIAN
         'NAME': 'osattracer_db',
         'USER': 'root',
         'PASSWORD': '',
-        'HOST': '',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
@@ -128,10 +128,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+<<<<<<< HEAD
 # Facilita el llenar catalogos con .json desde la carpeta de fixtures_v2
 FIXTURE_DIRS = [
     BASE_DIR / "fixtures_v2",
 ]
+=======
+MEDIA_URL = "/media/"
+
+MEDIA_ROOT = BASE_DIR / "media"
+>>>>>>> pruebas_v1
 
 #Auth Movil con Tokens
 REST_FRAMEWORK = {

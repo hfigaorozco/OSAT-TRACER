@@ -30,19 +30,38 @@ class CreateTipoObleaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "descripcion",
-            "cantidadDies"
+            "cantidadDies",
+            "activo",
     ]
-#LIST 
+#LIST
 class ListTipoObleaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Oblea
         fields = [
             "codigo",
             "descripcion",
-            "cantidadDies"
+            "cantidadDies",
+            "activo",
         ]
 #DETAIL
+class DetailTipoObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Tipo_Oblea
+        fields = [
+            "codigo",
+            "descripcion",
+            "cantidadDies",
+            "activo",
+        ]
 #UPDATE
+class UpdateTipoObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Tipo_Oblea
+        fields = [
+            "descripcion",
+            "cantidadDies",
+            "activo",
+        ]
 
 #SERIALIZERS EstadoPaso
 #CREATE
@@ -112,6 +131,8 @@ class CreateLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso",
+            "activo",
         ]
 #LIST
 class ListLineaSerializer(serializers.ModelSerializer):
@@ -120,6 +141,8 @@ class ListLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso",
+            "activo",
         ]
 #DETAIL
 class DetailLineaSerializer(serializers.ModelSerializer):
@@ -128,6 +151,8 @@ class DetailLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso",
+            "activo",
         ]
 #UPDATE
 class UpdateLineaSerializer(serializers.ModelSerializer):
@@ -135,7 +160,8 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             'nombre',
-    
+            'proceso',
+            'activo',
         ]
 
 
@@ -148,7 +174,7 @@ class CreateProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "imagen",
+            "activo",
         ]
 #LIST
 class ListProcesoSerializer(serializers.ModelSerializer):
@@ -158,6 +184,7 @@ class ListProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
+            "activo",
         ]
 #DETAIL
 class DetailProcesoSerializer(serializers.ModelSerializer):
@@ -167,17 +194,17 @@ class DetailProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "imagen",
+            "activo",
         ]
 #UPDATE
 class UpdateProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Proceso
         fields = [
-            "codigo",
+            "nombre",
             "descripcion",
-            "imagen",
-        ] 
+            "activo",
+        ]
 
 #SERIALIZERS  Paso
 #CREATE
@@ -189,16 +216,19 @@ class CreatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+            "activo",
+        ]
 #LIST
 class ListPasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paso
         fields = [
+            "codigo",
             "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+            "activo",
+        ]
 #DETAIL
 class DetailPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -208,16 +238,18 @@ class DetailPasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+            "activo",
+        ]
 #UPDATE
 class UpdatePasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paso
         fields = [
-            "codigo",
+            "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+            "activo",
+        ]
 
 #SERIALIZERS  Orden
 #CREATE
@@ -331,19 +363,21 @@ class ListPasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PasoProceso
         fields = [
+            "id",
             "paso",
             "proceso",
-            "orden",    
-        ] 
+            "orden",
+        ]
 #DETAIL
 class DetailPasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PasoProceso
         fields = [
+            "id",
             "paso",
             "proceso",
-            "orden",    
-        ] 
+            "orden",
+        ]
 #UPDATE
 class UpdatePasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -370,19 +404,21 @@ class ListProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProcesoPieza
         fields = [
+            "id",
             "proceso",
             "pieza",
-            "cantPiezas",   
-        ] 
+            "cantPiezas",
+        ]
 #DETAIL
 class DetailProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProcesoPieza
         fields = [
+            "id",
             "proceso",
             "pieza",
-            "cantPiezas",   
-        ] 
+            "cantPiezas",
+        ]
 #UPDATE
 class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -417,13 +453,9 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
 #SERIALIZERS  PasoRealizado
 #CREATE
 class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
-    defectos = serializers.ListField(
-        child=serializers.DictField(), required=False, write_only=True
-    )
+    defectos = serializers.ListField(child=serializers.DictField(), required=False, write_only=True)
     unidades_defecto = serializers.IntegerField(required=False, write_only=True, default=0)
-    observaciones = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True, write_only=True
-    )
+    observaciones = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = models.Paso_Realizado
@@ -637,7 +669,13 @@ class PasoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Paso
-        fields = ['codigo', 'nombre', 'descripcion', 'tiempoEstimado']
+        fields = [
+            'codigo', 
+            'nombre', 
+            'descripcion', 
+            'tiempoEstimado', 
+            'activo'
+        ]
 
     def get_tiempoEstimado(self, obj):
         if obj.tiempoEstimado is None:

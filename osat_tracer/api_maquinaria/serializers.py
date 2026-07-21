@@ -14,6 +14,7 @@ class CreateMaquinaSerializer(serializers.ModelSerializer):
             "empleado",
             "linea",
         ]
+        
 #LIST
 class ListMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,7 +22,13 @@ class ListMaquinaSerializer(serializers.ModelSerializer):
         fields = [
             "numSerie",
             "nombre",
+            "fechaReg",
+            "tipoMaquina",
+            "estado",
+            "empleado",
+            "linea",
         ]
+        
 #DETAIL
 class DetailMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,25 +42,26 @@ class DetailMaquinaSerializer(serializers.ModelSerializer):
             "empleado",
             "linea",
         ]
+        
 #UPDATE
 class UpdateMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
+            "nombre",
             "estado",
             "empleado",
             "linea",
         ]
         
-        
-        
+           
 # SERIALIZERS estado_maquina
 #CREATE
 class CreateEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -61,7 +69,7 @@ class ListEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL
@@ -74,7 +82,7 @@ class CreateTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -82,7 +90,7 @@ class ListTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL
