@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title" style="font-family:monospace;">{{ orden.numero }}</h1>
-    <p class="page-subtitle">{{ orden.proceso.nombre|default:"—" }}</p>
+    <p class="page-subtitle">{{ orden.proceso.nombre|default:"—" }} · {{ orden.linea_nombre }} · {{ orden.tipo_oblea_nombre }}</p>
   </div>
   <div class="page-actions">
     <button class="btn btn-primary" onclick="openModal('modal-registrar-lote')">+ Registrar lote / oblea</button>
@@ -32,7 +32,7 @@
           <td>{{ lote.numero_oblea|default:"—" }}</td>
           <td>{{ lote.dies_buenos|default:"—" }}</td>
           <td>{{ lote.etapa_actual.nombre|default:"—" }}</td>
-          <td>{% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Hold' %}<span class="badge badge-hold">Hold</span>{% elif lote.estado.nombre == 'Completado' %}<span class="badge badge-aprobado">Completado</span>{% elif lote.estado.nombre == 'Scrapped' %}<span class="badge badge-critico">Scrapped</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</td>
+          <td>{% if lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Terminada' %}<span class="badge badge-aprobado">Terminada</span>{% elif lote.estado.nombre == 'Rechazada' %}<span class="badge badge-critico">Rechazada</span>{% else %}<span class="badge badge-pendiente">{{ lote.estado.nombre }}</span>{% endif %}</td>
           <td style="text-align:right;font-weight:600;color:{% if lote.yield_pct >= 90 %}#16A85E{% elif lote.yield_pct >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{% if lote.yield_pct is not None %}{{ lote.yield_pct|floatformat:1 }}%{% else %}—{% endif %}</td>
           <td class="table-actions"><a href="{% url 'supervisor_lote_detalle' lote.pk %}" class="action-btn" title="Ver trazabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a></td>
         </tr>
@@ -50,19 +50,11 @@
     <form method="post" action="{% url 'supervisor_lote_registrar' %}">{% csrf_token %}
       <input type="hidden" name="orden_id" value="{{ orden.pk }}">
       <div class="modal-body">
-        <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Número de oblea <span class="required">*</span></label><input type="text" name="numero_oblea" class="form-control" placeholder="Del foundry" required></div>
-          <div class="form-group"><label class="form-label">Tecnología / nodo</label><input type="text" name="tecnologia" class="form-control" placeholder="Ej. 28nm"></div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Total dies en oblea</label><input type="number" name="total_dies" class="form-control" min="1"></div>
-          <div class="form-group"><label class="form-label">Dies buenos (wafer sort) <span class="required">*</span></label><input type="number" name="dies_buenos" class="form-control" min="1" required></div>
-        </div>
-        <div class="form-group"><label class="form-label">Condición de recepción</label><select name="condicion" class="form-control"><option value="ok">OK</option><option value="danada">Dañada</option></select></div>
+        <div class="form-group"><label class="form-label">Dies buenos (wafer sort) <span class="required">*</span></label><input type="number" name="dies_buenos" class="form-control" min="1" required></div>
         <div class="form-group">
           <label class="form-label">Código QR</label>
           <input type="text" class="form-control" value="(Autogenerado)" readonly style="background:#F4F6F9;color:#718096;">
-          <span class="form-hint">Se generará automáticamente al registrar el lote.</span>
+          <span class="form-hint">Se genera automáticamente al registrar el lote.</span>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-registrar-lote')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar lote</button></div>

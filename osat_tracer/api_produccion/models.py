@@ -105,6 +105,7 @@ class Orden(models.Model):
     horaFin = models.DateTimeField(auto_now=False, auto_now_add=False)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=False, default="2026-07-05 00:00:00+0000")
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='orden')
+    linea = models.ForeignKey('Linea', null=True, blank=True, on_delete=models.RESTRICT, related_name='orden')
     estado = models.ForeignKey(Estado_Orden, on_delete=models.RESTRICT, related_name='orden')
     empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='orden')
     tipoOblea = models.ForeignKey(Tipo_Oblea, on_delete=models.RESTRICT, related_name='orden')

@@ -18,9 +18,10 @@
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <h1 style="font-size:24px;font-weight:700;color:#fff;margin:0;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;">{{ lote.folio }}</h1>
     {% if lote.orden %}<span style="background:#009EAF20;color:#009EAF;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:500;">{{ lote.orden.numero }}</span>{% endif %}
-    {% if lote.estado.nombre == 'En proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">En proceso</span>
-    {% elif lote.estado.nombre == 'Hold' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Hold</span>
-    {% elif lote.estado.nombre == 'Completado' or lote.estado.nombre == 'Aprobado' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Completado</span>
+    {% if lote.estado.nombre == 'En Hold' %}<span style="background:#FEF3C7;color:#92400E;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #F5A623;">⏸ En Hold</span>
+    {% elif lote.estado.nombre == 'En proceso' %}<span style="background:#E0F7FA;color:#006064;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">En proceso</span>
+    {% elif lote.estado.nombre == 'Terminada' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Terminada</span>
+    {% elif lote.estado.nombre == 'Rechazada' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">Rechazada</span>
     {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:12px;font-weight:600;">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
   </div>
   <!-- Solo Hold, sin botón Scrap -->
@@ -59,19 +60,28 @@
   <div style="display:flex;flex-direction:column;gap:6px;">
     {% for etapa in lote.etapas %}
     {% if etapa.completado %}
-    <!-- Etapa completada -->
-    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;cursor:default;">
+    <!-- Etapa completada (aprobada o rechazada) -->
+    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;cursor:default;{% if etapa.rechazado %}background:#FDEDEE;{% endif %}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;flex:1;">
-          <div style="width:30px;height:30px;border-radius:50%;background:#16A85E;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <div style="width:30px;height:30px;border-radius:50%;background:{% if etapa.rechazado %}#EF5350{% else %}#16A85E{% endif %};color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            {% if etapa.rechazado %}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {% else %}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% endif %}
           </div>
           <div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:14px;font-weight:400;color:#1A202C;">{{ etapa.nombre }}</span>
+              {% if etapa.rechazado %}
+              <span style="background:#F8D7DA;color:#721C24;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;">Rechazado</span>
+              {% else %}
               <span style="background:#D4EDDA;color:#155724;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;">Aprobado</span>
+              {% endif %}
             </div>
             {% if etapa.hora_inicio_iso %}<div style="font-size:12px;color:#718096;margin-top:2px;">{{ etapa.hora_inicio_iso }}</div>{% endif %}
+            {% if etapa.notas %}<div style="font-size:12px;color:#718096;margin-top:2px;">{{ etapa.notas }}</div>{% endif %}
           </div>
         </div>
       </div>

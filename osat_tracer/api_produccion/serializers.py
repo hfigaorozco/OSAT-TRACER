@@ -255,16 +255,22 @@ class UpdatePasoSerializer(serializers.ModelSerializer):
 #SERIALIZERS  Orden
 #CREATE
 class CreateOrdenSerializer(serializers.ModelSerializer):
+    linea = serializers.PrimaryKeyRelatedField(queryset=models.Linea.objects.all(), required=True)
+
     class Meta:
         model = models.Orden
         fields = [
+            "numero",
             "fecha",
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
             "empleado",
-        ] 
+            "tipoOblea",
+        ]
+        read_only_fields = ["numero"]
 #LIST
 class ListOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -275,8 +281,10 @@ class ListOrdenSerializer(serializers.ModelSerializer):
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
-        ] 
+            "tipoOblea",
+        ]
 #DETAIL
 class DetailOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -287,11 +295,24 @@ class DetailOrdenSerializer(serializers.ModelSerializer):
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
             "empleado",
-        ] 
-                   
+            "tipoOblea",
+        ]
+
 #UPDATE
+class UpdateOrdenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Orden
+        fields = [
+            "horaIni",
+            "horaFin",
+            "proceso",
+            "linea",
+            "estado",
+            "tipoOblea",
+        ]
 
 
 #SERIALIZERS Oblea
@@ -333,8 +354,8 @@ class DetailObleaSerializer(serializers.ModelSerializer):
             "diesGenerados",
             "orden",
             "estado",
-            "tipo",
-        ] 
+            "codigoQR",
+        ]
 #UPDATE
 
 #SERIALIZERS  LineaProceso
@@ -585,7 +606,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
             "orden",
             "orden_numero",
             "estado",
-            "tipo",
+            "codigoQR",
             "etapas",
         ]
 
