@@ -87,7 +87,7 @@ DATABASES = {#### database de MariaBD FABIAN
         'NAME': 'osattracer_db',
         'USER': 'root',
         'PASSWORD': '',
-        'HOST': '',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
@@ -128,7 +128,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = "/media/"
 
+MEDIA_ROOT = BASE_DIR / "media"
 
 #Auth Movil con Tokens
 REST_FRAMEWORK = {
