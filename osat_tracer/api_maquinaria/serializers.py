@@ -13,8 +13,8 @@ class CreateMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
-            "activo",
         ]
+        
 #LIST
 class ListMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,10 +27,10 @@ class ListMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
-            "activo",
         ]
+        
 #DETAIL
-class DetalMaquinaSerializer(serializers.ModelSerializer):
+class DetailMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
@@ -41,8 +41,8 @@ class DetalMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
-            "activo",
         ]
+        
 #UPDATE
 class UpdateMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,18 +52,16 @@ class UpdateMaquinaSerializer(serializers.ModelSerializer):
             "estado",
             "empleado",
             "linea",
-            "activo",
         ]
         
-        
-        
+           
 # SERIALIZERS estado_maquina
 #CREATE
 class CreateEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -71,7 +69,7 @@ class ListEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL
@@ -84,7 +82,7 @@ class CreateTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -92,7 +90,7 @@ class ListTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL

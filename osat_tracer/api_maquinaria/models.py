@@ -3,7 +3,7 @@ from api_usuarios.models import Empleado
 
 # Create your models here.
 class Tipo_Maquina(models.Model):
-    clave = models.CharField(primary_key=True, max_length=5)
+    codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(default="", max_length=30)
     
     class Meta: 
@@ -14,7 +14,7 @@ class Tipo_Maquina(models.Model):
     
     
 class Estado_Maquina(models.Model):
-    clave = models.CharField(primary_key=True, max_length=5)
+    codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(default="Estado genérico", unique=True, max_length=15)
     
     class Meta: 
@@ -32,7 +32,6 @@ class Maquina(models.Model):
     estado = models.ForeignKey(Estado_Maquina, on_delete=models.CASCADE, related_name='maquina')
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='maquina')
     linea = models.ForeignKey('api_produccion.Linea', on_delete=models.CASCADE, related_name='maquina')
-    activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'maquina'

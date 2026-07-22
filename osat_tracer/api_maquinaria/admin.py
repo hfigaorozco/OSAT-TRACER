@@ -17,13 +17,13 @@ class MaquinaAdmin(admin.ModelAdmin):
 @admin.register(models.Tipo_Maquina)
 class TipoMaquinaAdmin(admin.ModelAdmin):
     list_display = [
-        "clave",
+        "codigo",
         "descripcion",
     ]
     
 @admin.register(models.Estado_Maquina)
 class EstadoMaquinaAdmin(admin.ModelAdmin):
     list_display = [
-        "clave",
+        "codigo",
         "descripcion",
     ]
