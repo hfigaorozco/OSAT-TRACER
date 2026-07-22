@@ -218,6 +218,10 @@ class Paso_Realizado(models.Model):
     def __str__(self):
         return str(self.numero)
     
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.refresh_from_db()
+    
 
 class Historial_Defectos(models.Model):
     defecto = models.ForeignKey(Defecto, on_delete=models.RESTRICT, related_name='historial_defectos') 
