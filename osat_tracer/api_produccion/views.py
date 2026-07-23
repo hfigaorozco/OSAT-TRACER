@@ -386,7 +386,7 @@ class GenerarEtiquetasQRView(APIView):
             pdf = generar_pdf_etiquetas_QR(id_orden)
             return FileResponse(
                 pdf,
-                as_attachment=True,
+                as_attachment=False,
                 filename=f"Orden_{id_orden}.pdf",
                 content_type="application/pdf"
             )
