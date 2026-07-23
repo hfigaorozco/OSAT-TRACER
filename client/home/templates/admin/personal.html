@@ -20,13 +20,13 @@
 <div class="filter-bar" style="margin-bottom:16px;">
   <div class="search-wrap">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="search-personal" class="form-control" placeholder="Buscar por nombre, usuario o RFC…" oninput="filtrarTabla(this.value)">
+    <input type="text" id="search-personal" class="form-control" placeholder="Buscar empleado" oninput="filtrarTabla(this.value)">
   </div>
-  <select id="filter-rol" class="form-control" style="width:160px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
+  <select id="filter-rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
     <option value="">Todos los roles</option>
     {% for rol in roles_list %}<option value="{{ rol.pk }}">{{ rol.nombre }}</option>{% endfor %}
   </select>
-  <select id="filter-estado" class="form-control" style="width:160px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
+  <select id="filter-estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
     <option value="">Todos los estados</option>
     {% for est in estados_empleado %}<option value="{{ est.nombre }}">{{ est.nombre }}</option>{% endfor %}
   </select>
@@ -43,7 +43,6 @@
           <th>RFC</th>
           <th>Rol</th>
           <th>Estado</th>
-          <th>Fecha contrato</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -81,8 +80,10 @@
 
           <td>
             {% if emp.rol.nombre == 'Administrador' %}
-              <span class="badge" style="background:#E9D8FD;color:#553C9A;">{{ emp.rol.nombre }}</span>
+              <span class="badge" style="background:#EFBF04;color:#000000;">{{ emp.rol.nombre }}</span>
             {% elif emp.rol.nombre == 'Supervisor' %}
+              <span class="badge" style="background:#D4EDDA;color:#155724;">{{ emp.rol.nombre }}</span>
+            {% elif emp.rol.nombre == 'Operador' %}
               <span class="badge" style="background:#BEE3F8;color:#2B6CB0;">{{ emp.rol.nombre }}</span>
             {% else %}
               <span class="badge badge-activo">{{ emp.rol.nombre|default:"—" }}</span>
@@ -96,8 +97,6 @@
               <span class="badge badge-inactivo">{{ emp.estado.nombre|default:"—" }}</span>
             {% endif %}
           </td>
-
-          <td style="font-size:14px;color:#4A5568;">{{ emp.fecha_contrato|date:"d/m/Y"|default:"—" }}</td>
 
           <td class="table-actions">
             <button class="action-btn" title="Editar"
@@ -176,17 +175,6 @@
               {% for rol in roles_list %}<option value="{{ rol.pk }}">{{ rol.nombre }}</option>{% endfor %}
             </select>
             <span class="form-error" id="err-c-rol"></span>
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label">Estado <span class="required">*</span></label>
-            <select name="estado" id="c-estado" class="form-control" required>
-              <option value="">Seleccionar…</option>
-              {% for est in estados_empleado %}<option value="{{ est.pk }}">{{ est.nombre }}</option>{% endfor %}
-            </select>
-            <span class="form-error" id="err-c-estado"></span>
           </div>
         </div>
 
@@ -324,31 +312,6 @@
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
       </div>
     </form>
-  </div>
-</div>
-
-
-<!-- ═══ MODAL CATÁLOGOS ═══ -->
-<div class="modal-overlay" id="modal-catalogos" style="display:none;" onclick="if(event.target===this)closeModal('modal-catalogos')">
-  <div class="modal-card modal-lg">
-    <div class="modal-header"><h2>Catálogos de Personal</h2>
-      <button class="modal-close" onclick="closeModal('modal-catalogos')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-        <div>
-          <h3 style="font-size:14px;font-weight:600;color:#fff;margin-bottom:12px;">Estados de empleado</h3>
-          <table class="data-table"><thead><tr><th>Nombre</th></tr></thead>
-          <tbody>{% for estado in estados_empleado %}<tr><td>{{ estado.nombre }}</td></tr>{% endfor %}</tbody></table>
-        </div>
-        <div>
-          <h3 style="font-size:14px;font-weight:600;color:#fff;margin-bottom:12px;">Roles de empleado</h3>
-          <table class="data-table"><thead><tr><th>Nombre</th></tr></thead>
-          <tbody>{% for rol in roles_list %}<tr><td>{{ rol.nombre }}</td></tr>{% endfor %}</tbody></table>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-catalogos')">Cerrar</button></div>
   </div>
 </div>
 
