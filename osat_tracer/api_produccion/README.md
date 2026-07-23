@@ -11,7 +11,7 @@
 ### Luego:
     python manage.py migrate
 
-# 3.Para probar se puede hacer una Oblea desde terminal con:
+# 3.Para probar se puede hacer una Oblea desde terminal con: 
 $body = @{
   diesGenerados = 120
   orden = 1
