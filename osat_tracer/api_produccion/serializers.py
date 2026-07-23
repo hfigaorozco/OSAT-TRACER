@@ -217,7 +217,6 @@ class CreatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
 #LIST
 class ListPasoSerializer(serializers.ModelSerializer):
@@ -228,7 +227,6 @@ class ListPasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
 #DETAIL
 class DetailPasoSerializer(serializers.ModelSerializer):
@@ -239,7 +237,6 @@ class DetailPasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
 #UPDATE
 class UpdatePasoSerializer(serializers.ModelSerializer):
@@ -249,7 +246,6 @@ class UpdatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
 
 #SERIALIZERS  Orden
