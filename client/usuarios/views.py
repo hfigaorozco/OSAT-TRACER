@@ -36,15 +36,15 @@ def _build_empleados(empleados_bd):
     """Construye la lista de empleados con todos los campos para la tabla unificada."""
     return [
         {
-            'pk':               e.get('numero'),
-            'primer_nombre':    e.get('nombre', ''),
+            'pk': e.get('numero'),
+            'primer_nombre': e.get('nombre', ''),
             'apellido_paterno': e.get('primerApell', ''),
             'apellido_materno': e.get('seguApell', '') or '',
-            'rfc':              e.get('rfc', ''),
-            'username':         e.get('username', '—'),
-            'email':            e.get('email', ''),
-            'rol':              _FakeObj(pk=e.get('rol', ''), nombre=e.get('rol', '—')),
-            'estado':           _FakeObj(pk=e.get('estado', ''), nombre=e.get('estado', '—')),
+            'rfc':   e.get('rfc', ''),
+            'username': e.get('username', '—'),
+            'email':   e.get('email', ''),
+            'rol':  _FakeObj(pk=e.get('rol', ''), nombre=e.get('rol', '—')),
+            'estado':  _FakeObj(pk=e.get('estado', ''), nombre=e.get('estado', '—')),
             'fecha_contrato':   e.get('fechaReg', '—'),
         }
         for e in empleados_bd
@@ -95,15 +95,14 @@ def admin_personal_crear(request):
     if request.method == 'POST':
         seguApell = request.POST.get('apellido_materno', '').strip()
         payload = {
-            'nombre':      request.POST.get('primer_nombre', '').strip(),
+            'nombre': request.POST.get('primer_nombre', '').strip(),
             'primerApell': request.POST.get('apellido_paterno', '').strip(),
-            'seguApell':   seguApell if seguApell else '',
-            'rfc':         request.POST.get('rfc', '').strip().upper(),
-            'estado':      request.POST.get('estado', ''),
-            'rol':         request.POST.get('rol', ''),
-            'username':    request.POST.get('username', '').strip().lower(),
-            'password':    request.POST.get('password', ''),
-            'email':       request.POST.get('email', '').strip(),
+            'seguApell': seguApell if seguApell else '',
+            'rfc': request.POST.get('rfc', '').strip().upper(),
+            'rol': request.POST.get('rol', ''),
+            'username': request.POST.get('username', '').strip().lower(),
+            'password': request.POST.get('password', ''),
+            'email': request.POST.get('email', '').strip(),
         }
         ok, resp = _post('/v1/create/empleado/', payload)
         if ok:
