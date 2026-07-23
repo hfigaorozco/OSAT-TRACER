@@ -11,7 +11,7 @@
 ### Luego:
     python manage.py migrate
 
-# 3.Para probar se puede hacer una Oblea desde terminal con:
+# 3.Para probar se puede hacer una Oblea desde terminal con: 
 $body = @{
   diesGenerados = 120
   orden = 1
@@ -23,3 +23,9 @@ Invoke-RestMethod `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
+
+# 4. Para generar los QR faltantes y cargarlos a la BD:
+# Correr los siguientes comandos en terminal linea por linea:
+python manage.py shell
+    exec(open("fixtures_v2/generar_qr.py").read())
+    exit()
