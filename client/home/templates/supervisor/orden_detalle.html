@@ -25,13 +25,20 @@
 </div>
 
 <div class="card" style="padding:0;">
-  <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="font-weight:600;font-size:15px;margin:0;">Lotes de esta orden</h3></div>
+  <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <h3 style="font-weight:600;font-size:15px;margin:0;">Lotes de esta orden</h3>
+    <div style="position:relative;">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar lote por código..." id="search-lotes" oninput="filterLotes(this.value)"
+        class="form-control" style="height:38px;padding-left:32px;width:220px;">
+    </div>
+  </div>
   <div class="table-wrap">
     <table class="data-table">
       <thead><tr><th>Folio QR</th><th>Número oblea</th><th>Dies buenos</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for lote in lotes %}
-        <tr>
+        <tr class="lote-row" data-folio="{{ lote.folio|lower }}">
           <td style="font-family:monospace;font-weight:600;">{{ lote.folio }}</td>
           <td>{{ lote.numero_oblea|default:"—" }}</td>
           <td>{{ lote.dies_buenos|default:"—" }}</td>
@@ -64,4 +71,15 @@
     </form>
   </div>
 </div>
+
+{% block extra_js %}
+<script>
+function filterLotes(q) {
+  q = (q || '').toLowerCase();
+  document.querySelectorAll('.lote-row').forEach(function(row) {
+    row.style.display = !q || (row.dataset.folio || '').includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
 {% endblock %}

@@ -33,8 +33,8 @@
   --text-muted:      #718096;
   --text-faint:      #546E7A;
 
-  --sidebar-closed:  67px;
-  --sidebar-open:    250px;
+  --sidebar-closed:  74px;
+  --sidebar-open:    262px;
   --topbar-h:        72px;
 
   --font-main:  'Montserrat', sans-serif;
@@ -132,6 +132,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .sidebar-toggle-btn:hover { background: rgba(255,255,255,.06); }
 
 /* Íconos: CSS controla cuál se muestra */
+.icon-menu, .icon-arrow { width: 22px; height: 22px; }
 .icon-menu  { display: block; }
 .icon-arrow { display: none; }
 .sidebar.open .icon-menu  { display: none; }
@@ -143,7 +144,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   padding: 8px 6px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -154,7 +155,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   align-items: center;
   justify-content: center;
   gap: 0;
-  height: 44px;
+  height: 52px;
+  flex-shrink: 0;
   border-radius: var(--radius);
   background: var(--nav-item-bg);
   color: var(--text-subtle);
@@ -164,13 +166,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   white-space: nowrap;
   transition: background .15s, color .15s;
   position: relative;
-  padding: 0 10px;
+  padding: 0 12px;
 }
 .sidebar.open .nav-item {
   justify-content: flex-start;
-  gap: 12px;
+  gap: 14px;
 }
-.nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-icon { width: 22px; height: 22px; flex-shrink: 0; }
 
 /* Label — oculto cuando sidebar cerrada */
 .nav-label {
@@ -202,11 +204,11 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Footer */
 .sidebar-footer {
-  padding: 6px;
+  padding: 8px 6px;
   border-top: 1px solid rgba(255,255,255,.05);
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
 }
 
 /* ══════════════════════════════════════

@@ -116,6 +116,11 @@
     </div>
     <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
   </div>
+  <div style="position:relative;margin-bottom:16px;max-width:260px;">
+    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)"
+      style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:100%;outline:none;">
+  </div>
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
       <thead style="background:#F7FAFC;">
@@ -479,7 +484,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
     };
     var lb = loteBadgeMap[l.estado] || loteBadgeMap.pendiente;
     var badgeEdo = '<span style="background:'+lb[0]+';color:'+lb[1]+';padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">'+lb[2]+'</span>';
-    return '<tr style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
+    return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.fecha_inicio+'</td>' +
@@ -490,10 +495,18 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
     '</tr>';
   }).join('') || '<tr><td colspan="8" style="padding:48px;text-align:center;color:#718096;">No hay lotes en esta orden</td></tr>';
+  document.getElementById('search-lotes-orden').value = '';
 
   document.getElementById('vista-ordenes').style.display = 'none';
   document.getElementById('vista-detalle-orden').style.display = 'block';
   document.getElementById('vista-detalle-lote').style.display = 'none';
+}
+
+function filterLotesOrden(q) {
+  q = (q || '').toLowerCase();
+  document.querySelectorAll('#tbody-lotes-orden .lote-row').forEach(function(row) {
+    row.style.display = !q || (row.dataset.folio || '').includes(q) ? '' : 'none';
+  });
 }
 
 function abrirLote(pk) {
