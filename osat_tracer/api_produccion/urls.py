@@ -39,6 +39,7 @@ urlpatterns = [
     path('v1/list/Orden/', views.ListOrdenAPIView.as_view(), name='list_Ordens'),
     path('v1/create/Orden/', views.CreateOrdenAPIView.as_view(), name='create_Orden'),
     path('v1/detail/Orden/<int:pk>/', views.DetailOrdenAPIView.as_view(), name='detail_Orden'),
+    path('v1/update/Orden/<int:pk>/', views.UpdateOrdenAPIView.as_view(), name='update_Orden'),
     #Oblea
     path('v1/list/Oblea/', views.ListObleaAPIView.as_view(), name='list_Obleas'),
     path('v1/create/Oblea/', views.CreateObleaAPIView.as_view(), name='create_Oblea'),

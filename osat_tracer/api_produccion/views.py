@@ -214,13 +214,17 @@ class ListOrdenAPIView(APIView):
     
 #DETAIL
 class DetailOrdenAPIView(APIView):
-    
+
     def get(self, request, pk):
         Ordens = models.Orden.objects.get(pk=pk)
         data = serializers.DetailOrdenSerializer(Ordens, many=False).data
         return Response(data)
 
 #UPDATE
+class UpdateOrdenAPIView(generics.UpdateAPIView):
+    queryset = models.Orden.objects.all()
+    serializer_class = serializers.UpdateOrdenSerializer
+    lookup_field = 'pk'
 
 #Vistas  Oblea
 #CREATE
@@ -252,7 +256,7 @@ class DetailObleaConEtapasAPIView(APIView):
     def get(self, request, pk):
         try:
             oblea = models.Oblea.objects.select_related(
-                'orden', 'orden__proceso', 'estado', 'tipo'
+                'orden', 'orden__proceso', 'estado'
             ).get(pk=pk)
         except models.Oblea.DoesNotExist:
             return Response({'error': 'Lote no encontrado.'}, status=404)

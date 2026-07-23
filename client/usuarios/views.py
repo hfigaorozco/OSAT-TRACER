@@ -9,7 +9,7 @@ def admin_dashboard(request):
         '/v1/list/empleados/', '/v1/list/maquinaria/', '/v1/list/kpis/',
         '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/',
     )
-    lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() in ('hold', 'ho001'))
+    lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
     ordenes_activas = [{'numero': f"ORD-{o['numero']:04d}" if isinstance(o.get('numero'), int) else str(o.get('numero', '')),
         'proceso': str(o.get('proceso', '—')), 'completados': 0, 'total': 1, 'pct': 0, 'estado': 'en_proceso'}
         for o in ordenes_bd[:5]]
@@ -173,7 +173,7 @@ def supervisor_dashboard(request):
     kpis, obleas, alertas_bd = _get_many(
         '/v1/list/kpis/', '/v1/list/Oblea/', '/v1/list/alertas/',
     )
-    lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() in ('hold', 'ho001'))
+    lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
         'user_role': 'Supervisor', 'unread_count': unread,
