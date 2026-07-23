@@ -23,3 +23,9 @@ Invoke-RestMethod `
   -Method Post `
   -ContentType "application/json" `
   -Body $body
+
+# 4. Para generar los QR faltantes y cargarlos a la BD:
+# Correr los siguientes comandos en terminal linea por linea:
+python manage.py shell
+    exec(open("fixtures_v2/generar_qr.py").read())
+    exit()
