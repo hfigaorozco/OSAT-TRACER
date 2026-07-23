@@ -15,7 +15,7 @@
   <div style="position:relative;">
     <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="inv-search" placeholder="Buscar por nombre" oninput="filterInventario()"
-      style="height:38px;padding:0 12px 0 34px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+      style="height:38px;padding:0 12px 0 34px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
   </div>
 
   <!-- Botón -->
@@ -29,7 +29,7 @@
 
 <!-- Tabla -->
 <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-  <table style="width:100%;border-collapse:collapse;font-size:13.5px;table-layout:fixed;" id="inv-table">
+  <table style="width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;" id="inv-table">
     <colgroup>
       <col style="width:25%;">
       <col style="width:39%;">
@@ -39,11 +39,11 @@
     </colgroup>
     <thead>
       <tr style="background:#F7FAFC;">
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
-        <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
       </tr>
     </thead>
     <tbody id="inv-tbody">
@@ -67,7 +67,7 @@
       </tr>
       {% empty %}
       <tr>
-        <td colspan="5" style="padding:48px;text-align:center;color:#718096;font-size:14px;">
+        <td colspan="5" style="padding:48px;text-align:center;color:#718096;font-size:15px;">
           No hay piezas registradas
         </td>
       </tr>
@@ -84,7 +84,7 @@
   <div style="background:#fff;border-radius:12px;width:100%;max-width:560px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 id="det-titulo" style="font-size:15px;font-weight:600;color:#1A202C;margin:0;"></h2>
+      <h2 id="det-titulo" style="font-size:16px;font-weight:600;color:#1A202C;margin:0;"></h2>
       <button onclick="document.getElementById('modal-detalle-pieza').style.display='none';"
               style="width:28px;height:28px;border-radius:6px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -100,16 +100,16 @@
         <!-- Info -->
         <div style="flex:1;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span id="det-nombre" style="font-size:16px;font-weight:600;color:#1A202C;"></span>
+            <span id="det-nombre" style="font-size:17px;font-weight:600;color:#1A202C;"></span>
           </div>
-          <p id="det-desc" style="font-size:13px;color:#718096;margin:0 0 12px;"></p>
+          <p id="det-desc" style="font-size:14px;color:#718096;margin:0 0 12px;"></p>
           <div style="display:flex;gap:24px;">
             <div>
-              <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
+              <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock actual</div>
               <div id="det-stock" style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;"></div>
             </div>
             <div>
-              <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock mínimo</div>
+              <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock mínimo</div>
               <div id="det-minimo" style="font-size:28px;font-weight:700;color:#718096;line-height:1;"></div>
             </div>
           </div>
@@ -117,17 +117,17 @@
         <!-- Acciones -->
         <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
           <button onclick="openFromDetalle('entrada')"
-                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             Registrar entrada
           </button>
           <button onclick="openFromDetalle('salida')"
-                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;color:#2D3748;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;color:#2D3748;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
             Registrar salida
           </button>
           <button onclick="openFromDetalle('ajuste')"
-                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="9.5" y="16" width="5" height="5"/><line x1="5.5" y1="8" x2="5.5" y2="14"/><line x1="18.5" y1="8" x2="18.5" y2="14"/><line x1="5.5" y1="14" x2="12" y2="16"/><line x1="18.5" y1="14" x2="12" y2="16"/></svg>
             Ajustar stock mínimo
           </button>
@@ -159,7 +159,7 @@
 <div id="modal-entrada" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Registrar entrada</h2>
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">Registrar entrada</h2>
       <button onclick="closeEntrada()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -172,19 +172,19 @@
         <!-- Material + Stock readonly -->
         <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Material</div>
-            <div id="ent-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Material</div>
+            <div id="ent-material-name" style="font-size:14.5px;font-weight:500;color:#1A202C;"></div>
           </div>
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
-            <div id="ent-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="ent-stock-actual" style="font-size:14.5px;font-weight:700;color:#1A202C;"></div>
           </div>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
           <div style="position:relative;">
             <input type="number" name="cantidad" id="ent-cantidad" min="1" required
-              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
             <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
             </div>
@@ -193,9 +193,9 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
         <button type="button" onclick="closeEntrada()"
-                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
         <button type="submit"
-                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar entrada</button>
+                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:14.5px;font-weight:600;cursor:pointer;">Confirmar entrada</button>
       </div>
     </form>
   </div>
@@ -208,7 +208,7 @@
 <div id="modal-salida" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Registrar salida</h2>
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">Registrar salida</h2>
       <button onclick="closeSalida()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -220,19 +220,19 @@
       <div style="padding:20px 24px;">
         <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Material</div>
-            <div id="sal-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Material</div>
+            <div id="sal-material-name" style="font-size:14.5px;font-weight:500;color:#1A202C;"></div>
           </div>
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
-            <div id="sal-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="sal-stock-actual" style="font-size:14.5px;font-weight:700;color:#1A202C;"></div>
           </div>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
           <div style="position:relative;">
             <input type="number" name="cantidad" min="1" required
-              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
             <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
             </div>
@@ -241,9 +241,9 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
         <button type="button" onclick="closeSalida()"
-                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
         <button type="submit"
-                style="padding:8px 18px;background:#EF5350;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar salida</button>
+                style="padding:8px 18px;background:#EF5350;color:#fff;border:none;border-radius:7px;font-size:14.5px;font-weight:600;cursor:pointer;">Confirmar salida</button>
       </div>
     </form>
   </div>
@@ -256,7 +256,7 @@
 <div id="modal-ajuste" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Ajuste de stock mínimo</h2>
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">Ajuste de stock mínimo</h2>
       <button onclick="closeAjuste()" style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -268,19 +268,19 @@
       <div style="padding:20px 24px;">
         <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Pieza</div>
-            <div id="aj-material-name" style="font-size:13.5px;font-weight:500;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Pieza</div>
+            <div id="aj-material-name" style="font-size:14.5px;font-weight:500;color:#1A202C;"></div>
           </div>
           <div>
-            <div style="font-size:11px;color:#718096;margin-bottom:2px;">Stock actual</div>
-            <div id="aj-stock-actual" style="font-size:13.5px;font-weight:700;color:#1A202C;"></div>
+            <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock actual</div>
+            <div id="aj-stock-actual" style="font-size:14.5px;font-weight:700;color:#1A202C;"></div>
           </div>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nuevo Stock Mínimo <span style="color:#EF5350;">*</span></label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nuevo Stock Mínimo <span style="color:#EF5350;">*</span></label>
           <div style="position:relative;">
             <input type="number" name="cantidad_minima" min="0" required
-              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+              style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
             <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
             </div>
@@ -289,9 +289,9 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
         <button type="button" onclick="closeAjuste()"
-                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
         <button type="submit"
-                style="padding:8px 18px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Confirmar ajuste</button>
+                style="padding:8px 18px;background:#F5A623;color:#fff;border:none;border-radius:7px;font-size:14.5px;font-weight:600;cursor:pointer;">Confirmar ajuste</button>
       </div>
     </form>
   </div>
@@ -304,7 +304,7 @@
 <div id="modal-nueva-pieza" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 style="font-size:15px;font-weight:600;color:#1A202C;margin:0;">Nueva pieza</h2>
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">Nueva pieza</h2>
       <button onclick="document.getElementById('modal-nueva-pieza').style.display='none';"
               style="width:28px;height:28px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -313,46 +313,46 @@
     <form method="post" enctype="multipart/form-data" action="{% url 'admin_inventario_crear' %}">{% csrf_token %}
       <div style="padding:20px 24px;">
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Código <span style="color:#EF5350;">*</span></label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Código <span style="color:#EF5350;">*</span></label>
           <input type="text" name="codigo" maxlength="5" required
-            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nombre <span style="color:#EF5350;">*</span></label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Nombre <span style="color:#EF5350;">*</span></label>
           <input type="text" name="nombre" maxlength="20" required
-            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
         </div>
         <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Descripción</label>
+          <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Descripción</label>
           <input type="text" name="descripcion" maxlength="80"
-            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+            style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
         </div>
         <!-- Imagen opcional -->
         <div style="margin-bottom:14px;">
           <div style="border:1.5px dashed #CBD5E0;border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
                onclick="document.getElementById('img-upload').click()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2" style="margin:0 auto 4px;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span style="font-size:12.5px;color:#A0AEC0;">Imagen (opcional) · </span>
-            <span style="font-size:12.5px;color:#16A85E;font-weight:500;">Seleccionar</span>
+            <span style="font-size:13.5px;color:#A0AEC0;">Imagen (opcional) · </span>
+            <span style="font-size:13.5px;color:#16A85E;font-weight:500;">Seleccionar</span>
             <input type="file" id="img-upload" name="imagen" accept="image/*" style="display:none;">
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock inicial <span style="color:#EF5350;">*</span></label>
+            <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock inicial <span style="color:#EF5350;">*</span></label>
             <div style="position:relative;">
               <input type="number" name="stock" min="0" required
-                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
               <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
               </div>
             </div>
           </div>
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock mínimo <span style="color:#EF5350;">*</span></label>
+            <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Stock mínimo <span style="color:#EF5350;">*</span></label>
             <div style="position:relative;">
               <input type="number" name="stock_minimo" min="0" required
-                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#1A202C;background:#fff;outline:none;">
+                style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
               <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
               </div>
@@ -362,9 +362,9 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid #E2E8F0;">
         <button type="button" onclick="document.getElementById('modal-nueva-pieza').style.display='none';"
-                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:13.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
+                style="padding:8px 18px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#4A5568;background:#fff;cursor:pointer;">Cancelar</button>
         <button type="submit"
-                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;">Guardar</button>
+                style="padding:8px 18px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:14.5px;font-weight:600;cursor:pointer;">Guardar</button>
       </div>
     </form>
   </div>

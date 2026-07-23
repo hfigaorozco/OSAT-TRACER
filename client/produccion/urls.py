@@ -5,6 +5,12 @@ urlpatterns = [
     # Admin producción
     path('admin/produccion/', views.admin_produccion, name='admin_produccion'),
     path('admin/produccion/plantilla/crear/', views.admin_produccion_plantilla_crear, name='admin_produccion_plantilla_crear'),
+    path('admin/produccion/orden/crear/', views.admin_orden_crear, name='admin_orden_crear'),
+    path('admin/produccion/orden/<int:pk>/editar/', views.admin_orden_editar, name='admin_orden_editar'),
+    path('admin/produccion/lote/registrar/', views.admin_lote_registrar, name='admin_lote_registrar'),
+    path('admin/produccion/lote/<int:pk>/hold/', views.admin_lote_hold, name='admin_lote_hold'),
+    path('admin/produccion/lote/<int:pk>/liberar/', views.admin_lote_liberar, name='admin_lote_liberar'),
+    path('admin/produccion/lote/<int:pk>/completar/', views.admin_etapa_completar, name='admin_etapa_completar'),
 
     # Organización
     path('admin/organizacion/', views.admin_organizacion, name='admin_organizacion'),
@@ -28,10 +34,12 @@ urlpatterns = [
     # Supervisor
     path('supervisor/ordenes/', views.supervisor_ordenes, name='supervisor_ordenes'),
     path('supervisor/ordenes/crear/', views.supervisor_ordenes_crear, name='supervisor_ordenes_crear'),
+    path('supervisor/ordenes/<int:pk>/editar/', views.supervisor_orden_editar, name='supervisor_orden_editar'),
     path('supervisor/ordenes/<int:pk>/', views.supervisor_orden_detalle, name='supervisor_orden_detalle'),
     path('supervisor/lotes/', views.supervisor_lotes, name='supervisor_lotes'),
     path('supervisor/lotes/<int:pk>/', views.supervisor_lote_detalle, name='supervisor_lote_detalle'),
     path('supervisor/lotes/<int:pk>/hold/', views.supervisor_lote_hold, name='supervisor_lote_hold'),
+    path('supervisor/lotes/<int:pk>/liberar/', views.supervisor_lote_liberar, name='supervisor_lote_liberar'),
     path('supervisor/lotes/<int:pk>/scrap/', views.supervisor_lote_scrap, name='supervisor_lote_scrap'),
     path('supervisor/lotes/registrar/', views.supervisor_lote_registrar, name='supervisor_lote_registrar'),
     path('supervisor/lotes/<int:pk>/completar/', views.supervisor_etapa_completar, name='supervisor_etapa_completar'),

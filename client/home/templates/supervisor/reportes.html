@@ -26,7 +26,7 @@
   </div>
   {% if reporte_orden %}
   <div class="card" style="padding:0;">
-    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="margin:0;font-weight:600;">Orden {{ reporte_orden.numero }}</h3><span style="font-size:13px;color:#718096;">{{ reporte_orden.fecha_inicio|date:"d/m/Y" }} al {{ reporte_orden.fecha_fin|date:"d/m/Y" }}</span></div>
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;"><h3 style="margin:0;font-weight:600;">Orden {{ reporte_orden.numero }}</h3><span style="font-size:14px;color:#718096;">{{ reporte_orden.fecha_inicio|date:"d/m/Y" }} al {{ reporte_orden.fecha_fin|date:"d/m/Y" }}</span></div>
     <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Lote</th><th>Operador</th><th>Dies iniciales</th><th>Dies finales</th><th>Scrap</th><th>Yield</th><th>Estado</th></tr></thead>
@@ -81,7 +81,7 @@
 
 <!-- Alertas -->
 <div id="tab-alertas" class="tab-pane" style="display:none;">
-  <div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Descripción</th><th>Referencia</th><th>Creada</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{% for alerta in todas_alertas %}<tr {% if alerta.resuelta %}style="opacity:.55;"{% endif %}><td>{% if alerta.tipo == 'critico' %}<span class="badge badge-critico">Crítica</span>{% else %}<span class="badge badge-hold">Advertencia</span>{% endif %}</td><td>{{ alerta.descripcion }}</td><td style="font-family:monospace;font-size:13px;">{{ alerta.referencia|default:"—" }}</td><td>{{ alerta.creada_en|date:"d/m/Y H:i" }}</td><td>{% if alerta.resuelta %}<span class="badge badge-aprobado">Resuelta</span>{% else %}<span class="badge badge-en-proceso">Activa</span>{% endif %}</td><td class="table-actions">{% if not alerta.resuelta %}<button class="action-btn" style="color:#16A85E;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>{% endif %}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><p>Sin alertas registradas</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Descripción</th><th>Referencia</th><th>Creada</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{% for alerta in todas_alertas %}<tr {% if alerta.resuelta %}style="opacity:.55;"{% endif %}><td>{% if alerta.tipo == 'critico' %}<span class="badge badge-critico">Crítica</span>{% else %}<span class="badge badge-hold">Advertencia</span>{% endif %}</td><td>{{ alerta.descripcion }}</td><td style="font-family:monospace;font-size:14px;">{{ alerta.referencia|default:"—" }}</td><td>{{ alerta.creada_en|date:"d/m/Y H:i" }}</td><td>{% if alerta.resuelta %}<span class="badge badge-aprobado">Resuelta</span>{% else %}<span class="badge badge-en-proceso">Activa</span>{% endif %}</td><td class="table-actions">{% if not alerta.resuelta %}<button class="action-btn" style="color:#16A85E;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>{% endif %}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><p>Sin alertas registradas</p></div></td></tr>{% endfor %}</tbody></table></div></div>
 </div>
 
 {% block extra_js %}
