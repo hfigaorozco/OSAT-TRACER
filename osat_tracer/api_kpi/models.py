@@ -42,7 +42,7 @@ class Kpi(models.Model):
 
 class Alerta(models.Model):
     numero = models.AutoField(primary_key=True)
-    descripcion = models.CharField(unique=True, max_length=50)
+    descripcion = models.CharField(unique=False, max_length=255)
     estadoAlerta = models.ForeignKey(EstadoAlerta, on_delete=models.RESTRICT, related_name='alerta')
     
     class Meta:
