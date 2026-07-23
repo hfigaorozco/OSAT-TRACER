@@ -170,6 +170,14 @@ def _lote_hold(request, pk):
         messages.error(request, f'Error: {resp}')
 
 
+def _lote_liberar(request, pk):
+    ok, resp = _patch(f'/v1/update/Oblea/{pk}/', {'estado': 'proce'})
+    if ok:
+        messages.success(request, 'Lote liberado del hold.')
+    else:
+        messages.error(request, f'Error: {resp}')
+
+
 def _lote_scrap(request, pk):
     ok, resp = _patch(f'/v1/update/Oblea/{pk}/', {'estado': 'recha'})
     if ok:
@@ -182,19 +190,87 @@ def _etapa_completar(request, pk):
     paso          = request.POST.get('paso', '')
     resultado     = request.POST.get('resultado', 'aprobado')
     observaciones = request.POST.get('observaciones', '')
+    unidades_defecto = int(request.POST.get('unidades_defecto', 0) or 0)
     estado_map = {'aprobado': 'compl', 'rechazado': 'nocom'}
     estado = estado_map.get(resultado, 'compl')
 
-    ok, resp = _post('/v1/create/PasoRealizado/', {
-        'paso':          paso,
-        'oblea':         pk,
-        'estado':        estado,
-        'observaciones': observaciones,
-    })
-    if ok:
-        messages.success(request, 'Etapa completada correctamente.')
-    else:
+    payload = {
+        'paso':             paso,
+        'oblea':            pk,
+        'estado':           estado,
+        'observaciones':    observaciones,
+        'unidades_defecto': unidades_defecto,
+    }
+    defectos_json = request.POST.get('defectos_json', '')
+    if defectos_json:
+        try:
+            defectos = json.loads(defectos_json)
+            if isinstance(defectos, list) and defectos:
+                payload['defectos'] = defectos
+        except (ValueError, TypeError):
+            pass
+
+    ok, resp = _post('/v1/create/PasoRealizado/', payload)
+    if not ok:
         messages.error(request, f'Error al completar: {resp}')
+        return
+
+    messages.success(request, 'Etapa completada correctamente.')
+    _avanzar_estado_lote_y_orden(pk)
+
+
+def _avanzar_estado_lote_y_orden(oblea_pk):
+    """
+    Tras registrar un Paso_Realizado: si el lote ya tiene TODAS sus etapas
+    registradas, avanza su estado real (termi si todo fue aprobado, recha
+    si alguna etapa fue rechazada). Y, según cómo queden los lotes de la
+    orden, avanza el estado de la orden (abier -> proce -> cerra), siguiendo
+    el catálogo real: Estado_Orden abier/proce/cerra, Estado_Oblea proce/termi/recha/enhol.
+    No toca lotes en Hold (enhol) — esos requieren resolverse aparte.
+    """
+    ob = _get(f'/v1/detail/Oblea/{oblea_pk}/')
+    if not ob:
+        return
+    orden_num = ob.get('orden')
+    orden = _get(f'/v1/detail/Orden/{orden_num}/')
+    if not orden:
+        return
+    proceso_codigo = str(orden.get('proceso', ''))
+
+    pasos_bd, pasos_realizados_bd, obleas_bd = _get_many(
+        '/v1/list/PasoProceso/',
+        '/v1/list/PasoRealizado/',
+        '/v1/list/Oblea/',
+    )
+    pasos_de_proceso = [p for p in pasos_bd if str(p.get('proceso')) == proceso_codigo]
+    realizados_de_esta_oblea = {
+        str(pr.get('paso', '')): pr
+        for pr in pasos_realizados_bd
+        if str(pr.get('oblea', '')) == str(oblea_pk)
+    }
+
+    nuevo_estado_lote = None
+    if pasos_de_proceso and all(str(p.get('paso', '')) in realizados_de_esta_oblea for p in pasos_de_proceso):
+        hay_rechazo = any(
+            str(realizados_de_esta_oblea[str(p.get('paso', ''))].get('estado', '')).lower() == 'nocom'
+            for p in pasos_de_proceso
+        )
+        nuevo_estado_lote = 'recha' if hay_rechazo else 'termi'
+        if str(ob.get('estado', '')).lower() not in ('termi', 'recha'):
+            _patch(f'/v1/update/Oblea/{oblea_pk}/', {'estado': nuevo_estado_lote})
+
+    edo_orden_actual = str(orden.get('estado', '')).lower()
+    if edo_orden_actual == 'abier':
+        _patch(f'/v1/update/Orden/{orden_num}/', {'estado': 'proce'})
+        edo_orden_actual = 'proce'
+
+    if edo_orden_actual == 'proce' and nuevo_estado_lote:
+        obleas_de_orden = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
+        for o in obleas_de_orden:
+            if str(o.get('numero')) == str(oblea_pk):
+                o['estado'] = nuevo_estado_lote
+        if obleas_de_orden and all(str(o.get('estado', '')).lower() in ('termi', 'recha') for o in obleas_de_orden):
+            _patch(f'/v1/update/Orden/{orden_num}/', {'estado': 'cerra'})
 
 
 # ── Cálculo de etapas de un lote (mismo criterio que usa la app móvil) ───────
@@ -235,6 +311,18 @@ def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea)
             break
 
     return etapas
+
+
+def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales):
+    """Dies activos = dies iniciales - scrap acumulado de cada etapa completada de este lote."""
+    scrap_total = sum(
+        int(pr.get('scrap', 0) or 0)
+        for pr in pasos_realizados_bd
+        if str(pr.get('oblea', '')) == str(oblea_num)
+    )
+    dies_activos = max(0, dies_iniciales - scrap_total)
+    yield_pct = round(dies_activos / dies_iniciales * 100, 1) if dies_iniciales > 0 else 0
+    return dies_activos, scrap_total, yield_pct
 
 
 # ── Helper compartido para construir ordenes y lotes ─────────────────────────
@@ -291,6 +379,7 @@ def _build_ordenes_lotes():
             'pct':             pct,
             'estado':          edo_str,
             'estado_pk':       str(o.get('estado', '')),
+            'tiene_hold':      any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
         })
 
     lotes = []
@@ -315,6 +404,9 @@ def _build_ordenes_lotes():
         etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea)
         pasos_completados = sum(1 for e in etapas if e['estado'] in ('aprobado', 'rechazado'))
 
+        dies_iniciales = ob.get('diesGenerados', 0)
+        dies_activos, scrap_total, yield_pct = _calcular_yield(num, pasos_realizados_bd, dies_iniciales)
+
         lotes.append({
             'pk':                num,
             'folio':             f'LOT-{num:04d}' if isinstance(num, int) else str(num),
@@ -325,10 +417,10 @@ def _build_ordenes_lotes():
             'total_pasos':       len(etapas),
             'pasos_completados': pasos_completados,
             'estado':            edo_str,
-            'dies_iniciales':    ob.get('diesGenerados', 0),
-            'dies_activos':      ob.get('diesGenerados', 0),
-            'scrap':             0,
-            'yield_pct':         98.0,
+            'dies_iniciales':    dies_iniciales,
+            'dies_activos':      dies_activos,
+            'scrap':             scrap_total,
+            'yield_pct':         yield_pct,
             'etapas':            etapas,
         })
 
@@ -428,6 +520,13 @@ def admin_lote_hold(request, pk):
     orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
     if request.method == 'POST':
         _lote_hold(request, pk)
+    return _admin_produccion_redirect(orden_pk=orden_pk, lote_pk=pk)
+
+
+def admin_lote_liberar(request, pk):
+    orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
+    if request.method == 'POST':
+        _lote_liberar(request, pk)
     return _admin_produccion_redirect(orden_pk=orden_pk, lote_pk=pk)
 
 
@@ -903,14 +1002,8 @@ def supervisor_ordenes(request):
         num   = o.get('numero')
         obs   = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         total = len(obs)
-        comp  = sum(
-            1 for ob in obs
-            if str(ob.get('estado', '')).lower() in ('completado', 'aprobado')
-        )
-        en_proc = sum(
-            1 for ob in obs
-            if str(ob.get('estado', '')).lower() in ('activo', 'en_proceso', 'proceso')
-        )
+        comp  = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'termi')
+        en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
         pct = round(comp / total * 100) if total > 0 else 0
         edo = str(o.get('estado', '')).lower()
         if 'cerra' in edo:
@@ -946,6 +1039,7 @@ def supervisor_ordenes(request):
             'pct_completados':  pct,
             'estado':           edo_str,
             'estado_pk':        str(o.get('estado', '')),
+            'tiene_hold':       any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
         })
 
     lineas_activas = [
@@ -969,6 +1063,7 @@ def supervisor_ordenes(request):
             'fecha_inicio':  o['fecha_inicio'],
             'fecha_fin':     o['fecha_fin'],
             'estado_pk':     o['estado_pk'],
+            'total_lotes':   o['total_lotes'],
         }
         for o in ordenes
     ]
@@ -1017,6 +1112,12 @@ def supervisor_lote_hold(request, pk):
     return redirect('supervisor_ordenes')
 
 
+def supervisor_lote_liberar(request, pk):
+    if request.method == 'POST':
+        _lote_liberar(request, pk)
+    return redirect('supervisor_lote_detalle', pk=pk)
+
+
 def supervisor_lote_scrap(request, pk):
     if request.method == 'POST':
         _lote_scrap(request, pk)
@@ -1028,12 +1129,16 @@ def supervisor_lote_scrap(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_orden_detalle(request, pk):
-    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, alertas_bd = _get_many(
+    (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
+     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
         '/v1/list/Linea/',
         '/v1/list/TipoOblea/',
+        '/v1/list/PasoProceso/',
+        '/v1/list/pasos/',
+        '/v1/list/PasoRealizado/',
         '/v1/list/alertas/',
     )
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
@@ -1058,12 +1163,18 @@ def supervisor_orden_detalle(request, pk):
     num    = orden_data.get('numero')
     obs    = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
     total  = len(obs)
-    comp   = sum(1 for ob in obs if str(ob.get('estado', '')).lower() in ('completado', 'aprobado'))
-    en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() in ('activo', 'en_proceso', 'proceso'))
+    comp   = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'termi')
+    en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
 
     proceso_codigo = str(orden_data.get('proceso', ''))
     proceso_data   = next((p for p in procesos_bd if str(p.get('codigo')) == proceso_codigo), {})
     proceso_obj    = _FakeObj(pk=proceso_codigo, nombre=proceso_data.get('nombre', proceso_codigo))
+
+    catalogo_map = {str(p.get('codigo', '')): p for p in pasos_catalogo}
+    pasos_de_proceso = sorted(
+        [p for p in pasos_bd if str(p.get('proceso')) == proceso_codigo],
+        key=lambda x: x.get('orden', 0)
+    )
 
     linea_pk = str(orden_data.get('linea', '')) if orden_data.get('linea') else ''
     linea_data = next((l for l in lineas_bd if str(l.get('codigo')) == linea_pk), {})
@@ -1095,14 +1206,26 @@ def supervisor_orden_detalle(request, pk):
     for ob in obs:
         ob_num = ob.get('numero')
         edo_ob = str(ob.get('estado', '')).lower()
+        realizados_de_esta_oblea = {
+            str(pr.get('paso', '')): pr
+            for pr in pasos_realizados_bd
+            if str(pr.get('oblea', '')) == str(ob_num)
+        }
+        etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea)
+        etapa_en_curso = next((e for e in etapas if e['estado'] == 'en_curso'), None)
+        etapa_nombre = etapa_en_curso['nombre'] if etapa_en_curso else ('Completado' if etapas else '—')
+        dies_iniciales = ob.get('diesGenerados', 0)
+        dies_activos, scrap_total, yield_pct = _calcular_yield(ob_num, pasos_realizados_bd, dies_iniciales)
         lotes.append({
             'pk':            ob_num,
             'folio':         f'LOT-{ob_num:04d}' if isinstance(ob_num, int) else str(ob_num),
             'numero_oblea':  ob_num,
-            'dies_buenos':   ob.get('diesGenerados', 0),
-            'etapa_actual':  _FakeObj(nombre='—'),
+            'dies_buenos':   dies_iniciales,
+            'dies_activos':  dies_activos,
+            'scrap':         scrap_total,
+            'etapa_actual':  _FakeObj(nombre=etapa_nombre),
             'estado':        _FakeObj(nombre=ESTADOS_OBLEA_LABEL.get(edo_ob, edo_ob.capitalize())),
-            'yield_pct':     98.0,
+            'yield_pct':     yield_pct,
         })
 
     ctx.update({
@@ -1182,7 +1305,7 @@ def supervisor_lote_detalle(request, pk):
             maquina='—',
             iniciado_en=None,
             completado_en=None,
-            scrap=0,
+            scrap=int((realizados_map.get(e['codigo'], {}) or {}).get('scrap', 0) or 0),
             yield_pct=0,
             notas=e['meta'] or '',
             tipo_maquina='—',
@@ -1196,6 +1319,9 @@ def supervisor_lote_detalle(request, pk):
     edo    = str(ob.get('estado', '')).lower()
     edo_str = ESTADOS_OBLEA_LABEL.get(edo, edo.capitalize())
 
+    dies_iniciales = ob.get('diesGenerados', 0)
+    dies_activos, scrap_total, yield_pct = _calcular_yield(num, pasos_realizados, dies_iniciales)
+
     lote = {
         'pk':             num,
         'folio':          f'LOT-{num:04d}' if isinstance(num, int) else str(num),
@@ -1204,10 +1330,10 @@ def supervisor_lote_detalle(request, pk):
                               numero=f'ORD-{orden_num:04d}' if isinstance(orden_num, int) else str(orden_num)
                           ) if orden_data else None,
         'estado':         _FakeObj(nombre=edo_str),
-        'dies_iniciales': ob.get('diesGenerados', 0),
-        'dies_activos':   ob.get('diesGenerados', 0),
-        'scrap_total':    0,
-        'yield_pct':      98.0,
+        'dies_iniciales': dies_iniciales,
+        'dies_activos':   dies_activos,
+        'scrap_total':    scrap_total,
+        'yield_pct':      yield_pct,
         'etapas':         etapas,
         'etapa_activa':   etapa_activa,
     }
