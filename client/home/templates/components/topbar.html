@@ -34,11 +34,11 @@
     </span>
     {% with rol=request.session.user_rol|default:"" %}
     {% if 'admin' in rol %}
-      <span style="background:#E9D8FD;color:#553C9A;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Administrador</span>
+      <span style="background:#EFBF04;color:#000000;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Administrador</span>
     {% elif 'super' in rol %}
-      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Supervisor</span>
+      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Supervisor</span>
     {% elif 'opera' in rol %}
-      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Operador</span>
+      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Operador</span>
     {% else %}
       <span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">{{ rol }}</span>
     {% endif %}
