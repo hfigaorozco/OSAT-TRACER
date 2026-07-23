@@ -5,9 +5,9 @@ from django.contrib import messages
 from django.urls import reverse
 from django.core.paginator import Paginator
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
+from datetime import date, timedelta
 
 PAGE_SIZE_ORGANIZACION = 9
-
 
 def _duracion_str(segundos):
     """Convierte segundos a un string que DurationField acepta (formato de str(timedelta))."""
@@ -38,6 +38,26 @@ def _fecha_display(iso_str):
     if len(partes) == 3 and all(partes):
         return f'{partes[2]}/{partes[1]}/{partes[0]}'
     return '—'
+
+
+def _hora_display(iso_str):
+    """Extrae HH:MM:SS de un datetime ISO para mostrarlo como hora del día."""
+    s = str(iso_str or '')
+    if 'T' in s:
+        parte_hora = s.split('T', 1)[1]
+    elif ' ' in s:
+        parte_hora = s.split(' ', 1)[1]
+    else:
+        return '—'
+    return parte_hora[:8] if len(parte_hora) >= 5 else '—'
+
+
+def _normalizar_hora(valor):
+    """Asegura formato HH:MM:SS a partir de lo que entregue <input type='time'> (HH:MM o HH:MM:SS)."""
+    valor = (valor or '').strip()
+    if not valor:
+        return None
+    return valor if len(valor) > 5 else f'{valor}:00'
 
 
 def _get_linea_proceso(linea_pk):
@@ -74,23 +94,29 @@ def _crear_orden(request):
     tipo_oblea = request.POST.get('tipo_oblea', '').strip()
     empleado_pk = request.session.get('user_id')
     cantidad_lotes = int(request.POST.get('cantidad_lotes', 0) or 0)
+    hora_inicio = _normalizar_hora(request.POST.get('hora_inicio', ''))
+    hora_fin    = _normalizar_hora(request.POST.get('hora_fin', ''))
 
     if not linea_pk or not tipo_oblea:
         messages.error(request, 'Selecciona línea y tipo de oblea.')
+        return
+    if not hora_inicio or not hora_fin:
+        messages.error(request, 'Indica hora de inicio y hora de fin.')
         return
     proceso_pk = _get_linea_proceso(linea_pk)
     if not proceso_pk:
         messages.error(request, 'La línea seleccionada no tiene un proceso asignado.')
         return
 
+    hoy = date.today().isoformat()
     ok, resp = _post('/v1/create/Orden/', {
-        'horaIni':   request.POST.get('fecha_inicio', '') + ' 00:00:00',
-        'horaFin':   request.POST.get('fecha_fin', '')    + ' 23:59:00',
-        'proceso':   proceso_pk,
-        'linea':     linea_pk,
+        'horaIni': f'{hoy} {hora_inicio}',
+        'horaFin': f'{hoy} {hora_fin}',
+        'proceso': proceso_pk,
+        'linea': linea_pk,
         'tipoOblea': tipo_oblea,
-        'estado':    'abier',
-        'empleado':  empleado_pk,
+        'estado': 'abier',
+        'empleado': empleado_pk,
     })
     if not ok:
         messages.error(request, f'Error: {resp}')
@@ -111,12 +137,19 @@ def _editar_orden(request, pk):
     linea_pk = request.POST.get('linea', '').strip()
     tipo_oblea = request.POST.get('tipo_oblea', '')
     cantidad_lotes_extra = int(request.POST.get('cantidad_lotes_extra', 0) or 0)
+    hora_inicio = _normalizar_hora(request.POST.get('hora_inicio', ''))
+    hora_fin    = _normalizar_hora(request.POST.get('hora_fin', ''))
+
     payload = {
-        'horaIni':   request.POST.get('fecha_inicio', '') + ' 00:00:00',
-        'horaFin':   request.POST.get('fecha_fin', '')    + ' 23:59:00',
         'tipoOblea': tipo_oblea,
         'estado':    request.POST.get('estado', ''),
     }
+    hoy = date.today().isoformat()
+    if hora_inicio:
+        payload['horaIni'] = f'{hoy} {hora_inicio}'
+    if hora_fin:
+        payload['horaFin'] = f'{hoy} {hora_fin}'
+
     if linea_pk:
         proceso_pk = _get_linea_proceso(linea_pk)
         if not proceso_pk:
@@ -362,24 +395,24 @@ def _build_ordenes_lotes():
         tipo_pk  = str(o.get('tipoOblea', '')) if o.get('tipoOblea') else ''
 
         ordenes.append({
-            'pk':              num,
-            'numero':          f'ORD-{num:04d}' if isinstance(num, int) else str(num),
-            'proceso':         str(o.get('proceso', '—')),
-            'proceso_nombre':  procesos_map.get(str(o.get('proceso', '')), {}).get('nombre', o.get('proceso', '—')),
-            'linea_pk':        linea_pk,
-            'linea_nombre':    lineas_map.get(linea_pk, {}).get('nombre', '—') if linea_pk else '—',
-            'tipo_oblea_pk':   tipo_pk,
+            'pk': num,
+            'numero': f'ORD-{num:04d}' if isinstance(num, int) else str(num),
+            'proceso': str(o.get('proceso', '—')),
+            'proceso_nombre': procesos_map.get(str(o.get('proceso', '')), {}).get('nombre', o.get('proceso', '—')),
+            'linea_pk': linea_pk,
+            'linea_nombre': lineas_map.get(linea_pk, {}).get('nombre', '—') if linea_pk else '—',
+            'tipo_oblea_pk': tipo_pk,
             'tipo_oblea_nombre': tipos_map.get(tipo_pk, {}).get('descripcion', '—') if tipo_pk else '—',
-            'fecha_inicio':    str(o.get('horaIni', '—'))[:10],
-            'fecha_fin':       str(o.get('horaFin', '—'))[:10],
-            'fecha_inicio_display': _fecha_display(o.get('horaIni', '')),
-            'fecha_fin_display':    _fecha_display(o.get('horaFin', '')),
-            'total_lotes':     total,
-            'completados':     comp,
-            'pct':             pct,
-            'estado':          edo_str,
-            'estado_pk':       str(o.get('estado', '')),
-            'tiene_hold':      any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
+            'hora_inicio':         _hora_display(o.get('horaIni', '')),
+            'hora_fin':            _hora_display(o.get('horaFin', '')),
+            'hora_inicio_display': _hora_display(o.get('horaIni', '')),
+            'hora_fin_display':    _hora_display(o.get('horaFin', '')),
+            'total_lotes': total,
+            'completados': comp,
+            'pct': pct,
+            'estado': edo_str,
+            'estado_pk': str(o.get('estado', '')),
+            'tiene_hold': any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
         })
 
     lotes = []
@@ -408,37 +441,28 @@ def _build_ordenes_lotes():
         dies_activos, scrap_total, yield_pct = _calcular_yield(num, pasos_realizados_bd, dies_iniciales)
 
         lotes.append({
-            'pk':                num,
-            'folio':             f'LOT-{num:04d}' if isinstance(num, int) else str(num),
-            'orden_pk':          orden_num,
-            'proceso':           str(orden_data.get('proceso', '—')),
-            'fecha_inicio':      str(orden_data.get('horaIni', '—'))[:10],
-            'fecha_fin':         str(orden_data.get('horaFin', '—'))[:10],
-            'total_pasos':       len(etapas),
+            'pk': num,
+            'folio': f'LOT-{num:04d}' if isinstance(num, int) else str(num),
+            'orden_pk': orden_num,
+            'proceso': str(orden_data.get('proceso', '—')),
+            'hora_inicio': _hora_display(orden_data.get('horaIni', '')),
+            'hora_fin': _hora_display(orden_data.get('horaFin', '')),
+            'total_pasos': len(etapas),
             'pasos_completados': pasos_completados,
-            'estado':            edo_str,
-            'dies_iniciales':    dies_iniciales,
-            'dies_activos':      dies_activos,
-            'scrap':             scrap_total,
-            'yield_pct':         yield_pct,
-            'etapas':            etapas,
+            'estado': edo_str,
+            'dies_iniciales': dies_iniciales,
+            'dies_activos': dies_activos,
+            'scrap': scrap_total,
+            'yield_pct': yield_pct,
+            'etapas': etapas,
         })
 
     plantillas = [
         _FakeObj(pk=p.get('codigo'), nombre=p.get('nombre', ''))
         for p in procesos_bd
     ]
-    lineas_activas = [
-        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''), 'proceso_pk': l.get('proceso'),
-         'proceso_nombre': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre', '')}
-        for l in lineas_bd
-        if l.get('activo', True) and l.get('proceso')
-    ]
-    tipos_oblea_activos = [
-        {'pk': t.get('codigo'), 'nombre': t.get('descripcion', '')}
-        for t in tipos_oblea_bd
-        if t.get('activo', True)
-    ]
+    lineas_activas = [... for l in lineas_bd if l.get('proceso')]
+    tipos_oblea_activos = [... for t in tipos_oblea_bd]
 
     return ordenes, lotes, plantillas, lineas_activas, tipos_oblea_activos, alertas_bd
 
@@ -585,7 +609,6 @@ def admin_organizacion(request):
             'pk':          codigo,
             'nombre':      p.get('nombre', '—'),
             'descripcion': p.get('descripcion', ''),
-            'activo':      p.get('activo', True),
             'pasos_count': len(pasos_rel),
             'pasos': [
                 {
@@ -612,7 +635,6 @@ def admin_organizacion(request):
             'codigo':       t.get('codigo'),
             'nombre':       t.get('descripcion', ''),
             'dies_maximos': t.get('cantidadDies', 0),
-            'activo':       t.get('activo', True),
         }
         for t in tipos_oblea
     ]
@@ -621,7 +643,6 @@ def admin_organizacion(request):
         {
             'pk':               l.get('codigo'),
             'nombre':           l.get('nombre', ''),
-            'activo':           l.get('activo', True),
             'proceso_pk':       l.get('proceso'),
             'proceso_asignado': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre') if l.get('proceso') else None,
         }
@@ -657,29 +678,9 @@ def admin_organizacion(request):
     ]
 
     # Filtros de estado (activo/inactivo) para cada listado de la pestaña correspondiente
-    estado_plantillas = request.GET.get('estado_plantillas', 'todos')
-    if estado_plantillas == 'activo':
-        plantillas_filtradas = [p for p in plantillas if p['activo']]
-    elif estado_plantillas == 'inactivo':
-        plantillas_filtradas = [p for p in plantillas if not p['activo']]
-    else:
-        plantillas_filtradas = plantillas
-
-    estado_lineas = request.GET.get('estado_lineas', 'todos')
-    if estado_lineas == 'activo':
-        lineas_filtradas = [l for l in lineas if l['activo']]
-    elif estado_lineas == 'inactivo':
-        lineas_filtradas = [l for l in lineas if not l['activo']]
-    else:
-        lineas_filtradas = lineas
-
-    estado_obleas = request.GET.get('estado_obleas', 'todos')
-    if estado_obleas == 'activo':
-        obleas_filtradas = [o for o in tipos_oblea_front if o['activo']]
-    elif estado_obleas == 'inactivo':
-        obleas_filtradas = [o for o in tipos_oblea_front if not o['activo']]
-    else:
-        obleas_filtradas = tipos_oblea_front
+    plantillas_filtradas = plantillas
+    lineas_filtradas = lineas
+    obleas_filtradas = tipos_oblea_front
 
     estado_pasos = request.GET.get('estado_pasos', 'todos')
     if estado_pasos == 'activo':
@@ -695,26 +696,23 @@ def admin_organizacion(request):
     pasos_page      = Paginator(pasos_filtrados, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_pasos', 1))
 
     ctx.update({
-        'plantillas':       plantillas,
+        'plantillas': plantillas,
         'plantillas_page':  plantillas_page,
-        'estado_plantillas': estado_plantillas,
-        'plantillas_extra_params': f'tab=plantillas&estado_plantillas={estado_plantillas}&',
+        'plantillas_extra_params': 'tab=plantillas&',
         'tipos_oblea':      obleas_page,
-        'estado_obleas':    estado_obleas,
-        'obleas_extra_params': f'tab=obleas&estado_obleas={estado_obleas}&',
-        'lineas':           lineas,
-        'lineas_page':      lineas_page,
-        'estado_lineas':    estado_lineas,
-        'lineas_extra_params': f'tab=lineas&estado_lineas={estado_lineas}&',
-        'pasos':            pasos_page,
-        'estado_pasos':     estado_pasos,
+        'obleas_extra_params': 'tab=obleas&',
+        'lineas': lineas,
+        'lineas_page': lineas_page,
+        'lineas_extra_params': 'tab=lineas&',
+        'procesos_activos': plantillas,
+        'pasos': pasos_page,
+        'estado_pasos': estado_pasos,
         'pasos_extra_params': f'tab=pasos&estado_pasos={estado_pasos}&',
-        'kpi_cards':        kpi_cards,
-        'procesos_activos': [p for p in plantillas if p['activo']],
-        'pasos_activos':    [p for p in pasos if p['activo']],
-        'piezas_catalogo':  [{'pk': z.get('codigo'), 'nombre': z.get('nombre', '')} for z in piezas_bd],
+        'kpi_cards': kpi_cards,
+        'pasos_activos': [p for p in pasos if p['activo']],
+        'piezas_catalogo': [{'pk': z.get('codigo'), 'nombre': z.get('nombre', '')} for z in piezas_bd],
         'breadcrumbs': [
-            {'label': 'Dashboard',    'url': '/admin-dash/'},
+            {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Organización', 'url': '/admin/organizacion/'},
         ],
     })
@@ -792,7 +790,6 @@ def admin_organizacion_plantilla_editar(request, pk):
         ok, resp = _patch(f'/v1/update/Proceso/{pk}/', {
             'nombre':      request.POST.get('nombre', ''),
             'descripcion': request.POST.get('descripcion', ''),
-            'activo':      request.POST.get('activo') == 'true',
         })
         if ok:
             messages.success(request, 'Plantilla actualizada.')
@@ -879,7 +876,6 @@ def admin_organizacion_oblea_crear(request):
             'codigo':       request.POST.get('codigo', ''),
             'descripcion':  request.POST.get('nombre', ''),
             'cantidadDies': int(request.POST.get('dies_maximos', 0) or 0),
-            'activo':       request.POST.get('activo', 'true') == 'true',
         })
         if ok:
             messages.success(request, 'Tipo de oblea creado.')
@@ -893,7 +889,6 @@ def admin_organizacion_oblea_editar(request, pk):
         ok, resp = _patch(f'/v1/update/TipoOblea/{pk}/', {
             'descripcion':  request.POST.get('nombre', ''),
             'cantidadDies': int(request.POST.get('dies_maximos', 0) or 0),
-            'activo':       request.POST.get('activo') == 'true',
         })
         if ok:
             messages.success(request, 'Tipo de oblea actualizado.')
@@ -908,7 +903,6 @@ def admin_organizacion_linea_crear(request):
             'codigo':  request.POST.get('codigo', ''),
             'nombre':  request.POST.get('nombre', ''),
             'proceso': request.POST.get('proceso') or None,
-            'activo':  request.POST.get('activo', 'true') == 'true',
         })
         if ok:
             messages.success(request, 'Línea creada.')
@@ -922,7 +916,6 @@ def admin_organizacion_linea_editar(request, pk):
         ok, resp = _patch(f'/v1/update/Linea/{pk}/', {
             'nombre':  request.POST.get('nombre', ''),
             'proceso': request.POST.get('proceso') or None,
-            'activo':  request.POST.get('activo') == 'true',
         })
         if ok:
             messages.success(request, 'Línea actualizada.')
@@ -939,7 +932,6 @@ def admin_organizacion_paso_crear(request):
             'nombre':         request.POST.get('nombre', ''),
             'descripcion':    request.POST.get('descripcion', ''),
             'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
-            'activo':         request.POST.get('activo', 'true') == 'true',
         })
         if ok:
             messages.success(request, 'Paso creado.')
@@ -955,7 +947,6 @@ def admin_organizacion_paso_editar(request, pk):
             'nombre':         request.POST.get('nombre', ''),
             'descripcion':    request.POST.get('descripcion', ''),
             'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
-            'activo':         request.POST.get('activo') == 'true',
         })
         if ok:
             messages.success(request, 'Paso actualizado.')
@@ -1046,12 +1037,11 @@ def supervisor_ordenes(request):
         {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''), 'proceso_pk': l.get('proceso'),
          'proceso_nombre': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre', '')}
         for l in lineas_bd
-        if l.get('activo', True) and l.get('proceso')
+        if l.get('proceso')
     ]
     tipos_oblea_activos = [
         {'pk': t.get('codigo'), 'nombre': t.get('descripcion', '')}
         for t in tipos_oblea_bd
-        if t.get('activo', True)
     ]
 
     ordenes_json_data = [

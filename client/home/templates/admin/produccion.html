@@ -60,8 +60,8 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.proceso_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.linea_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.tipo_oblea_nombre }}</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.fecha_inicio_display }}</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.fecha_fin_display }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.hora_inicio_display }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.hora_fin_display }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;text-align:center;">{{ orden.total_lotes }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -78,7 +78,7 @@
             {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
-            <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.fecha_inicio_display }}', '{{ orden.fecha_fin_display }}', '{{ orden.estado }}')"
+            <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.hora_inicio_display }}', '{{ orden.hora_fin_display }}', '{{ orden.estado }}')"
                     style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver detalle">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -227,8 +227,8 @@
           </select>
         </div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Fecha de inicio <span class="required">*</span></label><input type="date" name="fecha_inicio" id="orden-fecha-inicio-input" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Fecha estimada de fin <span class="required">*</span></label><input type="date" name="fecha_fin" id="orden-fecha-fin-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora de inicio <span class="required">*</span></label><input type="time" step="1" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora estimada de fin <span class="required">*</span></label><input type="time" step="1" name="hora_fin" id="orden-hora-fin-input" class="form-control" required></div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
@@ -382,8 +382,8 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  document.getElementById('orden-fecha-inicio-input').value = '';
-  document.getElementById('orden-fecha-fin-input').value = '';
+  document.getElementById('orden-hora-inicio-input').value = '';
+  document.getElementById('orden-hora-fin-input').value = '';
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
@@ -401,8 +401,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  document.getElementById('orden-fecha-inicio-input').value = o.fecha_inicio;
-  document.getElementById('orden-fecha-fin-input').value = o.fecha_fin;
+  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio;
+  document.getElementById('orden-hora-fin-input').value = o.hora_fin;
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!ordenPk) return;
   var o = _ordenes.find(function (x) { return String(x.pk) === String(ordenPk); });
   if (!o) return;
-  abrirOrden(o.pk, o.numero, o.proceso_nombre, o.fecha_inicio_display, o.fecha_fin_display, o.estado);
+  abrirOrden(o.pk, o.numero, o.proceso_nombre, o.hora_inicio_display, o.hora_fin_display, o.estado);
   if (lotePk) abrirLote(parseInt(lotePk, 10));
 });
 
@@ -487,8 +487,8 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
     return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.fecha_inicio+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.fecha_fin+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.hora_inicio+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.hora_fin+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">'+l.total_pasos+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;"><div style="height:100%;background:#16A85E;border-radius:999px;width:'+pct+'%;"></div></div><span style="font-size:13px;color:#718096;white-space:nowrap;">'+l.pasos_completados+'/'+l.total_pasos+'</span></div></td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">'+badgeEdo+'</td>' +

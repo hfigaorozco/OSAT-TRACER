@@ -54,15 +54,6 @@
         <input type="text" placeholder="Search..." id="search-plantillas" oninput="filterPlantillas(this.value)"
           style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
       </div>
-      <div style="position:relative;">
-        <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-        <select id="plantillas-estado-filter" onchange="filtrarPlantillasPorEstado(this.value)"
-          style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
-          <option value="todos" {% if estado_plantillas == 'todos' %}selected{% endif %}>Todos</option>
-          <option value="activo" {% if estado_plantillas == 'activo' %}selected{% endif %}>Activo</option>
-          <option value="inactivo" {% if estado_plantillas == 'inactivo' %}selected{% endif %}>Inactivo</option>
-        </select>
-      </div>
     </div>
   </div>
 
@@ -71,11 +62,6 @@
     <div class="card org-plantilla-card" style="position:relative;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">{{ p.nombre }}</h3>
-        {% if p.activo %}
-        <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px;">Activo</span>
-        {% else %}
-        <span style="background:#F8D7DA;color:#721C24;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px;">Inactivo</span>
-        {% endif %}
       </div>
       <p style="font-size:14px;color:#718096;margin-bottom:14px;min-height:36px;">{{ p.descripcion|default:"Sin descripción" }}</p>
       <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:12px;">
@@ -100,15 +86,6 @@
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
     </div>
-    <div style="position:relative;">
-      <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-      <select id="lineas-estado-filter" onchange="filtrarLineasPorEstado(this.value)"
-        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
-        <option value="todos" {% if estado_lineas == 'todos' %}selected{% endif %}>Todos</option>
-        <option value="activo" {% if estado_lineas == 'activo' %}selected{% endif %}>Activo</option>
-        <option value="inactivo" {% if estado_lineas == 'inactivo' %}selected{% endif %}>Inactivo</option>
-      </select>
-    </div>
   </div>
 
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
@@ -117,7 +94,6 @@
         <tr>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Código</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso asignado</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
@@ -127,10 +103,6 @@
         <tr>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">{{ l.pk }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-weight:500;color:#2D3748;">{{ l.nombre }}</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if l.activo %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Activo</span>
-            {% else %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Inactivo</span>{% endif %}
-          </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:{% if l.proceso_asignado %}#2D3748{% else %}#718096{% endif %};">{{ l.proceso_asignado|default:"Sin asignar" }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <button style="background:none;border:none;color:#718096;cursor:pointer;padding:4px;" onclick="openEditarLinea('{{ l.pk|escapejs }}')">
@@ -153,15 +125,6 @@
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
     </div>
-    <div style="position:relative;">
-      <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-      <select id="obleas-estado-filter" onchange="filtrarObleasPorEstado(this.value)"
-        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
-        <option value="todos" {% if estado_obleas == 'todos' %}selected{% endif %}>Todos</option>
-        <option value="activo" {% if estado_obleas == 'activo' %}selected{% endif %}>Activo</option>
-        <option value="inactivo" {% if estado_obleas == 'inactivo' %}selected{% endif %}>Inactivo</option>
-      </select>
-    </div>
   </div>
 
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
@@ -171,7 +134,6 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Código</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre / Descripción</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Cantidad dies</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
       </thead>
@@ -182,12 +144,8 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ o.nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-weight:600;color:#009EAF;">{{ o.dies_maximos }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if o.activo %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Activo</span>
-            {% else %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Inactivo</span>{% endif %}
-          </td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <button style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;"
-                    onclick="openEditarOblea('{{ o.pk|escapejs }}', '{{ o.nombre|escapejs }}', {{ o.dies_maximos|default:0 }}, {{ o.activo|yesno:'true,false' }})">
+                    onclick="openEditarOblea('{{ o.pk|escapejs }}', '{{ o.nombre|escapejs }}', {{ o.dies_maximos|default:0 }})">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar
             </button>
@@ -208,15 +166,6 @@
       <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
     </div>
-    <div style="position:relative;">
-      <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-      <select id="pasos-estado-filter" onchange="filtrarPasosPorEstado(this.value)"
-        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:160px;outline:none;appearance:none;">
-        <option value="todos" {% if estado_pasos == 'todos' %}selected{% endif %}>Todos</option>
-        <option value="activo" {% if estado_pasos == 'activo' %}selected{% endif %}>Activo</option>
-        <option value="inactivo" {% if estado_pasos == 'inactivo' %}selected{% endif %}>Inactivo</option>
-      </select>
-    </div>
   </div>
 
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
@@ -227,7 +176,6 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tiempo estimado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
       </thead>
@@ -238,10 +186,6 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ p.nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#718096;">{{ p.descripcion|default:"—" }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ p.tiempo_estimado_min|default:0 }} min</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if p.activo %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Activo</span>
-            {% else %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Inactivo</span>{% endif %}
-          </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <button style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;"
                     onclick="openEditarPaso('{{ p.pk|escapejs }}', '{{ p.nombre|escapejs }}', '{{ p.descripcion|default:''|escapejs }}', {{ p.tiempo_estimado_seg|default:0 }}, {{ p.activo|yesno:'true,false' }})">
@@ -315,108 +259,104 @@
 
 <!-- ═══ MODAL NUEVA / EDITAR PLANTILLA ═══ -->
 <div class="modal-overlay" id="modal-nueva-plantilla" style="display:none;" onclick="if(event.target===this)closeModal('modal-nueva-plantilla')">
-  <div class="modal-card modal-md">
+  <div class="modal-card modal-md" style="display:flex;flex-direction:column;max-height:85vh;">
     <div class="modal-header">
       <h2 id="plantilla-modal-title">Nueva plantilla</h2>
       <button class="modal-close" onclick="closeModal('modal-nueva-plantilla')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <!-- Form principal: solo campos propios de Proceso. Los bloques de pasos/piezas viven
-         FUERA de este <form> (los forms no pueden anidarse en HTML) y usan form="plantilla-form"
-         para que sus hidden inputs se envíen igual con el submit de abajo. -->
-    <form method="post" id="plantilla-form" action="{% url 'admin_organizacion_plantilla_crear' %}">{% csrf_token %}
-      <div class="modal-body" style="padding-bottom:0;">
-        <div class="form-group">
-          <label class="form-label">Código <span class="required">*</span></label>
-          <input type="text" name="codigo" id="plantilla-codigo-input" class="form-control" maxlength="5" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nombre <span class="required">*</span></label>
-          <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Descripción</label>
-          <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Estado</label>
-          <select name="activo" id="plantilla-activo-input" class="form-control">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
-      </div>
-    </form>
 
-    <div class="modal-body" style="padding-top:0;">
-      <!-- ── Pasos del proceso ── -->
-      <div>
-        <label class="form-label" style="margin-bottom:10px;">Pasos del proceso</label>
-
-        <!-- Bloque modo CREACIÓN (staged en JS, sin persistir hasta guardar la plantilla) -->
-        <div id="plantilla-pasos-create-block">
-          <div id="plantilla-pasos-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-          <div style="display:flex;gap:8px;margin-bottom:6px;">
-            <select id="plantilla-paso-select-create" class="form-control" style="flex:1;">
-              <option value="">Seleccionar paso del banco...</option>
-              {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
-            </select>
-            <button type="button" class="btn btn-outline btn-sm" onclick="agregarPasoExistenteCreate()">Agregar</button>
+    <div style="overflow-y:auto;flex:1;">
+      <!-- Form principal: solo campos propios de Proceso. Los bloques de pasos/piezas viven
+           FUERA de este <form> (los forms no pueden anidarse en HTML) y usan form="plantilla-form"
+           para que sus hidden inputs se envíen igual con el submit de abajo. -->
+      <form method="post" id="plantilla-form" action="{% url 'admin_organizacion_plantilla_crear' %}">{% csrf_token %}
+        <div class="modal-body" style="padding-bottom:0;">
+          <div class="form-group">
+            <label class="form-label">Código <span class="required">*</span></label>
+            <input type="text" name="codigo" id="plantilla-codigo-input" class="form-control" maxlength="5" required>
           </div>
-          <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
-                  style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Crear paso nuevo
-          </button>
-          <div id="plantilla-pasos-hidden-inputs"></div>
-        </div>
-
-        <!-- Bloque modo EDICIÓN (acciones reales e inmediatas contra el backend, form independiente) -->
-        <div id="plantilla-pasos-edit-block" style="display:none;">
-          <div id="plantilla-pasos-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-          <form method="post" id="form-plantilla-paso-agregar-edit" style="display:flex;gap:8px;margin-bottom:6px;">
-            {% csrf_token %}
-            <select name="paso" class="form-control" style="flex:1;">
-              <option value="">Seleccionar paso del banco...</option>
-              {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
-          </form>
-          <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
-                  style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Crear paso nuevo
-          </button>
-        </div>
-      </div>
-
-      <!-- ── Piezas requeridas ── -->
-      <div style="margin-top:18px;">
-        <label class="form-label" style="margin-bottom:10px;">Piezas requeridas</label>
-
-        <div id="plantilla-piezas-create-block">
-          <div id="plantilla-piezas-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-          <div style="display:flex;gap:8px;">
-            <select id="plantilla-pieza-select-create" class="form-control" style="flex:2;">
-              <option value="">Seleccionar pieza del inventario...</option>
-              {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
-            </select>
-            <input type="number" id="plantilla-pieza-cantidad-create" class="form-control" placeholder="Cant." min="1" style="flex:1;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="agregarPiezaCreate()">Agregar</button>
+          <div class="form-group">
+            <label class="form-label">Nombre <span class="required">*</span></label>
+            <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" required>
           </div>
-          <div id="plantilla-piezas-hidden-inputs"></div>
+          <div class="form-group">
+            <label class="form-label">Descripción</label>
+            <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+      </form>
+
+      <div class="modal-body" style="padding-top:0;">
+        <!-- ── Pasos del proceso ── -->
+        <div>
+          <label class="form-label" style="margin-bottom:10px;">Pasos del proceso</label>
+
+          <!-- Bloque modo CREACIÓN (staged en JS, sin persistir hasta guardar la plantilla) -->
+          <div id="plantilla-pasos-create-block">
+            <div id="plantilla-pasos-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:6px;">
+              <select id="plantilla-paso-select-create" class="form-control" style="flex:1;">
+                <option value="">Seleccionar paso del banco...</option>
+                {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+              </select>
+              <button type="button" class="btn btn-outline btn-sm" onclick="agregarPasoExistenteCreate()">Agregar</button>
+            </div>
+            <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
+                    style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Crear paso nuevo
+            </button>
+            <div id="plantilla-pasos-hidden-inputs"></div>
+          </div>
+
+          <!-- Bloque modo EDICIÓN (acciones reales e inmediatas contra el backend, form independiente) -->
+          <div id="plantilla-pasos-edit-block" style="display:none;">
+            <div id="plantilla-pasos-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+            <form method="post" id="form-plantilla-paso-agregar-edit" style="display:flex;gap:8px;margin-bottom:6px;">
+              {% csrf_token %}
+              <select name="paso" class="form-control" style="flex:1;">
+                <option value="">Seleccionar paso del banco...</option>
+                {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
+            </form>
+            <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
+                    style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Crear paso nuevo
+            </button>
+          </div>
         </div>
 
-        <div id="plantilla-piezas-edit-block" style="display:none;">
-          <div id="plantilla-piezas-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-          <form method="post" id="form-plantilla-pieza-agregar-edit" style="display:flex;gap:8px;">
-            {% csrf_token %}
-            <select name="pieza" class="form-control" style="flex:2;">
-              <option value="">Seleccionar pieza del inventario...</option>
-              {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
-            </select>
-            <input type="number" name="cantidad" class="form-control" placeholder="Cant." min="1" style="flex:1;">
-            <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
-          </form>
+        <!-- ── Piezas requeridas ── -->
+        <div style="margin-top:18px;">
+          <label class="form-label" style="margin-bottom:10px;">Piezas requeridas por die</label>
+
+          <div id="plantilla-piezas-create-block">
+            <div id="plantilla-piezas-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:8px;">
+              <select id="plantilla-pieza-select-create" class="form-control" style="flex:2;">
+                <option value="">Seleccionar pieza del inventario...</option>
+                {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
+              </select>
+              <input type="number" id="plantilla-pieza-cantidad-create" class="form-control" placeholder="Cant." min="1" style="flex:1;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="agregarPiezaCreate()">Agregar</button>
+            </div>
+            <div id="plantilla-piezas-hidden-inputs"></div>
+          </div>
+
+          <div id="plantilla-piezas-edit-block" style="display:none;">
+            <div id="plantilla-piezas-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+            <form method="post" id="form-plantilla-pieza-agregar-edit" style="display:flex;gap:8px;">
+              {% csrf_token %}
+              <select name="pieza" class="form-control" style="flex:2;">
+                <option value="">Seleccionar pieza del inventario...</option>
+                {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
+              </select>
+              <input type="number" name="cantidad" class="form-control" placeholder="Cant." min="1" style="flex:1;">
+              <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -472,13 +412,6 @@
         <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="linea-codigo-input" class="form-control" maxlength="5" required></div>
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="linea-nombre-input" class="form-control" required></div>
         <div class="form-group">
-          <label class="form-label">Estado</label>
-          <select name="activo" id="linea-activo-input" class="form-control">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
-        <div class="form-group">
           <label class="form-label" style="color:#16A85E;">Proceso asignado</label>
           <select name="proceso" id="linea-proceso-input" class="form-control">
             <option value="">Sin asignar</option>
@@ -512,13 +445,6 @@
             <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;pointer-events:none;">▲</span>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Estado</label>
-          <select name="activo" id="oblea-activo-input" class="form-control">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-nueva-oblea')">Cancelar</button>
@@ -541,13 +467,6 @@
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="paso-nombre-input" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Descripción</label><textarea name="descripcion" id="paso-desc-input" class="form-control" rows="3"></textarea></div>
         <div class="form-group"><label class="form-label">Tiempo estimado (minutos)</label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="0"></div>
-        <div class="form-group">
-          <label class="form-label">Estado</label>
-          <select name="activo" id="paso-activo-input" class="form-control">
-            <option value="true">Activo</option>
-            <option value="false">Inactivo</option>
-          </select>
-        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-nuevo-paso')">Cancelar</button>
@@ -625,7 +544,6 @@ function openNuevaPlantilla() {
   document.getElementById('plantilla-codigo-input').disabled = false;
   document.getElementById('plantilla-nombre-input').value = '';
   document.getElementById('plantilla-desc-input').value = '';
-  document.getElementById('plantilla-activo-input').value = 'true';
   document.getElementById('plantilla-form').action = "{% url 'admin_organizacion_plantilla_crear' %}";
 
   _plantillaPasosCreate = [];
@@ -651,7 +569,6 @@ function openEditarPlantilla(pk) {
   document.getElementById('plantilla-codigo-input').disabled = true;
   document.getElementById('plantilla-nombre-input').value = p.nombre;
   document.getElementById('plantilla-desc-input').value = p.descripcion;
-  document.getElementById('plantilla-activo-input').value = p.activo ? 'true' : 'false';
   document.getElementById('plantilla-form').action = URL_PLANTILLA_EDITAR.replace('__PK__', pk);
 
   document.getElementById('plantilla-pasos-create-block').style.display = 'none';
@@ -856,7 +773,6 @@ function openNuevaLinea() {
   document.getElementById('linea-codigo-input').value = '';
   document.getElementById('linea-codigo-input').disabled = false;
   document.getElementById('linea-nombre-input').value = '';
-  document.getElementById('linea-activo-input').value = 'true';
   document.getElementById('linea-proceso-input').value = '';
   document.getElementById('linea-form').action = "{% url 'admin_organizacion_linea_crear' %}";
   openModal('modal-nueva-linea');
@@ -874,7 +790,6 @@ function openEditarLinea(pk) {
   document.getElementById('linea-codigo-input').value = l.pk;
   document.getElementById('linea-codigo-input').disabled = true;
   document.getElementById('linea-nombre-input').value = l.nombre;
-  document.getElementById('linea-activo-input').value = l.activo ? 'true' : 'false';
   document.getElementById('linea-proceso-input').value = l.proceso_pk || '';
   document.getElementById('linea-form').action = URL_LINEA_EDITAR.replace('__PK__', pk);
   openModal('modal-nueva-linea');
@@ -888,18 +803,16 @@ function openNuevaOblea() {
   document.getElementById('oblea-codigo-input').disabled = false;
   document.getElementById('oblea-nombre-input').value = '';
   document.getElementById('oblea-dies-input').value = '';
-  document.getElementById('oblea-activo-input').value = 'true';
   document.getElementById('oblea-form').action = "{% url 'admin_organizacion_oblea_crear' %}";
   openModal('modal-nueva-oblea');
 }
 
-function openEditarOblea(pk, nombre, dies, activo) {
+function openEditarOblea(pk, nombre, dies) {
   document.getElementById('oblea-modal-title').textContent = 'Editar: ' + nombre;
   document.getElementById('oblea-codigo-input').value = pk;
   document.getElementById('oblea-codigo-input').disabled = true;
   document.getElementById('oblea-nombre-input').value = nombre;
   document.getElementById('oblea-dies-input').value = dies;
-  document.getElementById('oblea-activo-input').value = activo ? 'true' : 'false';
   document.getElementById('oblea-form').action = URL_OBLEA_EDITAR.replace('__PK__', pk);
   openModal('modal-nueva-oblea');
 }
@@ -929,7 +842,6 @@ function openNuevoPaso() {
   document.getElementById('paso-nombre-input').value = '';
   document.getElementById('paso-desc-input').value = '';
   document.getElementById('paso-tiempo-input').value = '';
-  document.getElementById('paso-activo-input').value = 'true';
   document.getElementById('paso-form').action = "{% url 'admin_organizacion_paso_crear' %}";
   openModal('modal-nuevo-paso');
 }
@@ -941,7 +853,6 @@ function openEditarPaso(pk, nombre, descripcion, tiempoSeg, activo) {
   document.getElementById('paso-nombre-input').value = nombre;
   document.getElementById('paso-desc-input').value = descripcion;
   document.getElementById('paso-tiempo-input').value = Math.round((tiempoSeg || 0) / 60);
-  document.getElementById('paso-activo-input').value = activo ? 'true' : 'false';
   document.getElementById('paso-form').action = URL_PASO_EDITAR.replace('__PK__', pk);
   openModal('modal-nuevo-paso');
 }
