@@ -13,7 +13,7 @@
       <tbody>
         {% for orden in ordenes %}
         <tr>
-          <td><a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ orden.numero }}</a></td>
+          <td>{% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}<a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ orden.numero }}</a></td>
           <td>{{ orden.proceso.nombre|default:"—" }}</td>
           <td>{{ orden.linea_nombre }}</td>
           <td>{{ orden.tipo_oblea_nombre }}</td>
@@ -24,7 +24,7 @@
             {% with pct=orden.pct_completados|default:0 %}
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="progress-bar"><div class="progress-fill" style="width:{{ pct }}%;"></div></div>
-              <span style="font-size:11px;color:#718096;white-space:nowrap;">{{ orden.lotes_completados|default:"0" }}/{{ orden.total_lotes|default:"0" }}</span>
+              <span style="font-size:12px;color:#718096;white-space:nowrap;">{{ orden.lotes_completados|default:"0" }}/{{ orden.total_lotes|default:"0" }}</span>
             </div>
             {% endwith %}
           </td>
@@ -72,12 +72,12 @@
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
           <input type="number" name="cantidad_lotes" id="orden-cantidad-crear-input" class="form-control" min="1" value="1" required>
-          <div style="font-size:12px;color:#718096;margin-top:4px;">Todos los lotes de la orden usan el mismo tipo de oblea elegido arriba.</div>
+          <div style="font-size:13px;color:#718096;margin-top:4px;">Todos los lotes de la orden usan el mismo tipo de oblea elegido arriba.</div>
         </div>
         <div class="form-group" id="orden-cantidad-extra-wrap" style="display:none;">
           <label class="form-label">Agregar lotes nuevos</label>
           <input type="number" name="cantidad_lotes_extra" id="orden-cantidad-extra-input" class="form-control" min="0" value="0">
-          <div id="orden-cantidad-extra-hint" style="font-size:12px;color:#718096;margin-top:4px;"></div>
+          <div id="orden-cantidad-extra-hint" style="font-size:13px;color:#718096;margin-top:4px;"></div>
         </div>
         <div class="form-group" id="orden-estado-wrap" style="display:none;">
           <label class="form-label">Estado</label>

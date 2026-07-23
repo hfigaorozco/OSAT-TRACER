@@ -4,15 +4,15 @@
   <div style="display:flex;align-items:center;gap:0;">
     <!-- El hamburger/flecha está en el sidebar, no aquí -->
     <img src="{% static 'img/logo.png' %}" alt="OSAT Tracer" style="width:52px;height:44px;object-fit:contain;margin-right:10px;">
-    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:13px;color:#fff;line-height:1.2;">
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:14px;color:#fff;line-height:1.2;">
       O.S.A.T. Tracer<br>
-      <span style="font-size:11px;color:#C4C5D0;">Trazabilidad de Ensamblado de Semiconductores</span>
+      <span style="font-size:12px;color:#C4C5D0;">Trazabilidad de Ensamblado de Semiconductores</span>
     </span>
   </div>
 
   <div style="display:flex;align-items:center;gap:32px;">
 
-    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:17px;color:#fff;">
       {% now "d/m/Y" %} &nbsp;
       <span id="topbar-hora">--:--</span>
     </span>
@@ -29,18 +29,18 @@
     })();
     </script>
 
-    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:16px;color:#fff;">
+    <span style="font-family:'Montserrat',sans-serif;font-weight:300;font-size:17px;color:#fff;">
       {{ request.session.user_name|default:"Empleado" }}
     </span>
     {% with rol=request.session.user_rol|default:"" %}
     {% if 'admin' in rol %}
-      <span style="background:#E9D8FD;color:#553C9A;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Administrador</span>
+      <span style="background:#E9D8FD;color:#553C9A;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Administrador</span>
     {% elif 'super' in rol %}
-      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Supervisor</span>
+      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Supervisor</span>
     {% elif 'opera' in rol %}
-      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">Operador</span>
+      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Operador</span>
     {% else %}
-      <span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">{{ rol }}</span>
+      <span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">{{ rol }}</span>
     {% endif %}
     {% endwith %}
 
@@ -56,7 +56,7 @@
       </button>
 
       <div class="notif-dropdown" id="notif-dropdown" style="display:none;">
-        <div style="padding:12px 16px;border-bottom:1px solid #2E3D52;font-weight:600;font-size:13px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+        <div style="padding:12px 16px;border-bottom:1px solid #2E3D52;font-weight:600;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
           <span>Notificaciones</span>
           {% if unread_count and unread_count > 0 %}
             <span class="badge badge-activo">{{ unread_count }}</span>
@@ -83,11 +83,11 @@
             </div>
             {% endfor %}
           {% else %}
-            <div style="padding:20px;text-align:center;color:#718096;font-size:13px;">Sin notificaciones nuevas</div>
+            <div style="padding:20px;text-align:center;color:#718096;font-size:14px;">Sin notificaciones nuevas</div>
           {% endif %}
         </div>
         <div style="padding:8px;border-top:1px solid #2E3D52;display:flex;justify-content:flex-end;">
-          <a href="#" style="font-size:12px;color:#16A85E;">Ver todas →</a>
+          <a href="#" style="font-size:13px;color:#16A85E;">Ver todas →</a>
         </div>
       </div>
     </div>

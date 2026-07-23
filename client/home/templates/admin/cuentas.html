@@ -53,7 +53,7 @@
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;border-radius:50%;background:#E2E8F0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#4A5568;">
+              <div style="width:32px;height:32px;border-radius:50%;background:#E2E8F0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#4A5568;">
                 {{ cuenta.user.get_full_name|default:cuenta.user.username|slice:":1"|upper }}
               </div>
               <span style="font-weight:500;">{{ cuenta.user.username }}</span>
@@ -134,7 +134,7 @@
           <label class="form-label">Contraseña inicial <span class="required">*</span></label>
           <div style="position:relative;">
             <input type="password" id="mc-password" name="password" class="form-control" style="padding-right:72px;" required>
-            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#4A5568;font-size:12px;cursor:pointer;" onclick="togglePassword('mc-password',this)">Ver</button>
+            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#4A5568;font-size:13px;cursor:pointer;" onclick="togglePassword('mc-password',this)">Ver</button>
           </div>
           <span class="form-hint">El usuario deberá cambiarla en su primer acceso.</span>
         </div>

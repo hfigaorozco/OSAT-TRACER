@@ -507,13 +507,14 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
         unidades_defecto = validated_data.pop('unidades_defecto', 0)
         observaciones = validated_data.pop('observaciones', None)
 
-        # Si no se manda alerta y el resultado es Hold/Rechazado, crear una
+        # Si no se manda alerta y el resultado es Rechazado (nocom), crear una
         if 'alerta' not in validated_data or validated_data.get('alerta') is None:
             from api_kpi.models import Alerta, EstadoAlerta
-            estado_str = str(validated_data.get('estado', '')).lower()
-            if 'hold' in estado_str or 'rechaz' in estado_str:
+            estado_obj = validated_data.get('estado')
+            estado_codigo = str(getattr(estado_obj, 'codigo', estado_obj) or '').lower()
+            if estado_codigo == 'nocom':
                 try:
-                    estado_activo = EstadoAlerta.objects.get(descripcion__iexact='activo')
+                    estado_activo = EstadoAlerta.objects.get(pk='sinre')
                 except EstadoAlerta.DoesNotExist:
                     estado_activo = EstadoAlerta.objects.first()
                 alerta = Alerta.objects.create(
@@ -526,7 +527,7 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 # Alerta es FK requerida en el modelo actual — usar una "sin novedad"
                 from api_kpi.models import Alerta, EstadoAlerta
                 try:
-                    estado_resuelto = EstadoAlerta.objects.get(descripcion__iexact='resuelto')
+                    estado_resuelto = EstadoAlerta.objects.get(pk='resue')
                 except EstadoAlerta.DoesNotExist:
                     estado_resuelto = EstadoAlerta.objects.first()
                 alerta, _ = Alerta.objects.get_or_create(
@@ -535,6 +536,8 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 )
                 validated_data['alerta'] = alerta
 
+        validated_data['observaciones'] = observaciones or ''
+        validated_data['scrap'] = unidades_defecto
         paso_realizado = models.Paso_Realizado.objects.create(**validated_data)
 
         # Guardar cada defecto en Historial_Defectos
@@ -563,8 +566,9 @@ class ListPasoRealizadoSerializer(serializers.ModelSerializer):
             "paso",
             "estado",
             "oblea",
-            "alerta",  
-        ] 
+            "alerta",
+            "scrap",
+        ]
 #DETAIL
 #UPDATE
 
@@ -682,7 +686,7 @@ class UpdateObleaSerializer(serializers.ModelSerializer):
         if hold_motivo:
             from api_kpi.models import Alerta, EstadoAlerta
             try:
-                estado_activo = EstadoAlerta.objects.get(descripcion__iexact='activo')
+                estado_activo = EstadoAlerta.objects.get(pk='sinre')
             except EstadoAlerta.DoesNotExist:
                 estado_activo = EstadoAlerta.objects.first()
 
