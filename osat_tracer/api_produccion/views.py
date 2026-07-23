@@ -4,8 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from django.http import FileResponse
-
+from api_kpi.models import Alerta
 from .services import generar_pdf_etiquetas_QR
+from rest_framework.exceptions import ValidationError
+from django.db import DatabaseError, transaction
 
 # Create your views here.
 # Vistas Defecto 
@@ -181,6 +183,26 @@ class UpdatePasoAPIView(generics.UpdateAPIView):
 #CREATE
 class CreateOrdenAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreateOrdenSerializer
+    
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+
+        except DatabaseError as e:
+            msg_raw = str(e)
+            if ',' in msg_raw:
+                msg_limpio = msg_raw.split(',')[-1].replace("'", "").replace(")", "").strip()
+            else:
+                msg_limpio = msg_raw
+
+            # Guardar alerta en la tabla de alertas
+            Alerta.objects.create(
+                descripcion=msg_limpio,
+                estadoAlerta_id='sinre'
+            )
+
+            raise ValidationError({'detail': msg_limpio})
 
 #LIST
 class ListOrdenAPIView(APIView):
