@@ -44,5 +44,3 @@ class UpdateReporteSerializer(serializers.ModelSerializer):
             "unidaes_defect",
             "comentarios",
         ]
-
-
