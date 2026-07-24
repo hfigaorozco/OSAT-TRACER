@@ -507,11 +507,35 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
         unidades_defecto = validated_data.pop('unidades_defecto', 0)
         observaciones = validated_data.pop('observaciones', None)
 
+        oblea = validated_data.get('oblea')
+        estado_obj = validated_data.get('estado')
+        estado_codigo = str(getattr(estado_obj, 'codigo', estado_obj) or '').lower()
+
+        # Un lote en Hold o ya Rechazado no puede recibir más etapas.
+        if oblea and str(oblea.estado_id).lower() in ('enhol', 'recha'):
+            raise serializers.ValidationError(
+                'Este lote no puede recibir más etapas: está en Hold o ya fue rechazado.'
+            )
+
+        # Rechazar una etapa implica que hubo scrap de más — solo se permite
+        # si el scrap de esta etapa supera el 10% de los dies activos del lote.
+        if oblea and estado_codigo == 'nocom':
+            dies_iniciales = oblea.diesGenerados or 0
+            scrap_previo = sum(
+                pr.scrap or 0
+                for pr in models.Paso_Realizado.objects.filter(oblea=oblea)
+            )
+            dies_activos = max(0, dies_iniciales - scrap_previo)
+            pct_scrap = (unidades_defecto / dies_activos * 100) if dies_activos > 0 else 100
+            if pct_scrap <= 10:
+                raise serializers.ValidationError(
+                    'Solo se puede rechazar una etapa si el scrap supera el 10% '
+                    'de los dies activos del lote.'
+                )
+
         # Si no se manda alerta y el resultado es Rechazado (nocom), crear una
         if 'alerta' not in validated_data or validated_data.get('alerta') is None:
             from api_kpi.models import Alerta, EstadoAlerta
-            estado_obj = validated_data.get('estado')
-            estado_codigo = str(getattr(estado_obj, 'codigo', estado_obj) or '').lower()
             if estado_codigo == 'nocom':
                 try:
                     estado_activo = EstadoAlerta.objects.get(pk='sinre')
@@ -553,6 +577,15 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 )
             except models.Defecto.DoesNotExist:
                 continue
+
+        # Rechazar una etapa rechaza el lote completo de una vez — ya no
+        # espera a que se completen las etapas restantes.
+        if oblea and estado_codigo == 'nocom':
+            try:
+                oblea.estado = models.Estado_Oblea.objects.get(pk='recha')
+                oblea.save(update_fields=['estado'])
+            except models.Estado_Oblea.DoesNotExist:
+                pass
 
         return paso_realizado
 
@@ -631,6 +664,11 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
                 oblea=obj, paso=pp.paso
             ).select_related('estado').order_by('-numero').first()
 
+            tiempo_estimado_seg = (
+                int(pp.paso.tiempoEstimado.total_seconds())
+                if pp.paso.tiempoEstimado else 0
+            )
+
             if paso_realizado:
                 estado_desc = paso_realizado.estado.descripcion if paso_realizado.estado else 'pendiente'
                 etapas.append({
@@ -643,6 +681,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
                     'hora_fin': None,
                     'unidades_defecto': 0,
                     'observaciones': None,
+                    'tiempo_estimado_seg': tiempo_estimado_seg,
                 })
             else:
                 etapas.append({
@@ -655,6 +694,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
                     'hora_fin': None,
                     'unidades_defecto': 0,
                     'observaciones': None,
+                    'tiempo_estimado_seg': tiempo_estimado_seg,
                 })
 
         # Marcar la primera etapa pendiente como "en_curso"

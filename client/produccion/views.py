@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import reverse
 from django.core.paginator import Paginator
-from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
+from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj, BACKEND_URL
 
 PAGE_SIZE_ORGANIZACION = 9
 
@@ -473,6 +473,7 @@ def admin_produccion(request):
         'lotes_json':           json.dumps(lotes),
         'maquinas_disponibles': [],
         'empleados':            [],
+        'backend_url':          BACKEND_URL,
         'breadcrumbs': [
             {'label': 'Dashboard',  'url': '/admin-dash/'},
             {'label': 'Producción', 'url': '/admin/produccion/'},
@@ -990,6 +991,7 @@ def supervisor_ordenes(request):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
@@ -1154,6 +1156,7 @@ def supervisor_orden_detalle(request, pk):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(pk)), {})
@@ -1262,6 +1265,7 @@ def supervisor_lote_detalle(request, pk):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     ob = next((o for o in obleas_bd if str(o.get('numero')) == str(pk)), {})
