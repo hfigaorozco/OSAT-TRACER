@@ -22,7 +22,7 @@ class ListMaquinaAPIView(generics.ListAPIView):
 #DETAIL
 class DetailMaquinaAPIView(generics.RetrieveAPIView):
     queryset = models.Maquina.objects.all()
-    serializer_class = serializers.DetalMaquinaSerializer
+    serializer_class = serializers.DetailMaquinaSerializer
 
 #UPDATE
 class UpdateMaquinaAPIView(generics.UpdateAPIView):

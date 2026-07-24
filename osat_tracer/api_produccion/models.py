@@ -20,6 +20,9 @@ class Tipo_Oblea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(max_length=25)
     cantidadDies = models.IntegerField(default=0, unique=True)
+    
+    class Meta:
+        db_table = 'tipo_oblea' 
 
 
 class Estado_Paso(models.Model):
@@ -55,40 +58,41 @@ class Estado_Oblea(models.Model):
         return self.descripcion
 
 
-class Linea(models.Model):
-    codigo = models.CharField(primary_key=True, max_length=5)
-    nombre = models.CharField(unique=True, max_length=20)
-    
-    class Meta:
-        db_table = 'linea'
-        
-    def __str__(self):
-        return self.nombre
-    
-    
 class Proceso(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=80)
-    
+
     class Meta:
         db_table = 'proceso'
-        
+
     def __str__(self):
         return self.nombre
-    
-    
+
+
+class Linea(models.Model):
+    codigo = models.CharField(primary_key=True, max_length=5)
+    nombre = models.CharField(unique=True, max_length=20)
+    proceso = models.ForeignKey(Proceso, null=True, blank=True, on_delete=models.SET_NULL, related_name='lineas')
+
+    class Meta:
+        db_table = 'linea'
+
+    def __str__(self):
+        return self.nombre
+
+
 class Paso(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
     descripcion = models.CharField(max_length=80)
     tiempoEstimado = models.DurationField()
-    
+
     class Meta:
-        db_table = 'paso' 
-    
+        db_table = 'paso'
+
     def __str__(self):
-        return self.nombre 
+        return self.nombre
   
 
 class Orden(models.Model):
@@ -97,6 +101,7 @@ class Orden(models.Model):
     horaFin = models.DateTimeField(auto_now=False, auto_now_add=False)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=False, default="2026-07-05 00:00:00+0000")
     proceso = models.ForeignKey(Proceso, on_delete=models.RESTRICT, related_name='orden')
+    linea = models.ForeignKey('Linea', null=True, blank=True, on_delete=models.RESTRICT, related_name='orden')
     estado = models.ForeignKey(Estado_Orden, on_delete=models.RESTRICT, related_name='orden')
     empleado = models.ForeignKey(Empleado, on_delete=models.RESTRICT, related_name='orden')
     tipoOblea = models.ForeignKey(Tipo_Oblea, on_delete=models.RESTRICT, related_name='orden')
@@ -111,8 +116,10 @@ class Orden(models.Model):
 class Oblea(models.Model):
     numero = models.AutoField(primary_key=True)
     diesGenerados = models.IntegerField(default=(0))
+    codigoQR = models.CharField(max_length=255, null=True, blank=True)
     orden = models.ForeignKey(Orden, on_delete=models.RESTRICT, related_name='oblea')
     estado = models.ForeignKey(Estado_Oblea, on_delete=models.RESTRICT, related_name='oblea')
+    
 
     class Meta:
         db_table = 'oblea' 
@@ -196,6 +203,7 @@ class Paso_Realizado(models.Model):
     hora = models.TimeField(auto_now=False, auto_now_add=True)
     fecha = models.DateTimeField(auto_now=False, auto_now_add=True)
     observaciones = models.CharField(max_length=200)
+    scrap = models.IntegerField(default=0)
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
@@ -206,6 +214,10 @@ class Paso_Realizado(models.Model):
         
     def __str__(self):
         return str(self.numero)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.refresh_from_db()
     
 
 class Historial_Defectos(models.Model):

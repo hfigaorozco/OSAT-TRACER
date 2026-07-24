@@ -14,16 +14,9 @@ class CreateMaquinaSerializer(serializers.ModelSerializer):
             "empleado",
             "linea",
         ]
+        
 #LIST
 class ListMaquinaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Maquina
-        fields = [
-            "numSerie",
-            "nombre",
-        ]
-#DETAIL
-class DetalMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
@@ -35,25 +28,40 @@ class DetalMaquinaSerializer(serializers.ModelSerializer):
             "empleado",
             "linea",
         ]
-#UPDATE
-class UpdateMaquinaSerializer(serializers.ModelSerializer):
+        
+#DETAIL
+class DetailMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Maquina
         fields = [
+            "numSerie",
+            "nombre",
+            "fechaReg",
+            "tipoMaquina",
             "estado",
             "empleado",
             "linea",
         ]
         
+#UPDATE
+class UpdateMaquinaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Maquina
+        fields = [
+            "nombre",
+            "estado",
+            "empleado",
+            "linea",
+        ]
         
-        
+           
 # SERIALIZERS estado_maquina
 #CREATE
 class CreateEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -61,7 +69,7 @@ class ListEstadoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Estado_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL
@@ -74,7 +82,7 @@ class CreateTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #LIST
@@ -82,7 +90,7 @@ class ListTipoMaquinaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Maquina
         fields = [
-            "clave",
+            "codigo",
             "descripcion",
         ]
 #DETAIL

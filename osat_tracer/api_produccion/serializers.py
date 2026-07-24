@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from . import models
 from api_kpi.models import Alerta
+from .services import generarQR
 
 #SERIALIZERS defecto
 #CREATE
@@ -11,6 +12,7 @@ class CreateDefectoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion"
         ]
+        
 #LIST
 class ListDefectoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +21,7 @@ class ListDefectoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion"
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -30,19 +33,37 @@ class CreateTipoObleaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "descripcion",
-            "cantidadDies"
+            "cantidadDies",
     ]
-#LIST 
+        
+#LIST
 class ListTipoObleaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tipo_Oblea
         fields = [
             "codigo",
             "descripcion",
-            "cantidadDies"
+            "cantidadDies",
         ]
+        
 #DETAIL
+class DetailTipoObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Tipo_Oblea
+        fields = [
+            "codigo",
+            "descripcion",
+            "cantidadDies",
+        ]
+        
 #UPDATE
+class UpdateTipoObleaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Tipo_Oblea
+        fields = [
+            "descripcion",
+            "cantidadDies",
+        ]
 
 #SERIALIZERS EstadoPaso
 #CREATE
@@ -53,6 +74,7 @@ class CreateEstadoPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST 
 class ListEstadoPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,6 +83,7 @@ class ListEstadoPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -73,6 +96,7 @@ class CreateEstadoOrdenSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST
 class ListEstadoOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -93,6 +117,7 @@ class CreateEstadoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST
 class ListEstadoObleaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,6 +126,7 @@ class ListEstadoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -112,6 +138,7 @@ class CreateLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso"
         ]
 #LIST
 class ListLineaSerializer(serializers.ModelSerializer):
@@ -120,6 +147,7 @@ class ListLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso"
         ]
 #DETAIL
 class DetailLineaSerializer(serializers.ModelSerializer):
@@ -128,6 +156,7 @@ class DetailLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
+            "proceso"
         ]
 #UPDATE
 class UpdateLineaSerializer(serializers.ModelSerializer):
@@ -135,7 +164,7 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             'nombre',
-    
+            'proceso',
         ]
 
 
@@ -147,9 +176,9 @@ class CreateProcesoSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
-            "descripcion",
-            "imagen",
+            "descripcion"
         ]
+        
 #LIST
 class ListProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -159,6 +188,7 @@ class ListProcesoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
         ]
+        
 #DETAIL
 class DetailProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -167,17 +197,16 @@ class DetailProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "imagen",
         ]
+        
 #UPDATE
 class UpdateProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Proceso
         fields = [
-            "codigo",
+            "nombre",
             "descripcion",
-            "imagen",
-        ] 
+        ]
 
 #SERIALIZERS  Paso
 #CREATE
@@ -189,16 +218,19 @@ class CreatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+        ]
+        
 #LIST
 class ListPasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paso
         fields = [
+            "codigo",
             "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+        ]
+        
 #DETAIL
 class DetailPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -207,31 +239,39 @@ class DetailPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "tiempoEstimado",
-        ] 
+            "tiempoEstimado"
+        ]
+        
 #UPDATE
 class UpdatePasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paso
         fields = [
-            "codigo",
+            "nombre",
             "descripcion",
             "tiempoEstimado",
-        ] 
+        ]
 
 #SERIALIZERS  Orden
 #CREATE
 class CreateOrdenSerializer(serializers.ModelSerializer):
+    linea = serializers.PrimaryKeyRelatedField(queryset=models.Linea.objects.all(), required=True)
+
     class Meta:
         model = models.Orden
         fields = [
+            "numero",
             "fecha",
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
             "empleado",
-        ] 
+            "tipoOblea",
+        ]
+        read_only_fields = ["numero"]
+        
 #LIST
 class ListOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -242,8 +282,11 @@ class ListOrdenSerializer(serializers.ModelSerializer):
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
-        ] 
+            "tipoOblea",
+        ]
+        
 #DETAIL
 class DetailOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -254,12 +297,24 @@ class DetailOrdenSerializer(serializers.ModelSerializer):
             "horaIni",
             "horaFin",
             "proceso",
+            "linea",
             "estado",
             "empleado",
-        ] 
-                   
-#UPDATE
+            "tipoOblea",
+        ]
 
+#UPDATE
+class UpdateOrdenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Orden
+        fields = [
+            "horaIni",
+            "horaFin",
+            "proceso",
+            "linea",
+            "estado",
+            "tipoOblea",
+        ]
 
 #SERIALIZERS Oblea
 #CREATE
@@ -270,8 +325,16 @@ class CreateObleaSerializer(serializers.ModelSerializer):
             "diesGenerados",
             "orden",
             "estado",
-            "tipo",
+            "codigoQR",
         ]
+        read_only_fields = ["codigoQR"]
+        
+    def create(self, validated_data):
+        oblea = super().create(validated_data)
+
+        # Generar el QR y guardar la ruta en codigoQR
+        generarQR(oblea)
+        return oblea
 
 #LIST
 class ListObleaSerializer(serializers.ModelSerializer):
@@ -292,8 +355,8 @@ class DetailObleaSerializer(serializers.ModelSerializer):
             "diesGenerados",
             "orden",
             "estado",
-            "tipo",
-        ] 
+            "codigoQR",
+        ]
 #UPDATE
 
 #SERIALIZERS  LineaProceso
@@ -331,19 +394,21 @@ class ListPasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PasoProceso
         fields = [
+            "id",
             "paso",
             "proceso",
-            "orden",    
-        ] 
+            "orden",
+        ]
 #DETAIL
 class DetailPasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PasoProceso
         fields = [
+            "id",
             "paso",
             "proceso",
-            "orden",    
-        ] 
+            "orden",
+        ]
 #UPDATE
 class UpdatePasoProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -370,19 +435,21 @@ class ListProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProcesoPieza
         fields = [
+            "id",
             "proceso",
             "pieza",
-            "cantPiezas",   
-        ] 
+            "cantPiezas",
+        ]
 #DETAIL
 class DetailProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProcesoPieza
         fields = [
+            "id",
             "proceso",
             "pieza",
-            "cantPiezas",   
-        ] 
+            "cantPiezas",
+        ]
 #UPDATE
 class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -391,8 +458,6 @@ class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
             "proceso",
             "cantPiezas",   
         ] 
-
-
 
 #SERIALIZERS  MaquinaPaso
 #CREATE
@@ -417,13 +482,9 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
 #SERIALIZERS  PasoRealizado
 #CREATE
 class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
-    defectos = serializers.ListField(
-        child=serializers.DictField(), required=False, write_only=True
-    )
+    defectos = serializers.ListField(child=serializers.DictField(), required=False, write_only=True)
     unidades_defecto = serializers.IntegerField(required=False, write_only=True, default=0)
-    observaciones = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True, write_only=True
-    )
+    observaciones = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = models.Paso_Realizado
@@ -445,13 +506,14 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
         unidades_defecto = validated_data.pop('unidades_defecto', 0)
         observaciones = validated_data.pop('observaciones', None)
 
-        # Si no se manda alerta y el resultado es Hold/Rechazado, crear una
+        # Si no se manda alerta y el resultado es Rechazado (nocom), crear una
         if 'alerta' not in validated_data or validated_data.get('alerta') is None:
             from api_kpi.models import Alerta, EstadoAlerta
-            estado_str = str(validated_data.get('estado', '')).lower()
-            if 'hold' in estado_str or 'rechaz' in estado_str:
+            estado_obj = validated_data.get('estado')
+            estado_codigo = str(getattr(estado_obj, 'codigo', estado_obj) or '').lower()
+            if estado_codigo == 'nocom':
                 try:
-                    estado_activo = EstadoAlerta.objects.get(descripcion__iexact='activo')
+                    estado_activo = EstadoAlerta.objects.get(pk='sinre')
                 except EstadoAlerta.DoesNotExist:
                     estado_activo = EstadoAlerta.objects.first()
                 alerta = Alerta.objects.create(
@@ -464,7 +526,7 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 # Alerta es FK requerida en el modelo actual — usar una "sin novedad"
                 from api_kpi.models import Alerta, EstadoAlerta
                 try:
-                    estado_resuelto = EstadoAlerta.objects.get(descripcion__iexact='resuelto')
+                    estado_resuelto = EstadoAlerta.objects.get(pk='resue')
                 except EstadoAlerta.DoesNotExist:
                     estado_resuelto = EstadoAlerta.objects.first()
                 alerta, _ = Alerta.objects.get_or_create(
@@ -473,6 +535,8 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 )
                 validated_data['alerta'] = alerta
 
+        validated_data['observaciones'] = observaciones or ''
+        validated_data['scrap'] = unidades_defecto
         paso_realizado = models.Paso_Realizado.objects.create(**validated_data)
 
         # Guardar cada defecto en Historial_Defectos
@@ -501,8 +565,9 @@ class ListPasoRealizadoSerializer(serializers.ModelSerializer):
             "paso",
             "estado",
             "oblea",
-            "alerta",  
-        ] 
+            "alerta",
+            "scrap",
+        ]
 #DETAIL
 #UPDATE
 
@@ -544,7 +609,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
             "orden",
             "orden_numero",
             "estado",
-            "tipo",
+            "codigoQR",
             "etapas",
         ]
 
@@ -620,7 +685,7 @@ class UpdateObleaSerializer(serializers.ModelSerializer):
         if hold_motivo:
             from api_kpi.models import Alerta, EstadoAlerta
             try:
-                estado_activo = EstadoAlerta.objects.get(descripcion__iexact='activo')
+                estado_activo = EstadoAlerta.objects.get(pk='sinre')
             except EstadoAlerta.DoesNotExist:
                 estado_activo = EstadoAlerta.objects.first()
 
@@ -637,7 +702,12 @@ class PasoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Paso
-        fields = ['codigo', 'nombre', 'descripcion', 'tiempoEstimado']
+        fields = [
+            'codigo', 
+            'nombre', 
+            'descripcion', 
+            'tiempoEstimado', 
+        ]
 
     def get_tiempoEstimado(self, obj):
         if obj.tiempoEstimado is None:

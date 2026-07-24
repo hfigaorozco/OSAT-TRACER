@@ -28,10 +28,9 @@ class Empleado(models.Model):
     numero = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=40)
     primerApell = models.CharField(max_length=40)
-    seguApell = models.CharField(max_length=40)
+    seguApell = models.CharField(max_length=40, blank=True, default='')
     rfc = models.CharField(max_length=13, unique=True)
-    fechaReg = models.DateField(auto_now_add=True)
-    estado = models.ForeignKey(Estado_Empleado, on_delete=models.RESTRICT, related_name='empleados')
+    estado = models.ForeignKey(Estado_Empleado, on_delete=models.RESTRICT, related_name='empleados', default='act')
     rol = models.ForeignKey(Rol, on_delete=models.RESTRICT, related_name='empleados')
     usuario = models.OneToOneField(User, on_delete=models.RESTRICT, related_name='empleado')
 

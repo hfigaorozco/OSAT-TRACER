@@ -2,7 +2,10 @@ from django.shortcuts import render
 from . import serializers, models
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics, status
+from django.http import FileResponse
+
+from .services import generar_pdf_etiquetas_QR
 
 # Create your views here.
 # Vistas Defecto 
@@ -29,13 +32,23 @@ class CreateTipoObleaAPIView(generics.CreateAPIView):
 
 #LIST
 class ListTipoObleaAPIView(APIView):
-    
+
     def get(self, request):
         TipoObleas = models.Tipo_Oblea.objects.all()
         data = serializers.ListTipoObleaSerializer(TipoObleas, many=True).data
         return Response(data)
 #DETAIL
+class DetailTipoObleaAPIView(APIView):
+
+    def get(self, request, pk):
+        TipoOblea = models.Tipo_Oblea.objects.get(pk=pk)
+        data = serializers.DetailTipoObleaSerializer(TipoOblea, many=False).data
+        return Response(data)
 #UPDATE
+class UpdateTipoObleaAPIView(generics.UpdateAPIView):
+    queryset = models.Tipo_Oblea.objects.all()
+    serializer_class = serializers.UpdateTipoObleaSerializer
+    lookup_field = 'pk'
 
 #Vistas  Estado Paso
 #CREATE
@@ -100,7 +113,7 @@ class ListLineaAPIView(APIView):
         return Response(data)
 #DETAIL
 class DetailLineaAPIView(APIView):
-    
+
     def get(self, request, pk):
         Linea = models.Linea.objects.get(pk=pk)
         data = serializers.DetailLineaSerializer(Linea, many=False).data
@@ -108,6 +121,10 @@ class DetailLineaAPIView(APIView):
 
 
 #UPDATE
+class UpdateLineaAPIView(generics.UpdateAPIView):
+    queryset = models.Linea.objects.all()
+    serializer_class = serializers.UpdateLineaSerializer
+    lookup_field = 'pk'
 
 #Vistas  Proceso
 #CREATE
@@ -144,14 +161,6 @@ class UpdateProcesoAPIView(generics.UpdateAPIView):
 class CreatePasoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreatePasoSerializer
 
-#LIST
-class ListPasoAPIView(APIView):
-    
-    def get(self, request):
-        Pasos = models.Paso.objects.all()
-        data = serializers.ListPasoSerializer(Pasos, many=True).data
-        return Response(data)
-    
 #DETAIL
 class DetailPasoAPIView(APIView):
     
@@ -183,13 +192,17 @@ class ListOrdenAPIView(APIView):
     
 #DETAIL
 class DetailOrdenAPIView(APIView):
-    
+
     def get(self, request, pk):
         Ordens = models.Orden.objects.get(pk=pk)
         data = serializers.DetailOrdenSerializer(Ordens, many=False).data
         return Response(data)
 
 #UPDATE
+class UpdateOrdenAPIView(generics.UpdateAPIView):
+    queryset = models.Orden.objects.all()
+    serializer_class = serializers.UpdateOrdenSerializer
+    lookup_field = 'pk'
 
 #Vistas  Oblea
 #CREATE
@@ -221,7 +234,7 @@ class DetailObleaConEtapasAPIView(APIView):
     def get(self, request, pk):
         try:
             oblea = models.Oblea.objects.select_related(
-                'orden', 'orden__proceso', 'estado', 'tipo'
+                'orden', 'orden__proceso', 'estado'
             ).get(pk=pk)
         except models.Oblea.DoesNotExist:
             return Response({'error': 'Lote no encontrado.'}, status=404)
@@ -282,9 +295,12 @@ class DetailPasoProcesoAPIView(APIView):
 class UpdatePasoProcesoAPIView(generics.UpdateAPIView):
     queryset = models.PasoProceso.objects.all()
     serializer_class = serializers.UpdatePasoProcesoSerializer
-    lookup_field = 'pk'  
-    
+    lookup_field = 'pk'
 
+#DELETE (quita solo la relación paso-proceso, no borra el Paso)
+class DeletePasoProcesoAPIView(generics.DestroyAPIView):
+    queryset = models.PasoProceso.objects.all()
+    lookup_field = 'pk'
 
 
 #View ProcesoPieza
@@ -312,9 +328,14 @@ class DetailProcesoPiezaAPIView(APIView):
 class UpdateProcesoPiezaAPIView(generics.UpdateAPIView):
     queryset = models.ProcesoPieza.objects.all()
     serializer_class = serializers.UpdateProcesoPiezaSerializer
-    lookup_field = 'pk'  
-    
-    
+    lookup_field = 'pk'
+
+#DELETE (quita solo la relación proceso-pieza, no borra la Pieza)
+class DeleteProcesoPiezaAPIView(generics.DestroyAPIView):
+    queryset = models.ProcesoPieza.objects.all()
+    lookup_field = 'pk'
+
+
 #Vistas  MaquinaPaso
 #CREATE
 class CreateMaquinaPasoAPIView(generics.CreateAPIView):
@@ -357,3 +378,20 @@ class ListHistorialDefectoAPIView(APIView):
 class ListPasoAPIView(generics.ListAPIView):
     queryset = models.Paso.objects.all()
     serializer_class = serializers.PasoSerializer
+
+
+class GenerarEtiquetasQRView(APIView):
+    def get(self, request, id_orden):
+        try:
+            pdf = generar_pdf_etiquetas_QR(id_orden)
+            return FileResponse(
+                pdf,
+                as_attachment=True,
+                filename=f"Orden_{id_orden}.pdf",
+                content_type="application/pdf"
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
