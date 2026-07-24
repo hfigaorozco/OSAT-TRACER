@@ -461,8 +461,16 @@ def _build_ordenes_lotes():
         _FakeObj(pk=p.get('codigo'), nombre=p.get('nombre', ''))
         for p in procesos_bd
     ]
-    lineas_activas = [... for l in lineas_bd if l.get('proceso')]
-    tipos_oblea_activos = [... for t in tipos_oblea_bd]
+    lineas_activas = [
+        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''), 'proceso_pk': l.get('proceso'),
+        'proceso_nombre': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre', '')}
+        for l in lineas_bd
+        if l.get('proceso')
+    ]
+    tipos_oblea_activos = [
+        {'pk': t.get('codigo'), 'nombre': t.get('descripcion', '')}
+        for t in tipos_oblea_bd
+    ]
 
     return ordenes, lotes, plantillas, lineas_activas, tipos_oblea_activos, alertas_bd
 

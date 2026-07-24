@@ -187,7 +187,6 @@ class ListProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "activo"
         ]
         
 #DETAIL
@@ -198,7 +197,6 @@ class DetailProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "activo"
         ]
         
 #UPDATE
@@ -208,7 +206,6 @@ class UpdateProcesoSerializer(serializers.ModelSerializer):
         fields = [
             "nombre",
             "descripcion",
-            "activo"
         ]
 
 #SERIALIZERS  Paso
@@ -221,7 +218,6 @@ class CreatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo"
         ]
         
 #LIST
@@ -254,7 +250,6 @@ class UpdatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo"
         ]
 
 #SERIALIZERS  Orden
@@ -712,7 +707,6 @@ class PasoSerializer(serializers.ModelSerializer):
             'nombre', 
             'descripcion', 
             'tiempoEstimado', 
-            'activo'
         ]
 
     def get_tiempoEstimado(self, obj):
