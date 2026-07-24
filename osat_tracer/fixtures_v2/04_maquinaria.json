@@ -1,18 +1,18 @@
 [
   {"model": "api_maquinaria.maquina", "pk": "mq001", "fields": {
-    "nombre": "Backgrinder", "fechaReg": "08:00:00",
+    "nombre": "Backgrinder", "fechaReg": "2026-06-20",
     "tipoMaquina": "prep", "estado": "act", "empleado": 6, "linea": "lin1"
   }},
   {"model": "api_maquinaria.maquina", "pk": "mq002", "fields": {
-    "nombre": "Die Attacher", "fechaReg": "08:00:00",
+    "nombre": "Die Attacher", "fechaReg": "2026-06-20",
     "tipoMaquina": "mont", "estado": "act", "empleado": 7, "linea": "lin1"
   }},
   {"model": "api_maquinaria.maquina", "pk": "mq003", "fields": {
-    "nombre": "Wire Bonder", "fechaReg": "08:00:00",
+    "nombre": "Wire Bonder", "fechaReg": "2026-06-20",
     "tipoMaquina": "mont", "estado": "act", "empleado": 8, "linea": "lin1"
   }},
   {"model": "api_maquinaria.maquina", "pk": "ma004", "fields": {
-    "nombre": "Encapsuladora", "fechaReg": "08:00:00",
+    "nombre": "Encapsuladora", "fechaReg": "2026-06-20",
     "tipoMaquina": "prot", "estado": "act", "empleado": 9, "linea": "lin2"
   }}
 ]

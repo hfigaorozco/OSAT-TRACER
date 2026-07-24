@@ -62,7 +62,6 @@ class EmpleadoListSerializer(serializers.ModelSerializer):
             'primerApell',
             'seguApell',
             'rfc',
-            'fechaReg',
             'username',
             'email',
             'estado',

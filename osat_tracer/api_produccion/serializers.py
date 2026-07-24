@@ -12,6 +12,7 @@ class CreateDefectoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion"
         ]
+        
 #LIST
 class ListDefectoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +21,7 @@ class ListDefectoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion"
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -32,8 +34,8 @@ class CreateTipoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
             "cantidadDies",
-            "activo",
     ]
+        
 #LIST
 class ListTipoObleaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,8 +44,8 @@ class ListTipoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
             "cantidadDies",
-            "activo",
         ]
+        
 #DETAIL
 class DetailTipoObleaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,8 +54,8 @@ class DetailTipoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
             "cantidadDies",
-            "activo",
         ]
+        
 #UPDATE
 class UpdateTipoObleaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,7 +63,6 @@ class UpdateTipoObleaSerializer(serializers.ModelSerializer):
         fields = [
             "descripcion",
             "cantidadDies",
-            "activo",
         ]
 
 #SERIALIZERS EstadoPaso
@@ -73,6 +74,7 @@ class CreateEstadoPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST 
 class ListEstadoPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -81,6 +83,7 @@ class ListEstadoPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -93,6 +96,7 @@ class CreateEstadoOrdenSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST
 class ListEstadoOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,6 +117,7 @@ class CreateEstadoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #LIST
 class ListEstadoObleaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -121,6 +126,7 @@ class ListEstadoObleaSerializer(serializers.ModelSerializer):
             "codigo",
             "descripcion",
         ]
+        
 #DETAIL
 #UPDATE
 
@@ -132,8 +138,7 @@ class CreateLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
-            "proceso",
-            "activo",
+            "proceso"
         ]
 #LIST
 class ListLineaSerializer(serializers.ModelSerializer):
@@ -142,8 +147,7 @@ class ListLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
-            "proceso",
-            "activo",
+            "proceso"
         ]
 #DETAIL
 class DetailLineaSerializer(serializers.ModelSerializer):
@@ -152,8 +156,7 @@ class DetailLineaSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
-            "proceso",
-            "activo",
+            "proceso"
         ]
 #UPDATE
 class UpdateLineaSerializer(serializers.ModelSerializer):
@@ -162,7 +165,6 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         fields = [
             'nombre',
             'proceso',
-            'activo',
         ]
 
 
@@ -174,9 +176,9 @@ class CreateProcesoSerializer(serializers.ModelSerializer):
         fields = [
             "codigo",
             "nombre",
-            "descripcion",
-            "activo",
+            "descripcion"
         ]
+        
 #LIST
 class ListProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -185,8 +187,8 @@ class ListProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "activo",
         ]
+        
 #DETAIL
 class DetailProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -195,8 +197,8 @@ class DetailProcesoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "activo",
         ]
+        
 #UPDATE
 class UpdateProcesoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -204,7 +206,6 @@ class UpdateProcesoSerializer(serializers.ModelSerializer):
         fields = [
             "nombre",
             "descripcion",
-            "activo",
         ]
 
 #SERIALIZERS  Paso
@@ -217,8 +218,8 @@ class CreatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
+        
 #LIST
 class ListPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -228,8 +229,8 @@ class ListPasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
+        
 #DETAIL
 class DetailPasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -238,9 +239,9 @@ class DetailPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "tiempoEstimado",
-            "activo",
+            "tiempoEstimado"
         ]
+        
 #UPDATE
 class UpdatePasoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -249,7 +250,6 @@ class UpdatePasoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "tiempoEstimado",
-            "activo",
         ]
 
 #SERIALIZERS  Orden
@@ -271,6 +271,7 @@ class CreateOrdenSerializer(serializers.ModelSerializer):
             "tipoOblea",
         ]
         read_only_fields = ["numero"]
+        
 #LIST
 class ListOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -285,6 +286,7 @@ class ListOrdenSerializer(serializers.ModelSerializer):
             "estado",
             "tipoOblea",
         ]
+        
 #DETAIL
 class DetailOrdenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -313,7 +315,6 @@ class UpdateOrdenSerializer(serializers.ModelSerializer):
             "estado",
             "tipoOblea",
         ]
-
 
 #SERIALIZERS Oblea
 #CREATE
@@ -457,8 +458,6 @@ class UpdateProcesoPiezaSerializer(serializers.ModelSerializer):
             "proceso",
             "cantPiezas",   
         ] 
-
-
 
 #SERIALIZERS  MaquinaPaso
 #CREATE
@@ -748,7 +747,6 @@ class PasoSerializer(serializers.ModelSerializer):
             'nombre', 
             'descripcion', 
             'tiempoEstimado', 
-            'activo'
         ]
 
     def get_tiempoEstimado(self, obj):

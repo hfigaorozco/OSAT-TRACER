@@ -61,28 +61,37 @@ def generar_pdf_etiquetas_QR(id_orden):
     obleas = Oblea.objects.filter(orden_id=id_orden)
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
+    pdf.setTitle(f"Etiquetas Orden #{id_orden}")
     page_width, page_height = A4
     x = 20 * mm
     y = page_height - 60 * mm
 
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawCentredString(300, 810, "OSAT TRACER")
+    
+    pdf.setFont("Helvetica", 12)
+    pdf.drawCentredString(300, 790, "Etiquetas de Producción")
+    
+    
     for oblea in obleas:
         asegurar_qr(oblea)
         ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
         imagen = ImageReader(str(ruta))
+        
         pdf.drawImage(
             imagen,
             x,
-            y,
+            y- 5,
             width=40 * mm,
             height=40 * mm
         )
         pdf.drawString(
-            x,
+            x + 40,
             y - 5 * mm,
             f"Lote {oblea.numero}"
         )
 
-        x += 70 * mm
+        x += 65 * mm
 
         if x > page_width - 60 * mm:
             x = 20 * mm
