@@ -75,4 +75,6 @@ urlpatterns = [
     
     #Servicios
     path('v1/orden/<int:id_orden>/etiquetas/QR/', views.GenerarEtiquetasQRView.as_view(), name='generar_etiquetas_qr'),
+    path('v1/oblea/<int:pk>/etiqueta/QR/', views.GenerarEtiquetaQRLoteView.as_view(), name='generar_etiqueta_qr_lote'),
+    path('v1/oblea/<int:pk>/qr.png/', views.ObleaQRImagenView.as_view(), name='oblea_qr_imagen'),
 ]

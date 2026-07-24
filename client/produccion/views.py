@@ -1,11 +1,10 @@
 import json
-from datetime import timedelta
+from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import reverse
 from django.core.paginator import Paginator
-from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
-from datetime import date, timedelta
+from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj, BACKEND_URL
 
 PAGE_SIZE_ORGANIZACION = 9
 
@@ -505,6 +504,7 @@ def admin_produccion(request):
         'lotes_json':           json.dumps(lotes),
         'maquinas_disponibles': [],
         'empleados':            [],
+        'backend_url':          BACKEND_URL,
         'breadcrumbs': [
             {'label': 'Dashboard',  'url': '/admin-dash/'},
             {'label': 'Producción', 'url': '/admin/produccion/'},
@@ -665,7 +665,6 @@ def admin_organizacion(request):
             'descripcion':         p.get('descripcion', ''),
             'tiempo_estimado_seg': p.get('tiempoEstimado', 0),
             'tiempo_estimado_min': round((p.get('tiempoEstimado', 0) or 0) / 60),
-            'activo':              p.get('activo', True),
         }
         for p in pasos_bd
     ]
@@ -685,23 +684,10 @@ def admin_organizacion(request):
         for k in kpis
     ]
 
-    # Filtros de estado (activo/inactivo) para cada listado de la pestaña correspondiente
-    plantillas_filtradas = plantillas
-    lineas_filtradas = lineas
-    obleas_filtradas = tipos_oblea_front
-
-    estado_pasos = request.GET.get('estado_pasos', 'todos')
-    if estado_pasos == 'activo':
-        pasos_filtrados = [p for p in pasos if p['activo']]
-    elif estado_pasos == 'inactivo':
-        pasos_filtrados = [p for p in pasos if not p['activo']]
-    else:
-        pasos_filtrados = pasos
-
-    plantillas_page = Paginator(plantillas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page', 1))
-    lineas_page     = Paginator(lineas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_lineas', 1))
-    obleas_page     = Paginator(obleas_filtradas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_obleas', 1))
-    pasos_page      = Paginator(pasos_filtrados, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_pasos', 1))
+    plantillas_page = Paginator(plantillas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page', 1))
+    lineas_page     = Paginator(lineas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_lineas', 1))
+    obleas_page     = Paginator(tipos_oblea_front, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_obleas', 1))
+    pasos_page      = Paginator(pasos, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_pasos', 1))
 
     ctx.update({
         'plantillas': plantillas,
@@ -714,10 +700,9 @@ def admin_organizacion(request):
         'lineas_extra_params': 'tab=lineas&',
         'procesos_activos': plantillas,
         'pasos': pasos_page,
-        'estado_pasos': estado_pasos,
-        'pasos_extra_params': f'tab=pasos&estado_pasos={estado_pasos}&',
+        'pasos_extra_params': 'tab=pasos&',
         'kpi_cards': kpi_cards,
-        'pasos_activos': [p for p in pasos if p['activo']],
+        'pasos_activos': pasos,
         'piezas_catalogo': [{'pk': z.get('codigo'), 'nombre': z.get('nombre', '')} for z in piezas_bd],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/admin-dash/'},
@@ -989,6 +974,7 @@ def supervisor_ordenes(request):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
@@ -1152,6 +1138,7 @@ def supervisor_orden_detalle(request, pk):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(pk)), {})
@@ -1260,6 +1247,7 @@ def supervisor_lote_detalle(request, pk):
             for a in alertas_bd[:5]
         ],
         'breadcrumbs': [],
+        'backend_url': BACKEND_URL,
     }
 
     ob = next((o for o in obleas_bd if str(o.get('numero')) == str(pk)), {})

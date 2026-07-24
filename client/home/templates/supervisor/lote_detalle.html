@@ -28,22 +28,29 @@
     {% elif lote.estado.nombre == 'Rechazada' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Rechazada</span>
     {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
   </div>
-  <!-- Solo Hold, sin botón Scrap -->
-  {% if lote.estado.nombre == 'En Hold' %}
-  <form method="post" action="{% url 'supervisor_lote_liberar' lote.pk %}" style="margin:0;">{% csrf_token %}
-    <button type="submit"
-            style="padding:12px 24px;background:#16A85E;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      Liberar del Hold
+  <!-- Acciones: QR + Hold, sin botón Scrap -->
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button type="button" onclick="document.getElementById('modal-qr').style.display='flex'"
+            title="Ver / imprimir código QR"
+            style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="14"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
     </button>
-  </form>
-  {% else %}
-  <button onclick="document.getElementById('modal-hold').style.display='flex'"
-          style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-    Poner en Hold
-  </button>
-  {% endif %}
+    {% if lote.estado.nombre == 'En Hold' %}
+    <form method="post" action="{% url 'supervisor_lote_liberar' lote.pk %}" style="margin:0;">{% csrf_token %}
+      <button type="submit"
+              style="padding:12px 24px;background:#16A85E;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Liberar del Hold
+      </button>
+    </form>
+    {% elif lote.estado.nombre != 'Rechazada' %}
+    <button onclick="document.getElementById('modal-hold').style.display='flex'"
+            style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      Poner en Hold
+    </button>
+    {% endif %}
+  </div>
 </div>
 
 <!-- KPI Stats -->
@@ -175,10 +182,16 @@
       </div>
 
       <!-- Botón completar etapa — ancho completo, llena el cuadro del paso -->
-      <button onclick="document.getElementById('modal-completar').style.display='flex'"
+      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' %}
+      <button onclick="document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
               style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">
         ✓ Completar etapa
       </button>
+      {% else %}
+      <div style="margin-top:14px;padding:12px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:13px;text-align:center;font-weight:600;">
+        Este lote fue rechazado y ya no puede continuar con más etapas.
+      </div>
+      {% endif %}
     </div>
 
     {% else %}
@@ -222,20 +235,23 @@
                 ✓ Aprobado
               </div>
             </label>
-            <label style="flex:1;cursor:pointer;">
-              <input type="radio" name="resultado" value="rechazado" style="display:none;" id="sup-res-rechazado">
+            <label id="sup-label-rechazado" style="flex:1;cursor:not-allowed;">
+              <input type="radio" name="resultado" value="rechazado" style="display:none;" id="sup-res-rechazado" disabled>
               <div id="sup-btn-rechazado" onclick="supSelectRes('rechazado')"
-                   style="border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#fff;color:#718096;font-weight:600;font-size:14px;">
+                   style="border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#F7FAFC;color:#A0AEC0;font-weight:600;font-size:14px;">
                 ✕ Rechazado
               </div>
             </label>
+          </div>
+          <div id="sup-rechazo-hint" style="font-size:12px;color:#A0AEC0;margin-top:6px;">
+            "Rechazado" se habilita cuando el scrap de esta etapa supera el 10% de los dies activos (<span id="sup-rechazo-umbral">0</span>).
           </div>
         </div>
 
         <!-- Unidades con defecto -->
         <div style="margin-bottom:16px;">
           <label style="font-size:14px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Unidades con defecto en esta etapa</label>
-          <input type="number" name="unidades_defecto" class="form-control" min="0" value="0" style="max-width:180px;background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:14px;">
+          <input type="number" name="unidades_defecto" id="sup-scrap-input" class="form-control" min="0" value="0" oninput="supActualizarRechazoDisponible()" style="max-width:180px;background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:14px;">
         </div>
 
         <!-- Defectos -->
@@ -269,6 +285,31 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+
+<!-- ═══ MODAL QR ═══ -->
+<div id="modal-qr" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:380px;text-align:center;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin:0;">Código QR — {{ lote.folio }}</h2>
+      <button onclick="document.getElementById('modal-qr').style.display='none'" style="background:none;border:none;cursor:pointer;color:#718096;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:24px;">
+      <img src="{{ backend_url }}/v1/oblea/{{ lote.pk }}/qr.png/" alt="QR {{ lote.folio }}"
+           style="width:220px;height:220px;object-fit:contain;border:1px solid #E2E8F0;border-radius:8px;padding:10px;">
+      <div style="margin-top:10px;font-family:monospace;font-weight:600;color:#1A202C;">{{ lote.folio }}</div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:center;gap:10px;">
+      <a href="{{ backend_url }}/v1/oblea/{{ lote.pk }}/etiqueta/QR/" target="_blank"
+         style="padding:10px 24px;background:#7C3AED;color:#fff;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir PDF
+      </a>
+    </div>
   </div>
 </div>
 
@@ -309,8 +350,39 @@ var _supCatalogo = [
   {codigo:'griet', descripcion:'Grieta en die'},
   {codigo:'desal', descripcion:'Desalineación en die'},
 ];
+var SUP_DIES_ACTIVOS = {{ lote.dies_activos|default:0 }};
+
+// Rechazar una etapa implica rechazar el lote completo (hubo scrap de más),
+// así que solo se habilita si el scrap de esta etapa supera el 10% de los
+// dies activos del lote.
+function supActualizarRechazoDisponible() {
+  var scrapInput = document.getElementById('sup-scrap-input');
+  var scrap = parseInt(scrapInput.value, 10) || 0;
+  var pct = SUP_DIES_ACTIVOS > 0 ? (scrap / SUP_DIES_ACTIVOS * 100) : 0;
+  var habilitado = pct > 10;
+
+  var label = document.getElementById('sup-label-rechazado');
+  var input = document.getElementById('sup-res-rechazado');
+  var btn = document.getElementById('sup-btn-rechazado');
+  input.disabled = !habilitado;
+  label.style.cursor = habilitado ? 'pointer' : 'not-allowed';
+  if (!habilitado) {
+    btn.style.border = '1.5px solid #CBD5E0';
+    btn.style.background = '#F7FAFC';
+    btn.style.color = '#A0AEC0';
+    if (input.checked) supSelectRes('aprobado');
+  } else if (!input.checked) {
+    btn.style.border = '1.5px solid #CBD5E0';
+    btn.style.background = '#fff';
+    btn.style.color = '#718096';
+  }
+
+  document.getElementById('sup-rechazo-umbral').textContent =
+    Math.floor(SUP_DIES_ACTIVOS * 0.10) + ' unidades';
+}
 
 function supSelectRes(val) {
+  if (val === 'rechazado' && document.getElementById('sup-res-rechazado').disabled) return;
   var configs = {
     aprobado:  {bg:'#D4EDDA', color:'#155724', border:'#16A85E'},
     rechazado: {bg:'#F8D7DA', color:'#721C24', border:'#EF5350'},
