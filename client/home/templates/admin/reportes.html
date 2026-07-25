@@ -62,9 +62,9 @@
         <tr>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Orden</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Operador</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies iniciales</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies finales</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Scrap</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies iniciales</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies finales</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Scrap</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
         </tr>
       </thead>
@@ -72,9 +72,9 @@
         <tr>
           <td style="padding:12px 16px;font-family:monospace;font-weight:600;color:#009EAF;">{{ reporte_orden.numero }}</td>
           <td style="padding:12px 16px;color:#2D3748;">{{ reporte_orden.operador }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#2D3748;">{{ reporte_orden.dies_iniciales }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#2D3748;">{{ reporte_orden.dies_finales }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#EF5350;font-weight:600;">{{ reporte_orden.scrap }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ reporte_orden.dies_iniciales }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ reporte_orden.dies_finales }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#EF5350;font-weight:600;">{{ reporte_orden.scrap }}</td>
           <td style="padding:12px 16px;">
             <button class="action-btn" title="Ver detalle" onclick="openModal('modal-detalle-reporte')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -123,6 +123,7 @@
   <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
     <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
       <input type="hidden" name="tab" value="kpi">
+      <input type="hidden" name="imprimir" value="1">
       <div>
         <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Indicador</label>
         <select name="kpi_tipo" class="form-control" style="width:180px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
@@ -141,10 +142,10 @@
         <tr>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">KPI</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Valor</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Verde</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Amarillo</th>
-          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Rojo</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Valor</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Verde</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Amarillo</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Rojo</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Semáforo</th>
         </tr>
       </thead>
@@ -153,29 +154,13 @@
         <tr style="border-bottom:1px solid #EDF2F7;">
           <td style="padding:12px 16px;color:#2D3748;">{{ fila.fecha }}</td>
           <td style="padding:12px 16px;color:#2D3748;">{{ fila.kpi_nombre }}</td>
-          <td style="padding:12px 16px;text-align:right;font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#16A85E;">{{ fila.umbral_verde }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#F5A623;">{{ fila.umbral_amarillo }}</td>
-          <td style="padding:12px 16px;text-align:right;color:#EF5350;">{{ fila.umbral_rojo }}</td>
+          <td style="padding:12px 16px;text-align:left;font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#16A85E;">{{ fila.umbral_verde }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#F5A623;">{{ fila.umbral_amarillo }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#EF5350;">{{ fila.umbral_rojo }}</td>
           <td style="padding:12px 16px;color:#2D3748;">{{ fila.semaforo }}</td>
         </tr>
         {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div id="tab-alertas" style="display:none;">
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
-      <thead style="background:#F7FAFC;">
-        <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="2" style="padding:24px 16px;text-align:center;color:#718096;">Pendiente de definir alcance</td></tr>
       </tbody>
     </table>
   </div>
@@ -191,7 +176,7 @@
     <div class="modal-body">
       <p><strong>Proceso:</strong> {{ reporte_orden.proceso_nombre }}</p>
       <p><strong>Operador:</strong> {{ reporte_orden.operador }}</p>
-      <p><strong>Generado:</strong> {{ reporte_orden.fecha }} {{ reporte_orden.hora }}</p>
+      <p><strong>Fecha:</strong> {{ reporte_orden.fecha }} {{ reporte_orden.hora }}</p>
       <p><strong>Dies iniciales:</strong> {{ reporte_orden.dies_iniciales }}</p>
       <p><strong>Dies finales:</strong> {{ reporte_orden.dies_finales }}</p>
       <p><strong>Scrap:</strong> {{ reporte_orden.scrap }}</p>
@@ -215,6 +200,12 @@ function switchReportTab(id, btn) {
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
 }
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'kpi' && params.get('imprimir') === '1') {
+    setTimeout(function(){ window.print(); }, 150);
+  }
+})();
 function imprimirDetalleReporte() {
   document.body.classList.add('printing-reporte');
   window.print();

@@ -47,6 +47,11 @@ def _ordenes_cerradas(ordenes_bd, procesos_map, desde, hasta):
     return resultado
 
 
+def _hora_corta(hora_str):
+    s = str(hora_str or '')
+    return s[:5] if len(s) >= 5 else s
+
+
 def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos_map):
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(orden_id)), None)
     if not orden_data:
@@ -77,7 +82,7 @@ def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos
         'yield_pct': yield_pct,
         'comentarios': reporte.get('comentarios', ''),
         'fecha': reporte.get('fecha', ''),
-        'hora': reporte.get('hora', ''),
+        'hora': _hora_corta(reporte.get('hora', '')),
         'numero_reporte': reporte.get('numero', ''),
     }, None
 

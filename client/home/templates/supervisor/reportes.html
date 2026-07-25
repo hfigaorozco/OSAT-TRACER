@@ -1,6 +1,7 @@
 {% extends "supervisor/layout.html" %}
 {% load static %}
 {% block page_title %}Reportes{% endblock %}
+
 {% block content %}
 <style>
 @media print {
@@ -14,134 +15,170 @@
 }
 </style>
 
-<div class="page-header"><div><h1 class="page-title">Reportes</h1><p class="page-subtitle">Informes de producción, inventario y KPIs</p></div></div>
-<div class="tab-bar">
-  <button class="tab-btn active" onclick="switchReportTab('tab-orden',this)">Por orden</button>
-  <button class="tab-btn" onclick="switchReportTab('tab-inventario',this)">Inventario</button>
-  <button class="tab-btn" onclick="switchReportTab('tab-kpi',this)">Historial KPI</button>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Reportes</h1>
+    <p class="page-subtitle">Informes de producción, inventario y KPIs</p>
+  </div>
 </div>
 
-<div id="tab-orden" class="tab-pane">
-  <div class="card" style="margin-bottom:16px;">
-    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-      <input type="hidden" name="tab" value="orden">
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchReportTab('tab-produccion',this)">Producción</button>
+  <button class="tab-btn" onclick="switchReportTab('tab-inventario',this)">Inventario</button>
+  <button class="tab-btn" onclick="switchReportTab('tab-kpi',this)">KPI</button>
+</div>
+
+<div id="tab-produccion">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:20px;">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="tab" value="produccion">
       <div style="flex:2;min-width:220px;">
-        <label class="form-label" style="margin-bottom:4px;">Orden (solo cerradas)</label>
-        <select name="orden_id" class="form-control">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Orden (solo cerradas)</label>
+        <select name="orden_id" class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
           <option value="">Seleccionar…</option>
           {% for o in ordenes %}<option value="{{ o.pk }}" {% if orden_id_actual == o.pk|stringformat:"s" %}selected{% endif %}>{{ o.numero }} — {{ o.proceso_nombre }}</option>{% endfor %}
         </select>
       </div>
-      <div><label class="form-label" style="margin-bottom:4px;">Desde</label><input type="date" name="desde" class="form-control" value="{{ request.GET.desde }}"></div>
-      <div><label class="form-label" style="margin-bottom:4px;">Hasta</label><input type="date" name="hasta" class="form-control" value="{{ request.GET.hasta }}"></div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Desde</label>
+        <input type="date" name="desde" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Hasta</label>
+        <input type="date" name="hasta" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
+      </div>
       <button type="submit" class="btn btn-primary btn-sm">Generar reporte de orden</button>
     </form>
   </div>
 
   {% if error_orden %}
-  <div class="empty-state"><p style="color:#EF5350;">{{ error_orden }}</p></div>
+  <div style="background:#F8D7DA;color:#721C24;padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:14px;">{{ error_orden }}</div>
   {% endif %}
 
   {% if reporte_orden %}
-  <div class="card" style="padding:0;">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr><th>Orden</th><th>Operador</th><th>Dies iniciales</th><th>Dies finales</th><th>Scrap</th><th>Detalle</th></tr></thead>
-        <tbody>
-          <tr>
-            <td style="font-family:monospace;font-weight:600;">{{ reporte_orden.numero }}</td>
-            <td>{{ reporte_orden.operador }}</td>
-            <td style="text-align:right;">{{ reporte_orden.dies_iniciales }}</td>
-            <td style="text-align:right;">{{ reporte_orden.dies_finales }}</td>
-            <td style="text-align:right;color:#EF5350;">{{ reporte_orden.scrap }}</td>
-            <td class="table-actions">
-              <button class="action-btn" title="Ver detalle" onclick="openModal('modal-detalle-reporte')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Orden</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Operador</th>
+          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies iniciales</th>
+          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies finales</th>
+          <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Scrap</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:12px 16px;font-family:monospace;font-weight:600;color:#009EAF;">{{ reporte_orden.numero }}</td>
+          <td style="padding:12px 16px;color:#2D3748;">{{ reporte_orden.operador }}</td>
+          <td style="padding:12px 16px;text-align:right;color:#2D3748;">{{ reporte_orden.dies_iniciales }}</td>
+          <td style="padding:12px 16px;text-align:right;color:#2D3748;">{{ reporte_orden.dies_finales }}</td>
+          <td style="padding:12px 16px;text-align:right;color:#EF5350;font-weight:600;">{{ reporte_orden.scrap }}</td>
+          <td style="padding:12px 16px;">
+            <button class="action-btn" title="Ver detalle" onclick="openModal('modal-detalle-reporte')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   {% elif not error_orden %}
-  <div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Selecciona una orden cerrada y genera el reporte</p></div>
+  <div class="empty-state" style="padding:48px;text-align:center;color:#718096;">
+    <p>Selecciona una orden cerrada y genera el reporte</p>
+  </div>
   {% endif %}
 </div>
 
-<div id="tab-inventario" class="tab-pane" style="display:none;">
+<div id="tab-inventario" style="display:none;">
   <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-    <button class="btn btn-primary btn-sm" onclick="imprimirTabla()">Generar reporte de inventario</button>
+    <button class="btn btn-primary btn-sm" onclick="imprimirTabla('tabla-inventario')">Generar reporte de inventario</button>
   </div>
-  <div class="card" style="padding:0;">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr><th>Código</th><th>Pieza</th><th>Stock mínimo</th><th>Stock actual</th></tr></thead>
-        <tbody>
-          {% for item in reporte_inventario %}
-          <tr>
-            <td style="font-family:monospace;">{{ item.codigo }}</td>
-            <td>{{ item.nombre }}</td>
-            <td style="text-align:left;">{{ item.stock_minimo }}</td>
-            <td style="text-align:left;font-weight:600;">{{ item.stock_actual }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="5"><div class="empty-state"><p>Sin piezas registradas</p></div></td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+    <table id="tabla-inventario" style="width:100%;border-collapse:collapse;font-size:14.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Código</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Pieza</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in reporte_inventario %}
+        <tr style="border-bottom:1px solid #EDF2F7;">
+          <td style="padding:12px 16px;font-family:monospace;color:#009EAF;font-weight:600;">{{ item.codigo }}</td>
+          <td style="padding:12px 16px;color:#2D3748;">{{ item.nombre }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ item.stock_minimo }}</td>
+          <td style="padding:12px 16px;text-align:left;font-weight:700;color:#1A202C;">{{ item.stock_actual }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
-<div id="tab-kpi" class="tab-pane" style="display:none;">
-  <div class="card" style="margin-bottom:16px;">
-    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+<div id="tab-kpi" style="display:none;">
+  <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
       <input type="hidden" name="tab" value="kpi">
+      <input type="hidden" name="imprimir" value="1">
       <div>
-        <label class="form-label" style="margin-bottom:4px;">Indicador</label>
-        <select name="kpi_tipo" class="form-control" style="width:180px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Indicador</label>
+        <select name="kpi_tipo" class="form-control" style="width:180px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
           <option value="">Todos</option>
           {% for k in kpis_catalogo %}<option value="{{ k.pk }}">{{ k.nombre }}</option>{% endfor %}
         </select>
       </div>
-      <div><label class="form-label" style="margin-bottom:4px;">Desde</label><input type="date" name="desde" class="form-control"></div>
-      <div><label class="form-label" style="margin-bottom:4px;">Hasta</label><input type="date" name="hasta" class="form-control"></div>
-      <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end;">Generar reporte de KPIs</button>
+      <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Desde</label><input type="date" name="desde" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Hasta</label><input type="date" name="hasta" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;"></div>
+      <button type="submit" class="btn btn-primary btn-sm">Generar reporte de KPIs</button>
     </form>
   </div>
-  <div class="card" style="padding:0;">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr><th>Fecha</th><th>KPI</th><th>Valor</th><th>Verde</th><th>Amarillo</th><th>Rojo</th><th>Semáforo</th></tr></thead>
-        <tbody>
-          {% for fila in reporte_kpi %}
-          <tr>
-            <td>{{ fila.fecha }}</td>
-            <td>{{ fila.kpi_nombre }}</td>
-            <td style="font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor }}</td>
-            <td style="color:#16A85E;">{{ fila.umbral_verde }}</td>
-            <td style="color:#F5A623;">{{ fila.umbral_amarillo }}</td>
-            <td style="color:#EF5350;">{{ fila.umbral_rojo }}</td>
-            <td>{{ fila.semaforo }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="7"><div class="empty-state"><p>Genera el reporte para ver el historial</p></div></td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">KPI</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Valor</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Verde</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Amarillo</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Rojo</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Semáforo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in reporte_kpi %}
+        <tr style="border-bottom:1px solid #EDF2F7;">
+          <td style="padding:12px 16px;color:#2D3748;">{{ fila.fecha }}</td>
+          <td style="padding:12px 16px;color:#2D3748;">{{ fila.kpi_nombre }}</td>
+          <td style="padding:12px 16px;text-align:left;font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#16A85E;">{{ fila.umbral_verde }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#F5A623;">{{ fila.umbral_amarillo }}</td>
+          <td style="padding:12px 16px;text-align:left;color:#EF5350;">{{ fila.umbral_rojo }}</td>
+          <td style="padding:12px 16px;color:#2D3748;">{{ fila.semaforo }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
-<div id="tab-alertas" class="tab-pane" style="display:none;">
-  <div class="card" style="padding:0;">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr><th>Descripción</th><th>Estado</th></tr></thead>
-        <tbody><tr><td colspan="2"><div class="empty-state"><p>Pendiente de definir alcance</p></div></td></tr></tbody>
-      </table>
-    </div>
+<div id="tab-alertas" style="display:none;">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
+      <thead style="background:#F7FAFC;">
+        <tr>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="2" style="padding:24px 16px;text-align:center;color:#718096;">Pendiente de definir alcance</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -155,7 +192,7 @@
     <div class="modal-body">
       <p><strong>Proceso:</strong> {{ reporte_orden.proceso_nombre }}</p>
       <p><strong>Operador:</strong> {{ reporte_orden.operador }}</p>
-      <p><strong>Generado:</strong> {{ reporte_orden.fecha }} {{ reporte_orden.hora }}</p>
+      <p><strong>Fecha:</strong> {{ reporte_orden.fecha }} {{ reporte_orden.hora }}</p>
       <p><strong>Dies iniciales:</strong> {{ reporte_orden.dies_iniciales }}</p>
       <p><strong>Dies finales:</strong> {{ reporte_orden.dies_finales }}</p>
       <p><strong>Scrap:</strong> {{ reporte_orden.scrap }}</p>
@@ -169,15 +206,23 @@
   </div>
 </div>
 {% endif %}
+{% endblock %}
 
 {% block extra_js %}
 <script>
 function switchReportTab(id, btn) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.style.display='none');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).style.display = 'block';
+  ['tab-produccion','tab-inventario','tab-kpi','tab-alertas'].forEach(function(t){
+    document.getElementById(t).style.display = t === id ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
 }
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'kpi' && params.get('imprimir') === '1') {
+    setTimeout(function(){ window.print(); }, 150);
+  }
+})();
 function imprimirDetalleReporte() {
   document.body.classList.add('printing-reporte');
   window.print();
@@ -189,9 +234,11 @@ function imprimirTabla() {
 (function(){
   var params = new URLSearchParams(window.location.search);
   var tab = params.get('tab');
-  var map = {orden:'tab-orden',inventario:'tab-inventario',kpi:'tab-kpi',alertas:'tab-alertas'};
-  if(tab && map[tab]){var btn=document.querySelector('[onclick*="'+map[tab]+'"]');if(btn)switchReportTab(map[tab],btn);}
+  var map = {produccion:'tab-produccion',inventario:'tab-inventario',kpi:'tab-kpi',alertas:'tab-alertas'};
+  if (tab && map[tab]) {
+    var btn = document.querySelector('.tab-btn[onclick*="'+map[tab]+'"]');
+    if (btn) switchReportTab(map[tab], btn);
+  }
 })();
 </script>
-{% endblock %}
 {% endblock %}
