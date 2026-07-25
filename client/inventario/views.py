@@ -133,6 +133,11 @@ def supervisor_inventario(request):
         }
         for p in piezas_bd
     ]
+
+    q = request.GET.get('q', '').strip().lower()
+    if q:
+        piezas = [p for p in piezas if q in p['nombre'].lower()]
+
     ctx.update({
         'piezas': piezas,
         'breadcrumbs': [
@@ -156,3 +161,11 @@ def supervisor_inventario_entrada(request):
         else:
             messages.error(request, f'Error: {resp}')
     return redirect('supervisor_inventario')
+
+
+class SupervisorInventarioDetail(generic.View):
+    url_base = "http://localhost:8001/api/v1/detail/pieza/"
+
+    def get(self, request, codigo):
+        response = requests.get(f"{self.url_base}{codigo}/")
+        return JsonResponse(response.json())
