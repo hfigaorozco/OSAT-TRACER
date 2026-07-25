@@ -21,6 +21,7 @@ class ListReporteSerializer(serializers.ModelSerializer):
             "unidades_apro",
             "unidaes_defect",
             "comentarios",
+            "orden",
         ]
 #DETAIL
 class DetailReporteSerializer(serializers.ModelSerializer):
