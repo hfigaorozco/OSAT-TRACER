@@ -133,6 +133,9 @@ def _crear_orden(request):
 
 
 def _editar_orden(request, pk):
+    orden_antes = _get(f'/v1/detail/Orden/{pk}/') or {}
+    estado_anterior = str(orden_antes.get('estado', '')).lower()
+
     linea_pk = request.POST.get('linea', '').strip()
     tipo_oblea = request.POST.get('tipo_oblea', '')
     cantidad_lotes_extra = int(request.POST.get('cantidad_lotes_extra', 0) or 0)
@@ -161,6 +164,9 @@ def _editar_orden(request, pk):
     if not ok:
         messages.error(request, f'Error: {resp}')
         return
+
+    if payload['estado'] == 'cerra' and estado_anterior != 'cerra':
+        _generar_reporte_orden(pk)
 
     if cantidad_lotes_extra > 0 and tipo_oblea:
         creados, errores = _crear_lotes_para_orden(pk, tipo_oblea, cantidad_lotes_extra)
@@ -303,8 +309,28 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
                 o['estado'] = nuevo_estado_lote
         if obleas_de_orden and all(str(o.get('estado', '')).lower() in ('termi', 'recha') for o in obleas_de_orden):
             _patch(f'/v1/update/Orden/{orden_num}/', {'estado': 'cerra'})
+            _generar_reporte_orden(orden_num)
+    
 
-
+def _generar_reporte_orden(orden_num):
+    obleas_bd, pasos_realizados_bd = _get_many('/v1/list/Oblea/', '/v1/list/PasoRealizado/')
+    obleas_de_orden = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
+    dies_iniciales = sum(int(o.get('diesGenerados', 0) or 0) for o in obleas_de_orden)
+    obleas_pks = {str(o.get('numero')) for o in obleas_de_orden}
+    scrap_total = sum(
+        int(pr.get('scrap', 0) or 0)
+        for pr in pasos_realizados_bd
+        if str(pr.get('oblea', '')) in obleas_pks
+    )
+    dies_finales = max(0, dies_iniciales - scrap_total)
+    _post('/v1/create/reportes/', {
+        'unidades_apro': dies_finales,
+        'unidaes_defect': scrap_total,
+        'comentarios': 'Generado automáticamente al cerrar la orden.',
+        'orden': orden_num,
+    })
+    
+    
 # ── Cálculo de etapas de un lote (mismo criterio que usa la app móvil) ───────
 
 def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea):
