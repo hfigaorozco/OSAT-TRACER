@@ -4,17 +4,49 @@
 {% block content %}
 <div class="page-header">
   <div><h1 class="page-title">Inventario de materiales</h1><p class="page-subtitle">Consulta de existencias y registro de entradas</p></div>
-  <div class="page-actions"><button class="btn btn-primary" onclick="openModal('modal-entrada-sup')">+ Registrar entrada</button></div>
 </div>
 <div class="filter-bar">
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="#B0BEC5" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" name="q" class="form-control" placeholder="Código o nombre…" value="{{ request.GET.q }}"></div>
-    <select name="estado" class="form-control" style="width:160px;"><option value="">Todos los estados</option><option value="ok">OK</option><option value="bajo">Bajo mínimo</option><option value="critico">Crítico</option></select>
-    <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
-    {% if request.GET.q or request.GET.estado %}<a href="{% url 'supervisor_inventario' %}" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
+    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="#B0BEC5" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" name="q" class="form-control" placeholder="Buscar por nombre" value="{{ request.GET.q }}"></div>
+    <button type="submit" class="btn btn-outline btn-sm">Buscar</button>
+    {% if request.GET.q %}<a href="{% url 'supervisor_inventario' %}" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
   </form>
 </div>
-<div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:right;">Stock</th><th style="text-align:right;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{% for pieza in piezas %}<tr {% if pieza.stock == 0 %}style="background:rgba(239,83,80,.06);"{% elif pieza.stock < pieza.stock_minimo %}style="background:rgba(245,166,35,.06);"{% endif %}><td style="font-family:monospace;font-weight:600;">{{ pieza.codigo }}</td><td style="font-weight:500;">{{ pieza.nombre }}</td><td style="text-align:right;font-weight:600;{% if pieza.stock == 0 %}color:#EF5350;{% elif pieza.stock < pieza.stock_minimo %}color:#F5A623;{% else %}color:#16A85E;{% endif %}">{{ pieza.stock }}</td><td style="text-align:right;color:#718096;">{{ pieza.stock_minimo }}</td><td>{% if pieza.stock == 0 %}<span class="badge badge-critico">Crítico</span>{% elif pieza.stock < pieza.stock_minimo %}<span class="badge badge-bajo">Bajo</span>{% else %}<span class="badge badge-ok">OK</span>{% endif %}</td><td class="table-actions"><button class="action-btn" title="Kardex" onclick="openModal('modal-kardex-{{ pieza.pk }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-btn" title="Entrada" onclick="document.getElementById('ent-sup-pieza').value='{{ pieza.pk }}';document.getElementById('ent-sup-nombre').value='{{ pieza.nombre }}';document.getElementById('ent-sup-stock').value='{{ pieza.stock }}';openModal('modal-entrada-sup')"><svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button></td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><p>No se encontraron materiales</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:left;">Stock</th><th style="text-align:left;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
+  <tbody>
+    {% for pieza in piezas %}
+    <tr {% if pieza.stock <= pieza.stock_minimo %}style="background:rgba(239,83,80,.06);"{% endif %}>
+      <td style="font-family:monospace;font-weight:600;">{{ pieza.codigo }}</td>
+      <td style="font-weight:500;{% if pieza.stock <= pieza.stock_minimo %}color:#EF5350;{% endif %}">
+        <span style="display:inline-flex;align-items:center;gap:6px;">
+          {{ pieza.nombre }}
+          {% if pieza.stock <= pieza.stock_minimo %}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {% endif %}
+        </span>
+      </td>
+      <td style="text-align:left;font-weight:600;{% if pieza.stock <= pieza.stock_minimo %}color:#EF5350;{% else %}color:#16A85E;{% endif %}">{{ pieza.stock }}</td>
+      <td style="text-align:left;{% if pieza.stock <= pieza.stock_minimo %}color:#EF5350;font-weight:600;{% else %}color:#718096;{% endif %}">{{ pieza.stock_minimo }}</td>
+      <td>
+        {% if pieza.stock == 0 %}
+        <span class="badge badge-critico">Stock crítico</span>
+        {% elif pieza.stock <= pieza.stock_minimo %}
+        <span class="badge badge-critico">Stock bajo</span>
+        {% else %}
+        <span class="badge badge-ok">Suficiente stock</span>
+        {% endif %}
+      </td>
+      <td class="table-actions">
+        <button class="action-btn" title="Kardex" onclick="openDetalle('{{ pieza.codigo }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="action-btn" title="Entrada" onclick="document.getElementById('ent-sup-pieza').value='{{ pieza.pk }}';document.getElementById('ent-sup-nombre').value='{{ pieza.nombre }}';document.getElementById('ent-sup-stock').value='{{ pieza.stock }}';openModal('modal-entrada-sup')"><svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6"><div class="empty-state"><p>No se encontraron materiales</p></div></td></tr>
+    {% endfor %}
+  </tbody>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modal-entrada-sup" style="display:none;" onclick="if(event.target===this)closeModal('modal-entrada-sup')">
   <div class="modal-card modal-md">
@@ -25,10 +57,114 @@
         <div class="form-group"><label class="form-label">Material</label><input type="text" id="ent-sup-nombre" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
         <div class="form-group"><label class="form-label">Stock actual</label><input type="text" id="ent-sup-stock" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
         <div class="form-group"><label class="form-label">Cantidad a ingresar <span class="required">*</span></label><input type="number" name="cantidad" class="form-control" min="1" required></div>
-        <div class="form-group"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="2" placeholder="Número de orden de compra, proveedor, etc."></textarea></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-entrada-sup')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar entrada</button></div>
     </form>
   </div>
 </div>
+
+
+<!-- MODAL DE DETALLE DE LA PIEZA EN SUPERVISOR -->
+<div id="modal-detalle-pieza" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:560px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 id="det-titulo" style="font-size:16px;font-weight:600;color:#1A202C;margin:0;"></h2>
+      <button onclick="document.getElementById('modal-detalle-pieza').style.display='none';"
+              style="width:28px;height:28px;border-radius:6px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="width:48px;height:48px;border-radius:10px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span id="det-nombre" style="font-size:17px;font-weight:600;color:#1A202C;"></span>
+          </div>
+          <p id="det-desc" style="font-size:14px;color:#718096;margin:0 0 12px;"></p>
+          <div style="display:flex;gap:24px;">
+            <div>
+              <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock actual</div>
+              <div id="det-stock" style="font-size:28px;font-weight:700;color:#1A202C;line-height:1;"></div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:#718096;margin-bottom:2px;">Stock mínimo</div>
+              <div id="det-minimo" style="font-size:28px;font-weight:700;color:#718096;line-height:1;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+          <button onclick="openFromDetalle('entrada')"
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            Registrar entrada
+          </button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;margin:20px 0;">
+      <img
+          id="det-imagen"
+          src="/static/img/no-image.png"
+          alt="Imagen de la pieza"
+          style="
+              width:440px;
+              height:220px;
+              object-fit:contain;
+              border:1px solid #E2E8F0;
+              border-radius:10px;
+              background:#FAFAFA;
+              padding:10px;
+          ">
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+var _piezaSup = { pk: null, nombre: '', stock: 0 };
+
+async function openDetalle(codigo) {
+  const response = await fetch(`/supervisor/inventario/detail/${codigo}/`);
+  if (!response.ok) {
+    alert("No se pudo obtener la información de la pieza.");
+    return;
+  }
+  const pieza = await response.json();
+
+  _piezaSup = { pk: pieza.codigo, nombre: pieza.nombre, stock: pieza.stockActual };
+
+  document.getElementById("det-titulo").textContent = pieza.codigo;
+  document.getElementById("det-nombre").textContent = pieza.nombre;
+  document.getElementById("det-desc").textContent = pieza.descripcion;
+  document.getElementById("det-stock").textContent = pieza.stockActual;
+  document.getElementById("det-minimo").textContent = pieza.stockMinimo;
+
+  const img = document.getElementById("det-imagen");
+  if (pieza.imagen) {
+    img.src = "http://localhost:8001" + pieza.imagen;
+  } else {
+    img.src = "/static/img/no-image.png";
+  }
+
+  document.getElementById("modal-detalle-pieza").style.display = "flex";
+}
+
+function openFromDetalle(tipo) {
+  document.getElementById('modal-detalle-pieza').style.display = 'none';
+  if (tipo === 'entrada') {
+    document.getElementById('ent-sup-pieza').value = _piezaSup.pk;
+    document.getElementById('ent-sup-nombre').value = _piezaSup.nombre;
+    document.getElementById('ent-sup-stock').value = _piezaSup.stock;
+    openModal('modal-entrada-sup');
+  }
+}
+
+document.getElementById('modal-detalle-pieza').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+{% endblock %}
 {% endblock %}

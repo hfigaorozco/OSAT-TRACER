@@ -10,11 +10,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -25,7 +21,6 @@
       "primerApell": "Figueroa",
       "seguApell": "Orozco",
       "rfc": "FAOH900315KX7",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "admin",
       "usuario": 1
@@ -38,15 +33,10 @@
       "username": "jflores",
       "first_name": "Jose Manuel",
       "last_name": "Flores Ruiz",
-      "email": "jfloresruiz@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -57,7 +47,6 @@
       "primerApell": "Flores",
       "seguApell": "Ruiz",
       "rfc": "FORM881122QJ4",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "admin",
       "usuario": 2
@@ -70,15 +59,10 @@
       "username": "arturjm",
       "first_name": "Arturo Javier",
       "last_name": "Jimenez de Lara Rizo",
-      "email": "arturjm@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -89,7 +73,6 @@
       "primerApell": "Jimenez",
       "seguApell": "de Lara Rizo",
       "rfc": "JIRA920807MT9",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "admin",
       "usuario": 3
@@ -106,11 +89,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -121,7 +100,6 @@
       "primerApell": "Saiz",
       "seguApell": "Gonzalez",
       "rfc": "SAGF950418DL2",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "admin",
       "usuario": 4
@@ -138,11 +116,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -153,7 +127,6 @@
       "primerApell": "Hernandez",
       "seguApell": "Espinoza",
       "rfc": "HEES930926PN8",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "super",
       "usuario": 5
@@ -170,11 +143,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -185,7 +154,6 @@
       "primerApell": "Hernandez",
       "seguApell": "Medina",
       "rfc": "HEMJ891210VC5",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "opera",
       "usuario": 6
@@ -202,11 +170,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -217,7 +181,6 @@
       "primerApell": "Marin",
       "seguApell": "Loyo",
       "rfc": "MALB970731RW1",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "opera",
       "usuario": 7
@@ -234,11 +197,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -249,7 +208,6 @@
       "primerApell": "Coria",
       "seguApell": "PeÃ±a",
       "rfc": "COPK940214HF6",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "opera",
       "usuario": 8
@@ -266,11 +224,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -281,7 +235,6 @@
       "primerApell": "Gallardo",
       "seguApell": "Ramirez",
       "rfc": "GARL910603ZT3",
-      "fechaReg": "2026-06-01",
       "estado": "act",
       "rol": "opera",
       "usuario": 9
@@ -298,11 +251,7 @@
       "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-<<<<<<< HEAD
-      "password": "pbkdf2_sha256$1000000$3kDnEf3dsCFHKlZatn7A0B$rZb/8iAJ0NQQMdNVg/PCFRq9J7yJ38kAEB5lFrz7DWE="
-=======
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
->>>>>>> pruebas_v1
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -313,7 +262,6 @@
       "primerApell": "Mendivil",
       "seguApell": "Perez",
       "rfc": "MEPJ880925BX0",
-      "fechaReg": "2026-06-01",
       "estado": "ina",
       "rol": "opera",
       "usuario": 10

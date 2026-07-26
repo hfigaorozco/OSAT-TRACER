@@ -60,8 +60,8 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.proceso_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.linea_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.tipo_oblea_nombre }}</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.fecha_inicio_display }}</td>
-          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.fecha_fin_display }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.hora_inicio_display }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.hora_fin_display }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;text-align:center;">{{ orden.total_lotes }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -78,7 +78,7 @@
             {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
-            <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.fecha_inicio_display }}', '{{ orden.fecha_fin_display }}', '{{ orden.estado }}')"
+            <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.hora_inicio_display }}', '{{ orden.hora_fin_display }}', '{{ orden.estado }}')"
                     style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver detalle">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -86,6 +86,10 @@
                     style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Editar">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
+            <a href="{{ backend_url }}/v1/orden/{{ orden.pk }}/etiquetas/QR/" target="_blank" onclick="event.stopPropagation();"
+               style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;display:inline-flex;" title="Ver / imprimir códigos QR de los lotes">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+            </a>
           </td>
         </tr>
         {% endfor %}
@@ -116,12 +120,15 @@
     </div>
     <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
   </div>
-  <div style="position:relative;margin-bottom:16px;max-width:260px;">
-    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)"
-      style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:100%;outline:none;">
-  </div>
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3 style="font-weight:600;font-size:15px;margin:0;color:#1A202C;">Lotes de esta orden</h3>
+      <div style="position:relative;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)"
+          style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:220px;outline:none;">
+      </div>
+    </div>
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -164,6 +171,10 @@
       <p id="lote-meta" style="font-size:14px;color:var(--text-muted);margin:0;"></p>
     </div>
     <div style="display:flex;gap:10px;">
+      <button type="button" onclick="verQR(_loteActual.pk, _loteActual.folio)" title="Ver / imprimir código QR"
+              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+      </button>
       <button id="btn-hold-lote" onclick="onHoldButtonClick()"
               style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -227,8 +238,8 @@
           </select>
         </div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Fecha de inicio <span class="required">*</span></label><input type="date" name="fecha_inicio" id="orden-fecha-inicio-input" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Fecha estimada de fin <span class="required">*</span></label><input type="date" name="fecha_fin" id="orden-fecha-fin-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora de inicio <span class="required">*</span></label><input type="time" step="1" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora estimada de fin <span class="required">*</span></label><input type="time" step="1" name="hora_fin" id="orden-hora-fin-input" class="form-control" required></div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
@@ -288,6 +299,29 @@
   </div>
 </div>
 
+<!-- Modal QR (lote individual, desde listado o detalle) -->
+<div id="modal-qr" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:380px;text-align:center;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin:0;">Código QR — <span id="qr-folio"></span></h2>
+      <button onclick="document.getElementById('modal-qr').style.display='none'" style="background:none;border:none;cursor:pointer;color:#718096;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:24px;">
+      <img id="qr-img" src="" alt="QR"
+           style="width:220px;height:220px;object-fit:contain;border:1px solid #E2E8F0;border-radius:8px;padding:10px;">
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:center;gap:10px;">
+      <a id="qr-pdf-link" href="" target="_blank"
+         style="padding:10px 24px;background:#7C3AED;color:#fff;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir PDF
+      </a>
+    </div>
+  </div>
+</div>
+
 <!-- Modal completar etapa (compartido) -->
 <div class="modal-overlay" id="modal-completar-etapa" style="display:none;" onclick="if(event.target===this)closeModal('modal-completar-etapa')">
   <div class="modal-card modal-lg">
@@ -303,12 +337,13 @@
         <label class="form-label">Resultado <span class="required">*</span></label>
         <div style="display:flex;gap:10px;margin-top:6px;">
           <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#D4EDDA;color:#155724;font-weight:600;font-size:14px;cursor:pointer;">✓ Aprobado</div>
-          <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#fff;color:#718096;font-weight:600;font-size:14px;cursor:pointer;">✕ Rechazado</div>
+          <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#F7FAFC;color:#A0AEC0;font-weight:600;font-size:14px;cursor:not-allowed;">✕ Rechazado</div>
         </div>
+        <div style="font-size:12px;color:#A0AEC0;margin-top:6px;">"Rechazado" se habilita cuando el scrap de esta etapa supera el 10% de los dies activos (<span id="comp-rechazo-umbral">0</span>).</div>
       </div>
       <div class="form-group">
         <label class="form-label">Unidades con defecto en esta etapa</label>
-        <input type="number" id="comp-scrap" class="form-control" min="0" value="0" oninput="calcularYieldPreviewComp()" style="max-width:180px;">
+        <input type="number" id="comp-scrap" class="form-control" min="0" value="0" oninput="calcularYieldPreviewComp();compActualizarRechazoDisponible();" style="max-width:180px;">
         <div id="yield-preview-comp" style="margin-top:8px;font-size:13px;color:#718096;"></div>
       </div>
       <div class="form-group">
@@ -335,6 +370,7 @@
 <script>
 var _ordenes    = {{ ordenes_json|safe }};
 var _lotes      = {{ lotes_json|safe }};
+var BACKEND_URL = "{{ backend_url }}";
 var _ordenActual = null;
 var _loteActual  = null;
 var _compResultado = 'aprobado';
@@ -370,6 +406,13 @@ function _submitForm(action, fields) {
   f.submit();
 }
 
+function verQR(pk, folio) {
+  document.getElementById('qr-folio').textContent = folio;
+  document.getElementById('qr-img').src = BACKEND_URL + '/v1/oblea/' + pk + '/qr.png/';
+  document.getElementById('qr-pdf-link').href = BACKEND_URL + '/v1/oblea/' + pk + '/etiqueta/QR/';
+  openModal('modal-qr');
+}
+
 // ── Crear / editar orden ──
 function actualizarProcesoOrden() {
   var sel = document.getElementById('orden-linea-input');
@@ -382,8 +425,8 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  document.getElementById('orden-fecha-inicio-input').value = '';
-  document.getElementById('orden-fecha-fin-input').value = '';
+  document.getElementById('orden-hora-inicio-input').value = '';
+  document.getElementById('orden-hora-fin-input').value = '';
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
@@ -401,8 +444,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  document.getElementById('orden-fecha-inicio-input').value = o.fecha_inicio;
-  document.getElementById('orden-fecha-fin-input').value = o.fecha_fin;
+  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio;
+  document.getElementById('orden-hora-fin-input').value = o.hora_fin;
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';
@@ -438,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!ordenPk) return;
   var o = _ordenes.find(function (x) { return String(x.pk) === String(ordenPk); });
   if (!o) return;
-  abrirOrden(o.pk, o.numero, o.proceso_nombre, o.fecha_inicio_display, o.fecha_fin_display, o.estado);
+  abrirOrden(o.pk, o.numero, o.proceso_nombre, o.hora_inicio_display, o.hora_fin_display, o.estado);
   if (lotePk) abrirLote(parseInt(lotePk, 10));
 });
 
@@ -487,12 +530,15 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
     return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.fecha_inicio+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.fecha_fin+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.hora_inicio+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.hora_fin+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">'+l.total_pasos+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;"><div style="height:100%;background:#16A85E;border-radius:999px;width:'+pct+'%;"></div></div><span style="font-size:13px;color:#718096;white-space:nowrap;">'+l.pasos_completados+'/'+l.total_pasos+'</span></div></td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">'+badgeEdo+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">' +
+        '<button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver trazabilidad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+        '<button onclick="event.stopPropagation();verQR('+l.pk+', \''+l.folio+'\')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver / imprimir código QR"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg></button>' +
+      '</td>' +
     '</tr>';
   }).join('') || '<tr><td colspan="8" style="padding:48px;text-align:center;color:#718096;">No hay lotes en esta orden</td></tr>';
   document.getElementById('search-lotes-orden').value = '';
@@ -531,10 +577,14 @@ function abrirLote(pk) {
   loteEstadoBadgeEl.textContent = leb[2];
 
   var btnHold = document.getElementById('btn-hold-lote');
-  if (lote.estado === 'hold') {
+  if (lote.estado === 'rechazado') {
+    btnHold.style.display = 'none';
+  } else if (lote.estado === 'hold') {
+    btnHold.style.display = '';
     document.getElementById('btn-hold-lote-label').textContent = 'Liberar del Hold';
     btnHold.style.background = '#16A85E';
   } else {
+    btnHold.style.display = '';
     document.getElementById('btn-hold-lote-label').textContent = 'Poner en Hold';
     btnHold.style.background = '#F5A623';
   }
@@ -606,13 +656,19 @@ function renderTrazabilidad(lote) {
       progressHtml = '<div style="margin-top:6px;font-size:12px;color:#718096;font-style:italic;">Sin tiempo estimado configurado</div>';
     }
 
-    // Botón completar etapa — SOLO en el paso activo, ancho completo dentro del paso
-    var completarBtn = isActive
-      ? '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+')" '+
+    // Botón completar etapa — SOLO en el paso activo, ancho completo dentro del paso.
+    // Si el lote ya está en Hold o Rechazado, no se puede seguir avanzando.
+    var completarBtn = '';
+    if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado')) {
+      completarBtn = '<div style="margin-top:14px;padding:12px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:13px;text-align:center;font-weight:600;">'+
+        (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' : 'Este lote fue rechazado y ya no puede continuar con más etapas.')+
+        '</div>';
+    } else if (isActive) {
+      completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+')" '+
         'style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">'+
         '✓ Completar etapa'+
-        '</button>'
-      : '';
+        '</button>';
+    }
 
     var rowBg   = isActive ? 'background:#E0F7FA;border:1px solid #B2EBF2;' : isRejected ? 'background:#FEF2F2;border:1px solid #FECACA;' : 'border:1px solid transparent;';
     var rowOp   = isPending ? 'opacity:.45;' : '';
@@ -707,9 +763,13 @@ function toggleEtapaDetalle(el) {
 }
 
 // ── Completar etapa ──
+var _compDiesActivos = 0;
+var _compRechazoHabilitado = false;
+
 function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos) {
   _compResultado = 'aprobado';
   _defCompCount  = 0;
+  _compDiesActivos = diesActivos || 0;
   document.getElementById('defectos-comp-list').innerHTML = '';
   document.getElementById('comp-scrap').value = 0;
   document.getElementById('comp-comentarios').value = '';
@@ -717,10 +777,37 @@ function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos) {
   selectResultadoComp('aprobado');
   document.getElementById('comp-modal-titulo').textContent = 'Completar — ' + nombreEtapa;
   document.getElementById('comp-modal-sub').textContent    = loteFolio + ' · ' + diesActivos + ' dies activos';
+  compActualizarRechazoDisponible();
   openModal('modal-completar-etapa');
 }
 
+// Rechazar una etapa implica rechazar el lote completo (hubo scrap de más),
+// así que solo se habilita si el scrap de esta etapa supera el 10% de los
+// dies activos del lote.
+function compActualizarRechazoDisponible() {
+  var scrap = parseInt(document.getElementById('comp-scrap').value, 10) || 0;
+  var pct = _compDiesActivos > 0 ? (scrap / _compDiesActivos * 100) : 0;
+  _compRechazoHabilitado = pct > 10;
+
+  var btn = document.getElementById('btn-res-rechazado');
+  btn.style.cursor = _compRechazoHabilitado ? 'pointer' : 'not-allowed';
+  if (!_compRechazoHabilitado) {
+    btn.style.border = '1.5px solid #CBD5E0';
+    btn.style.background = '#F7FAFC';
+    btn.style.color = '#A0AEC0';
+    if (_compResultado === 'rechazado') selectResultadoComp('aprobado');
+  } else if (_compResultado !== 'rechazado') {
+    btn.style.border = '1.5px solid #CBD5E0';
+    btn.style.background = '#fff';
+    btn.style.color = '#718096';
+  }
+
+  var umbral = document.getElementById('comp-rechazo-umbral');
+  if (umbral) umbral.textContent = Math.floor(_compDiesActivos * 0.10) + ' unidades';
+}
+
 function selectResultadoComp(val) {
+  if (val === 'rechazado' && !_compRechazoHabilitado) return;
   _compResultado = val;
   var configs = {
     aprobado:  {bg:'#D4EDDA', color:'#155724', border:'#16A85E'},
