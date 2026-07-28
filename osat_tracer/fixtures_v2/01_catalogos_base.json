@@ -6,15 +6,15 @@
   {"model": "api_usuarios.rol", "fields": {"codigo": "super", "descripcion": "Supervisor"}},
   {"model": "api_usuarios.rol", "fields": {"codigo": "opera", "descripcion": "Operador"}},
 
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "prep", "descripcion": "Preparación de oblea"}},
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "mont", "descripcion": "Montaje"}},
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "prot", "descripcion": "Protección"}},
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "acab", "descripcion": "Acabado"}},
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "insp", "descripcion": "Inspección"}},
-  {"model": "api_maquinaria.tipo_maquina", "fields": {"clave": "empq", "descripcion": "Empaquetado"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "prep", "descripcion": "Preparación de oblea"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "mont", "descripcion": "Montaje"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "prot", "descripcion": "Protección"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "acab", "descripcion": "Acabado"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "insp", "descripcion": "Inspección"}},
+  {"model": "api_maquinaria.tipo_maquina", "fields": {"codigo": "empq", "descripcion": "Empaquetado"}},
 
-  {"model": "api_maquinaria.estado_maquina", "fields": {"clave": "act", "descripcion": "Activa"}},
-  {"model": "api_maquinaria.estado_maquina", "fields": {"clave": "ina", "descripcion": "Inactiva"}},
+  {"model": "api_maquinaria.estado_maquina", "fields": {"codigo": "act", "descripcion": "Activa"}},
+  {"model": "api_maquinaria.estado_maquina", "fields": {"codigo": "ina", "descripcion": "Inactiva"}},
 
   {"model": "api_kpi.semaforo", "fields": {"codigo": "ver", "descripcion": "verde"}},
   {"model": "api_kpi.semaforo", "fields": {"codigo": "ama", "descripcion": "amarillo"}},
