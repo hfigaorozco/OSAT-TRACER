@@ -282,6 +282,7 @@ class ListOrdenSerializer(serializers.ModelSerializer):
             "horaIni",
             "horaFin",
             "proceso",
+            "empleado",
             "linea",
             "estado",
             "tipoOblea",
