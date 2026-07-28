@@ -35,6 +35,16 @@ def admin_dashboard(request):
 # ADMIN — PERSONAL (tabla unificada)
 # ════════════════════════════════════════════════════════════════
 
+ESTADO_MAP = {
+    'act': 'Activo', 'ina': 'Inactivo',
+    'activo': 'Activo', 'inactivo': 'Inactivo',
+}
+
+ESTADO_PK_MAP = {
+    'activo': 'act', 'inactivo': 'ina',
+    'act': 'act', 'ina': 'ina',
+}
+
 def _build_empleados(empleados_bd):
     """Construye la lista de empleados con todos los campos para la tabla unificada."""
     return [
@@ -47,7 +57,10 @@ def _build_empleados(empleados_bd):
             'username': e.get('username', '—'),
             'email':   e.get('email', ''),
             'rol':  _FakeObj(pk=e.get('rol', ''), nombre=e.get('rol', '—')),
-            'estado':  _FakeObj(pk=e.get('estado', ''), nombre=e.get('estado', '—')),
+            'estado':  _FakeObj(
+                pk=ESTADO_PK_MAP.get(str(e.get('estado', '')).lower(), 'act'),
+                nombre=ESTADO_MAP.get(str(e.get('estado', '')).lower(), e.get('estado', '—'))
+            ),
             'fecha_contrato':   e.get('fechaReg', '—'),
         }
         for e in empleados_bd
@@ -60,17 +73,8 @@ def admin_personal(request):
         '/v1/list/alertas/',
     )
 
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {
-        'user_role':    'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [],
-        'breadcrumbs': [
-            {'label': 'Dashboard', 'url': '/admin-dash/'},
-            {'label': 'Personal',  'url': '/admin/personal/'},
-        ],
-    }
-
+    # pk = código corto — es lo que espera el API al crear/editar un
+    # empleado (Empleado.rol es FK a Rol, cuya PK es el código corto).
     roles_list = [
         _FakeObj(pk='admin', nombre='Administrador'),
         _FakeObj(pk='super', nombre='Supervisor'),
@@ -84,43 +88,65 @@ def admin_personal(request):
 
     empleados_lista = _build_empleados(empleados_bd)
 
-    # Los filtros de rol/estado se aplican sobre la lista COMPLETA antes de
-    # paginar — si se paginara primero, filtrar solo buscaría dentro de la
-    # página actual en vez de en todos los empleados.
+    # Los filtros (texto, rol, estado) se aplican sobre la lista COMPLETA
+    # antes de paginar — si se paginara primero, filtrar solo buscaría
+    # dentro de la página actual en vez de en todos los empleados.
+    q = request.GET.get('q', '').strip().lower()
     rol_filtro = request.GET.get('rol', '')
     estado_filtro = request.GET.get('estado', '')
 
-    empleados_filtrados = empleados_lista
+    if q:
+        empleados_lista = [
+            e for e in empleados_lista
+            if q in e['primer_nombre'].lower()
+            or q in e['apellido_paterno'].lower()
+            or q in e['username'].lower()
+            or q in e['rfc'].lower()
+        ]
     if rol_filtro:
         rol_nombre = roles_map.get(rol_filtro, '')
-        empleados_filtrados = [e for e in empleados_filtrados if e['rol'].nombre == rol_nombre]
+        empleados_lista = [e for e in empleados_lista if e['rol'].nombre == rol_nombre]
     if estado_filtro:
-        empleados_filtrados = [
-            e for e in empleados_filtrados
-            if str(e['estado'].nombre).lower() == estado_filtro.lower()
+        empleados_lista = [
+            e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro.lower()
         ]
 
-    paginator = Paginator(empleados_filtrados, PAGE_SIZE_PERSONAL)
+    paginator = Paginator(empleados_lista, PAGE_SIZE_PERSONAL)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
     filtros_activos = {}
+    if q:
+        filtros_activos['q'] = q
     if rol_filtro:
         filtros_activos['rol'] = rol_filtro
     if estado_filtro:
         filtros_activos['estado'] = estado_filtro
     personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
 
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [],
+        'breadcrumbs': [
+            {'label': 'Dashboard', 'url': '/admin-dash/'},
+            {'label': 'Personal',  'url': '/admin/personal/'},
+        ],
+    }
+
     ctx.update({
         'empleados':            page_obj,
         'page_obj':             page_obj,
         'roles_list':           roles_list,
         'estados_empleado':     estados_empleado,
+        'q':                    q,
         'rol_filtro':           rol_filtro,
         'estado_filtro':        estado_filtro,
         'personal_extra_params': personal_extra_params,
     })
     return render(request, 'admin/personal.html', ctx)
+
 
 def admin_personal_crear(request):
     if request.method == 'POST':

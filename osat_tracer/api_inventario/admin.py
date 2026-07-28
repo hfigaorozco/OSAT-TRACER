@@ -12,3 +12,19 @@ class PiezaAdmin(admin.ModelAdmin):
         'stockActual',
         'imagen'
     ]
+
+
+@admin.register(models.MovimientoInventario)
+class MovimientoInventarioAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'pieza',
+        'tipo',
+        'cantidad',
+        'stockAnterior',
+        'stockPosterior',
+        'fecha',
+        'usuario',
+    ]
+    list_filter = ['tipo', 'fecha']
+    search_fields = ['pieza__codigo', 'pieza__nombre', 'usuario', 'comentario']

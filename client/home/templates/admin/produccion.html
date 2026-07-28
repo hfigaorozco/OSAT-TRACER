@@ -75,7 +75,7 @@
             {% if orden.estado == 'en_proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">En proceso</span>
             {% elif orden.estado == 'aprobado' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Aprobado</span>
             {% elif orden.estado == 'rechazado' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Rechazado</span>
-            {% else %}<span style="background:#E9ECEF;color:#495057;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
+            {% else %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
             <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.hora_inicio_display }}', '{{ orden.hora_fin_display }}', '{{ orden.estado }}')"
@@ -262,6 +262,41 @@
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-orden')">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de Confirmacion -->
+<div class="modal-overlay" id="modal-confirmar-orden" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)cerrarModalConfirmacion()">
+  
+  <div style="background:#ffffff !important; width:90% !important; max-width:400px !important; min-width:300px !important; padding:32px 24px !important; border-radius:16px !important; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3) !important; margin:auto !important; display:flex !important; flex-direction:column !important; align-items:center !important; text-align:center !important; box-sizing:border-box !important;">
+    
+    <div style="margin-bottom:16px; display:flex; justify-content:center; align-items:center;">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0080FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+    </div>
+
+    <h2 style="font-size:22px !important; font-weight:700 !important; color:#1A202C !important; margin:0 0 12px 0 !important; text-align:center !important; width:100% !important;">
+      Crear orden
+    </h2>
+    
+    <p style="font-size:15px !important; color:#4A5568 !important; margin:0 0 24px 0 !important; line-height:1.5 !important; text-align:center !important; width:100% !important;">
+      Se creará la orden en la línea: <strong id="confirm-linea-nombre" style="color:#2D3748;">--</strong>.<br>
+      ¿Está seguro de continuar?
+    </p>
+
+    <div style="display:flex !important; gap:12px !important; justify-content:center !important; align-items:center !important; width:100% !important;">
+      <button type="button" class="btn btn-danger" style="background:#E53E3E !important; color:#ffffff !important; border:none !important; padding:10px 20px !important; border-radius:6px !important; font-weight:600 !important; cursor:pointer !important; min-width:100px !important;" onclick="cerrarModalConfirmacion()">
+        Cancelar
+      </button>
+      
+      <button type="button" class="btn btn-primary" style="background:#00a86b !important; color:#ffffff !important; border:none !important; padding:10px 20px !important; border-radius:6px !important; font-weight:600 !important; cursor:pointer !important; min-width:100px !important;" onclick="confirmarYEnviarOrden()">
+        Continuar
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -507,7 +542,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
     en_proceso: ['#FFF3CD','#856404','En proceso'],
     aprobado:   ['#D4EDDA','#155724','Aprobado'],
     rechazado:  ['#F8D7DA','#721C24','Rechazado'],
-    pendiente:  ['#E9ECEF','#495057','Pendiente'],
+    pendiente:  ['#E9ECEF','#856404','Pendiente'],
   };
   var b = badgeMap[estado] || badgeMap.pendiente;
   var badge = document.getElementById('det-orden-badge');
@@ -523,7 +558,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
       aprobado:   ['#D4EDDA','#155724','Terminado'],
       rechazado:  ['#F8D7DA','#721C24','Rechazado'],
       hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
-      pendiente:  ['#E9ECEF','#495057','Pendiente'],
+      pendiente:  ['#E9ECEF','#856404','Pendiente'],
     };
     var lb = loteBadgeMap[l.estado] || loteBadgeMap.pendiente;
     var badgeEdo = '<span style="background:'+lb[0]+';color:'+lb[1]+';padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">'+lb[2]+'</span>';
@@ -565,11 +600,11 @@ function abrirLote(pk) {
   document.getElementById('lote-titulo').textContent      = lote.folio;
   document.getElementById('lote-meta').textContent        = lote.proceso;
   var loteEstadoBadgeMap = {
-    en_proceso: ['#E0F7FA','#006064','En proceso'],
+    en_proceso: ['#E0F7FA','#856404','En proceso'],
     aprobado:   ['#D4EDDA','#155724','Terminado'],
     rechazado:  ['#F8D7DA','#721C24','Rechazado'],
     hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
-    pendiente:  ['#E9ECEF','#495057','Pendiente'],
+    pendiente:  ['#E9ECEF','#856404','Pendiente'],
   };
   var leb = loteEstadoBadgeMap[lote.estado] || loteEstadoBadgeMap.pendiente;
   var loteEstadoBadgeEl = document.getElementById('lote-estado-badge');
@@ -926,6 +961,34 @@ function onHoldButtonClick() {
   } else {
     openModal('modal-hold');
   }
+}
+
+// Variable global para controlar el submit manual
+let ordenFormConfirmada = false;
+
+document.getElementById('orden-form').addEventListener('submit', function(e) {
+  if (!ordenFormConfirmada) {
+    e.preventDefault();
+
+    const selectLinea = document.getElementById('orden-linea-input');
+    const lineaTexto = selectLinea.options[selectLinea.selectedIndex]?.text || '';
+
+    document.getElementById('confirm-linea-nombre').textContent = lineaTexto;
+
+    document.getElementById('modal-confirmar-orden').style.display = 'flex';
+  }
+});
+
+function cerrarModalConfirmacion() {
+  document.getElementById('modal-confirmar-orden').style.display = 'none';
+}
+
+function confirmarYEnviarOrden() {
+  ordenFormConfirmada = true; 
+  const form = document.getElementById('orden-form');
+  
+  cerrarModalConfirmacion();
+  form.submit(); 
 }
 </script>
 {% endblock %}

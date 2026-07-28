@@ -68,29 +68,16 @@ def admin_inventario_movimiento(request):
         cantidad = int(request.POST.get('cantidad', 0))
         cantidad_minima = int(request.POST.get('cantidad_minima', 0))
 
-        pieza = _get(f'/v1/detail/pieza/{pieza_id}/', {})
-        stock_actual = pieza.get('stockActual', 0)
-        stock_minimo_actual = pieza.get('stockMinimo', 0)
+        payload = {
+            'pieza': pieza_id,
+            'tipo': tipo,
+            'cantidad': cantidad,
+            'usuario': request.session.get('user_name', ''),
+        }
+        if tipo == 'ajuste':
+            payload['cantidad_minima'] = cantidad_minima
 
-        nuevo_stock = stock_actual
-        nuevo_stock_minimo = stock_minimo_actual
-
-        if tipo == 'entrada':
-            nuevo_stock = stock_actual + cantidad
-
-        elif tipo == 'salida':
-            nuevo_stock = max(0, stock_actual - cantidad)
-
-        elif tipo == 'ajuste':
-            nuevo_stock_minimo = cantidad_minima
-
-        ok, resp = _patch(
-            f'/v1/update/pieza/{pieza_id}/',
-            {
-                'stockActual': nuevo_stock,
-                'stockMinimo': nuevo_stock_minimo
-            }
-        )
+        ok, resp = _post('/v1/create/movimiento_inventario/', payload)
 
         if ok:
             messages.success(request, 'Movimiento registrado')
@@ -151,10 +138,12 @@ def supervisor_inventario_entrada(request):
     if request.method == 'POST':
         pieza_id = request.POST.get('pieza_id', '')
         cantidad = int(request.POST.get('cantidad', 0))
-        pieza = _get(f'/v1/detail/pieza/{pieza_id}/', {})
-        stock_actual = pieza.get('stockActual', 0)
-        nuevo_stock = stock_actual + cantidad
-        ok, resp = _patch(f'/v1/update/pieza/{pieza_id}/', {'stockActual': nuevo_stock})
+        ok, resp = _post('/v1/create/movimiento_inventario/', {
+            'pieza': pieza_id,
+            'tipo': 'entrada',
+            'cantidad': cantidad,
+            'usuario': request.session.get('user_name', ''),
+        })
         if ok:
             messages.success(request, 'Entrada registrada')
         else:

@@ -342,3 +342,7 @@ def registro_view(request):
             })
 
     return render(request, 'base/registro.html')
+
+
+def horario_laboral(request):
+    return render(request, '404pages/horario_laboral.html', status=503)

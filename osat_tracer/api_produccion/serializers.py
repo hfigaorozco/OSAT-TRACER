@@ -239,7 +239,7 @@ class DetailPasoSerializer(serializers.ModelSerializer):
             "codigo",
             "nombre",
             "descripcion",
-            "tiempoEstimado"
+            "tiempoEstimado",
         ]
         
 #UPDATE

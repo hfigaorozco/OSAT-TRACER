@@ -18,20 +18,21 @@
 
 <!-- Filtros -->
 <div class="filter-bar" style="margin-bottom:16px;">
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="search-personal" class="form-control" placeholder="Buscar empleado" oninput="filtrarTabla(this.value)">
-  </div>
-  <form method="get" style="display:flex;gap:10px;align-items:center;">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" class="form-control" placeholder="Buscar empleado" value="{{ q }}">
+    </div>
     <select name="rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
       <option value="">Todos los roles</option>
       {% for rol in roles_list %}<option value="{{ rol.pk }}" {% if rol_filtro == rol.pk %}selected{% endif %}>{{ rol.nombre }}</option>{% endfor %}
     </select>
     <select name="estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
       <option value="">Todos los estados</option>
-      {% for est in estados_empleado %}<option value="{{ est.nombre }}" {% if estado_filtro == est.nombre %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
+      {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
-    {% if rol_filtro or estado_filtro %}
+    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+    {% if q or rol_filtro or estado_filtro %}
       <a href="{% url 'admin_personal' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
     {% endif %}
   </form>
@@ -54,11 +55,12 @@
       <tbody>
         {% for emp in empleados %}
         <tr class="personal-row"
-            data-nombre="{{ emp.primer_nombre|lower }} {{ emp.apellido_paterno|lower }} {{ emp.apellido_materno|lower }}"
-            data-username="{{ emp.username|lower }}"
-            data-rfc="{{ emp.rfc|lower }}"
-            data-rol="{{ emp.rol.nombre|lower }}"
-            data-estado="{{ emp.estado.nombre|lower }}">
+          data-nombre="{{ emp.primer_nombre|lower }} {{ emp.apellido_paterno|lower }} {{ emp.apellido_materno|lower }}"
+          data-username="{{ emp.username|lower }}"
+          data-rfc="{{ emp.rfc|lower }}"
+          data-rol="{{ emp.rol.nombre|lower }}"
+          data-estado="{{ emp.estado.nombre|lower }}"
+          data-estado-pk="{{ emp.estado.pk|lower }}">
 
           <!-- Empleado: avatar + nombre completo -->
           <td>
@@ -324,20 +326,9 @@
 {% block extra_js %}
 <script>
 
-// ── Búsqueda por texto dentro de la página actual ─────────────────
-// Rol y Estado ya se filtran en el servidor (ver <form method="get">
-// arriba) para que busquen entre TODOS los empleados, no solo los de
-// esta página. Esta búsqueda de texto es un narrowing rápido adicional
-// sobre lo que ya trajo el servidor.
-function filtrarTabla(q) {
-  q = (document.getElementById('search-personal').value || '').toLowerCase();
-  document.querySelectorAll('.personal-row').forEach(function(row) {
-    var matchQ = !q || (row.dataset.nombre||'').includes(q) ||
-                       (row.dataset.username||'').includes(q) ||
-                       (row.dataset.rfc||'').includes(q);
-    row.style.display = matchQ ? '' : 'none';
-  });
-}
+// El buscador de texto, rol y estado se filtran en el servidor (ver
+// <form method="get"> arriba) para que busquen entre TODOS los
+// empleados, no solo los que caían en la página que se estaba viendo.
 
 // ── Toggle contraseña ────────────────────────────────────────────
 function togglePw(id, btn) {
