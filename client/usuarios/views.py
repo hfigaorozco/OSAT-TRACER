@@ -86,7 +86,7 @@ def admin_personal(request):
             or q in e['rfc'].lower()
         ]
     if rol_filtro:
-        empleados_lista = [e for e in empleados_lista if e['rol'].pk.lower() == rol_filtro]
+        empleados_lista = [e for e in empleados_lista if e['rol'].pk.lower() == rol_filtro.lower()]
     if estado_filtro:
         empleados_lista = [e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro]
 
@@ -97,19 +97,19 @@ def admin_personal(request):
 
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
-        'user_role':    'Administrador',
+        'user_role': 'Administrador',
         'unread_count': unread,
         'recent_notifications': [],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Personal',  'url': '/admin/personal/'},
         ],
-        'empleados':        page_obj,
-        'page_obj':         page_obj,
-        'roles_list':       [
-            _FakeObj(pk='admin', nombre='Administrador'),
-            _FakeObj(pk='super', nombre='Supervisor'),
-            _FakeObj(pk='opera', nombre='Operador'),
+        'empleados': page_obj,
+        'page_obj': page_obj,
+        'roles_list': [
+            _FakeObj(pk='Administrador', nombre='Administrador'),
+            _FakeObj(pk='Supervisor', nombre='Supervisor'),
+            _FakeObj(pk='Operador', nombre='Operador'),
         ],
         'estados_empleado': [
             _FakeObj(pk='act', nombre='Activo'),
