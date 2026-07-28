@@ -23,11 +23,11 @@
       <option value="">Todos los tipos</option>
       {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}" {% if tipo_filtro == tipo.pk %}selected{% endif %}>{{ tipo.nombre }}</option>{% endfor %}
     </select>
-    <select name="estado" class="form-control" style="width:160px;">
+    <select name="estado" class="form-control" style="width:180px;">
       <option value="">Todos los estados</option>
       {% for est in estados_maquina %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
-    <select name="linea" class="form-control" style="width:160px;">
+    <select name="linea" class="form-control" style="width:180px;">
       <option value="">Todas las líneas</option>
       {% for linea in lineas %}<option value="{{ linea.pk }}" {% if linea_filtro == linea.pk %}selected{% endif %}>{{ linea.nombre }}</option>{% endfor %}
     </select>

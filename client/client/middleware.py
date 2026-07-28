@@ -4,8 +4,8 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 
-HORA_INICIO = time(7, 0)   # 7:00 am
-HORA_FIN = time(17, 0)     # 5:00 pm
+HORA_INICIO = time(7, 0) #7:00 am
+HORA_FIN = time(17, 0) #5:00 pm
 
 class AccesoPorRol:
     def __init__(self, get_response):
@@ -28,7 +28,7 @@ class AccesoPorRol:
         if not usuario_id:
             return redirect('login')
 
-        # Ventana de disponibilidad del sistema 
+        # Ventana de disponibilidsd del sistema 
         hora_actual = timezone.localtime(timezone.now()).time()
         horario = HORA_INICIO <= hora_actual <= HORA_FIN
         

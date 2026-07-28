@@ -32,6 +32,16 @@ def admin_dashboard(request):
 # ADMIN — PERSONAL (tabla unificada)
 # ════════════════════════════════════════════════════════════════
 
+ESTADO_MAP = {
+    'act': 'Activo', 'ina': 'Inactivo',
+    'activo': 'Activo', 'inactivo': 'Inactivo',
+}
+
+ESTADO_PK_MAP = {
+    'activo': 'act', 'inactivo': 'ina',
+    'act': 'act', 'ina': 'ina',
+}
+
 def _build_empleados(empleados_bd):
     """Construye la lista de empleados con todos los campos para la tabla unificada."""
     return [
@@ -44,7 +54,10 @@ def _build_empleados(empleados_bd):
             'username': e.get('username', '—'),
             'email':   e.get('email', ''),
             'rol':  _FakeObj(pk=e.get('rol', ''), nombre=e.get('rol', '—')),
-            'estado':  _FakeObj(pk=e.get('estado', ''), nombre=e.get('estado', '—')),
+            'estado':  _FakeObj(
+                pk=ESTADO_PK_MAP.get(str(e.get('estado', '')).lower(), 'act'),
+                nombre=ESTADO_MAP.get(str(e.get('estado', '')).lower(), e.get('estado', '—'))
+            ),
             'fecha_contrato':   e.get('fechaReg', '—'),
         }
         for e in empleados_bd
@@ -57,6 +70,31 @@ def admin_personal(request):
         '/v1/list/alertas/',
     )
 
+    empleados_lista = _build_empleados(empleados_bd)
+
+    # ── Filtros server-side ──
+    q = request.GET.get('q', '').strip().lower()
+    rol_filtro = request.GET.get('rol', '').strip().lower()
+    estado_filtro = request.GET.get('estado', '').strip().lower()
+
+    if q:
+        empleados_lista = [
+            e for e in empleados_lista
+            if q in e['primer_nombre'].lower()
+            or q in e['apellido_paterno'].lower()
+            or q in e['username'].lower()
+            or q in e['rfc'].lower()
+        ]
+    if rol_filtro:
+        empleados_lista = [e for e in empleados_lista if e['rol'].pk.lower() == rol_filtro]
+    if estado_filtro:
+        empleados_lista = [e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro]
+
+    # ── Paginación sobre la lista YA filtrada ──
+    paginator = Paginator(empleados_lista, 8)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
         'user_role':    'Administrador',
@@ -66,30 +104,21 @@ def admin_personal(request):
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Personal',  'url': '/admin/personal/'},
         ],
-    }
-
-    roles_list = [
-        _FakeObj(pk='admin', nombre='Administrador'),
-        _FakeObj(pk='super', nombre='Supervisor'),
-        _FakeObj(pk='opera', nombre='Operador'),
-    ]
-    estados_empleado = [
-        _FakeObj(pk='act', nombre='Activo'),
-        _FakeObj(pk='ina', nombre='Inactivo'),
-    ]
-
-    empleados_lista = _build_empleados(empleados_bd)
-    paginator = Paginator(empleados_lista, 8)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    ctx.update({
         'empleados':        page_obj,
         'page_obj':         page_obj,
-        'roles_list':       roles_list,
-        'estados_empleado': estados_empleado,
-    })
+        'roles_list':       [
+            _FakeObj(pk='admin', nombre='Administrador'),
+            _FakeObj(pk='super', nombre='Supervisor'),
+            _FakeObj(pk='opera', nombre='Operador'),
+        ],
+        'estados_empleado': [
+            _FakeObj(pk='act', nombre='Activo'),
+            _FakeObj(pk='ina', nombre='Inactivo'),
+        ],
+        'q': q, 'rol_filtro': rol_filtro, 'estado_filtro': estado_filtro,
+    }
     return render(request, 'admin/personal.html', ctx)
+
 
 def admin_personal_crear(request):
     if request.method == 'POST':
