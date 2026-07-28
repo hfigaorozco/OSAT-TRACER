@@ -1,6 +1,6 @@
 [
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "activo"}},
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "inactivo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "Activo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "Inactivo"}},
 
   {"model": "api_usuarios.rol", "fields": {"codigo": "admin", "descripcion": "Administrador"}},
   {"model": "api_usuarios.rol", "fields": {"codigo": "super", "descripcion": "Supervisor"}},
