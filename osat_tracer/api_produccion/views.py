@@ -1,3 +1,5 @@
+from pathlib import Path
+from django.conf import settings
 from django.shortcuts import render
 from . import serializers, models
 from rest_framework.views import APIView
@@ -408,8 +410,8 @@ class GenerarEtiquetasQRView(APIView):
             pdf = generar_pdf_etiquetas_QR(id_orden)
             return FileResponse(
                 pdf,
-                as_attachment=True,
-                filename=f"Orden_{id_orden}.pdf",
+                as_attachment=False,
+                filename=f"Orden_{id_orden}_QR.pdf",
                 content_type="application/pdf"
             )
         except Exception as e:
@@ -417,3 +419,40 @@ class GenerarEtiquetasQRView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+## Etiqueta QR de un solo lote (Oblea) — vista + impresión desde el detalle de lote
+class GenerarEtiquetaQRLoteView(APIView):
+    def get(self, request, pk):
+        try:
+            oblea = models.Oblea.objects.get(pk=pk)
+        except models.Oblea.DoesNotExist:
+            return Response({"error": "Lote no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            pdf = generar_pdf_etiqueta_qr_lote(oblea)
+            return FileResponse(
+                pdf,
+                as_attachment=False,
+                filename=f"Lote_{oblea.numero}_QR.pdf",
+                content_type="application/pdf"
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+## Imagen PNG del QR de un lote (para previsualizar antes de imprimir el PDF)
+class ObleaQRImagenView(APIView):
+    def get(self, request, pk):
+        try:
+            oblea = models.Oblea.objects.get(pk=pk)
+        except models.Oblea.DoesNotExist:
+            return Response({"error": "Lote no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        asegurar_qr(oblea)
+        ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
+        return FileResponse(open(ruta, "rb"), content_type="image/png")
+    
+
+        

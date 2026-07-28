@@ -18,9 +18,12 @@ class ListReporteSerializer(serializers.ModelSerializer):
         model = models.Reporte
         fields = [
             "numero",
+            "fecha",
+            "hora",
             "unidades_apro",
             "unidaes_defect",
             "comentarios",
+            "orden",
         ]
 #DETAIL
 class DetailReporteSerializer(serializers.ModelSerializer):
@@ -44,5 +47,3 @@ class UpdateReporteSerializer(serializers.ModelSerializer):
             "unidaes_defect",
             "comentarios",
         ]
-
-

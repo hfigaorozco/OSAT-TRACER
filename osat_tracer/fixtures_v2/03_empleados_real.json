@@ -10,7 +10,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -33,11 +33,10 @@
       "username": "jflores",
       "first_name": "Jose Manuel",
       "last_name": "Flores Ruiz",
-      "email": "jfloresruiz@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -60,11 +59,10 @@
       "username": "arturjm",
       "first_name": "Arturo Javier",
       "last_name": "Jimenez de Lara Rizo",
-      "email": "arturjm@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -91,7 +89,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -118,7 +116,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -145,7 +143,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -172,7 +170,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -199,7 +197,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -226,7 +224,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
@@ -253,7 +251,7 @@
       "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$fuVBHggXkPdppguD98guw1$YcGZlMsOCb5cxawFobofdGzPIlO3Mvz2IA6Ymz7FRdk="
+      "password": "pbkdf2_sha256$1200000$dFBiTqVHUIYDWBXLgnSLVJ$O6yjGGHJ6SbEe34VmpE3zMmhdpKHcUxVd+0OJPaVk8Y="
     }
   },
   {
