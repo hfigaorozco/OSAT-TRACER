@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
@@ -6,7 +7,9 @@ from django.core.paginator import Paginator
 from django.views import View
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj
 
-PAGE_SIZE_MAQUINARIA = 10
+PAGE_SIZE_MAQUINARIA = 9
+
+_NUM_SERIE_RE = re.compile(r'^[A-Za-z0-9]+$')
 
 
 def _parse_fecha(valor):
@@ -106,7 +109,7 @@ class AdminMaquinaria(View):
             'lineas': [_FakeObj(pk=l.get('codigo'), nombre=l.get('nombre', ''))
                                 for l in lineas_bd],
             'empleados': [_FakeObj(pk=e.get('numero'), nombre=f"{e.get('nombre', '')} {e.get('primerApell', '')}".strip())
-                                for e in empleados_bd],
+                                for e in empleados_bd if e.get('rol') == 'Operador'],
             'breadcrumbs': [
                 {'label': 'Dashboard', 'url': '/admin-dash/'},
                 {'label': 'Maquinaria','url': '/admin/maquinaria/'},
@@ -117,13 +120,54 @@ class AdminMaquinaria(View):
 
 class AdminMaquinariaCrear(View):
     def post(self, request):
+        num_serie = request.POST.get('num_serie', '').strip().upper()
+        nombre = request.POST.get('nombre', '').strip()
+        tipo = request.POST.get('tipo', '').strip()
+        linea = request.POST.get('linea', '').strip()
+        estado = request.POST.get('estado', '').strip()
+        empleado = request.POST.get('empleado', '').strip()
+
+        errores = []
+        if not num_serie:
+            errores.append('El número de serie es obligatorio.')
+        elif len(num_serie) > 5:
+            errores.append('El número de serie no puede tener más de 5 caracteres.')
+        elif not _NUM_SERIE_RE.match(num_serie):
+            errores.append('El número de serie solo puede tener letras y números.')
+
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 30:
+            errores.append('El nombre no puede tener más de 30 caracteres.')
+
+        if not tipo:
+            errores.append('Selecciona el tipo de máquina.')
+        if not linea:
+            errores.append('Selecciona la línea de producción.')
+        if not estado:
+            errores.append('Selecciona el estado.')
+        if not empleado:
+            errores.append('Selecciona el operador asignado.')
+
+        if not errores and num_serie:
+            maquinas_bd = _get('/v1/list/maquinaria/', [])
+            if any(str(m.get('numSerie', '')).upper() == num_serie for m in maquinas_bd):
+                errores.append(f'Ya existe una máquina con el número de serie "{num_serie}".')
+            if nombre and any(str(m.get('nombre', '')).strip().lower() == nombre.lower() for m in maquinas_bd):
+                errores.append(f'Ya existe una máquina con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_maquinaria')
+
         ok, resp = _post('/v1/create/maquinaria/', {
-            'numSerie': request.POST.get('num_serie', '').strip(),
-            'nombre': request.POST.get('nombre', '').strip(),
-            'tipoMaquina': request.POST.get('tipo', ''),
-            'estado': request.POST.get('estado', ''),
-            'empleado': request.POST.get('empleado', ''),
-            'linea': request.POST.get('linea', ''),
+            'numSerie': num_serie,
+            'nombre': nombre,
+            'tipoMaquina': tipo,
+            'estado': estado,
+            'empleado': empleado,
+            'linea': linea,
         })
         if ok:
             messages.success(request, 'Máquina registrada')
@@ -134,13 +178,47 @@ class AdminMaquinariaCrear(View):
 
 class AdminMaquinariaEditar(View):
     def post(self, request, pk):
+        linea = request.POST.get('linea', '').strip()
+        estado = request.POST.get('estado', '').strip()
+        empleado = request.POST.get('empleado', '').strip()
+
+        errores = []
+        if not linea:
+            errores.append('Selecciona la línea de producción.')
+        if not estado:
+            errores.append('Selecciona el estado.')
+        if not empleado:
+            errores.append('Selecciona el operador asignado.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_maquinaria')
+
         ok, resp = _patch(f'/v1/update/maquinaria/{pk}/', {
-            'estado': request.POST.get('estado', ''),
-            'empleado': request.POST.get('empleado', ''),
-            'linea': request.POST.get('linea', ''),
+            'estado': estado,
+            'empleado': empleado,
+            'linea': linea,
         })
         if ok:
             messages.success(request, 'Máquina actualizada.')
         else:
             messages.error(request, f'Error: {resp}')
+        return redirect('admin_maquinaria')
+
+
+class AdminMaquinariaToggleEstado(View):
+    """Activa/desactiva una máquina directamente desde el listado, sin abrir Editar."""
+    def post(self, request, pk):
+        maquinas = _get('/v1/list/maquinaria/', [])
+        maq = next((m for m in maquinas if str(m.get('numSerie')) == str(pk)), None)
+        if maq:
+            estado_actual = str(maq.get('estado', '')).lower()
+            nuevo_estado = 'ina' if estado_actual == 'act' else 'act'
+            ok, resp = _patch(f'/v1/update/maquinaria/{pk}/', {'estado': nuevo_estado})
+            if ok:
+                accion = 'desactivada' if nuevo_estado == 'ina' else 'activada'
+                messages.success(request, f'Máquina {accion} correctamente.')
+            else:
+                messages.error(request, f'Error: {resp}')
         return redirect('admin_maquinaria')

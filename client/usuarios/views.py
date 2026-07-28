@@ -1,7 +1,10 @@
+from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
 from django.core.paginator import Paginator
+
+PAGE_SIZE_PERSONAL = 9
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
@@ -77,17 +80,45 @@ def admin_personal(request):
         _FakeObj(pk='act', nombre='Activo'),
         _FakeObj(pk='ina', nombre='Inactivo'),
     ]
+    roles_map = {r.pk: r.nombre for r in roles_list}
 
     empleados_lista = _build_empleados(empleados_bd)
-    paginator = Paginator(empleados_lista, 8)
+
+    # Los filtros de rol/estado se aplican sobre la lista COMPLETA antes de
+    # paginar — si se paginara primero, filtrar solo buscaría dentro de la
+    # página actual en vez de en todos los empleados.
+    rol_filtro = request.GET.get('rol', '')
+    estado_filtro = request.GET.get('estado', '')
+
+    empleados_filtrados = empleados_lista
+    if rol_filtro:
+        rol_nombre = roles_map.get(rol_filtro, '')
+        empleados_filtrados = [e for e in empleados_filtrados if e['rol'].nombre == rol_nombre]
+    if estado_filtro:
+        empleados_filtrados = [
+            e for e in empleados_filtrados
+            if str(e['estado'].nombre).lower() == estado_filtro.lower()
+        ]
+
+    paginator = Paginator(empleados_filtrados, PAGE_SIZE_PERSONAL)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
+    filtros_activos = {}
+    if rol_filtro:
+        filtros_activos['rol'] = rol_filtro
+    if estado_filtro:
+        filtros_activos['estado'] = estado_filtro
+    personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
+
     ctx.update({
-        'empleados':        page_obj,
-        'page_obj':         page_obj,
-        'roles_list':       roles_list,
-        'estados_empleado': estados_empleado,
+        'empleados':            page_obj,
+        'page_obj':             page_obj,
+        'roles_list':           roles_list,
+        'estados_empleado':     estados_empleado,
+        'rol_filtro':           rol_filtro,
+        'estado_filtro':        estado_filtro,
+        'personal_extra_params': personal_extra_params,
     })
     return render(request, 'admin/personal.html', ctx)
 

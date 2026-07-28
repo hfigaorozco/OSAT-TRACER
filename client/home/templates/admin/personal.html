@@ -22,14 +22,19 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="search-personal" class="form-control" placeholder="Buscar empleado" oninput="filtrarTabla(this.value)">
   </div>
-  <select id="filter-rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
-    <option value="">Todos los roles</option>
-    {% for rol in roles_list %}<option value="{{ rol.pk }}">{{ rol.nombre }}</option>{% endfor %}
-  </select>
-  <select id="filter-estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="filtrarTabla()">
-    <option value="">Todos los estados</option>
-    {% for est in estados_empleado %}<option value="{{ est.nombre }}">{{ est.nombre }}</option>{% endfor %}
-  </select>
+  <form method="get" style="display:flex;gap:10px;align-items:center;">
+    <select name="rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
+      <option value="">Todos los roles</option>
+      {% for rol in roles_list %}<option value="{{ rol.pk }}" {% if rol_filtro == rol.pk %}selected{% endif %}>{{ rol.nombre }}</option>{% endfor %}
+    </select>
+    <select name="estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
+      <option value="">Todos los estados</option>
+      {% for est in estados_empleado %}<option value="{{ est.nombre }}" {% if estado_filtro == est.nombre %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
+    </select>
+    {% if rol_filtro or estado_filtro %}
+      <a href="{% url 'admin_personal' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
+    {% endif %}
+  </form>
 </div>
 
 <!-- Tabla unificada -->
@@ -123,7 +128,7 @@
     </table>
   </div>
 </div>
-{% include "components/pagination.html" %}
+{% include "components/pagination.html" with page_obj=empleados extra_params=personal_extra_params %}
 
 
 <!-- ═══ MODAL CREAR EMPLEADO ═══ -->
@@ -319,18 +324,18 @@
 {% block extra_js %}
 <script>
 
-// ── Filtro de tabla ──────────────────────────────────────────────
+// ── Búsqueda por texto dentro de la página actual ─────────────────
+// Rol y Estado ya se filtran en el servidor (ver <form method="get">
+// arriba) para que busquen entre TODOS los empleados, no solo los de
+// esta página. Esta búsqueda de texto es un narrowing rápido adicional
+// sobre lo que ya trajo el servidor.
 function filtrarTabla(q) {
   q = (document.getElementById('search-personal').value || '').toLowerCase();
-  var rol    = document.getElementById('filter-rol').value.toLowerCase();
-  var estado = document.getElementById('filter-estado').value.toLowerCase();
   document.querySelectorAll('.personal-row').forEach(function(row) {
     var matchQ = !q || (row.dataset.nombre||'').includes(q) ||
                        (row.dataset.username||'').includes(q) ||
                        (row.dataset.rfc||'').includes(q);
-    var matchR = !rol    || (row.dataset.rol||'').includes(rol);
-    var matchE = !estado || (row.dataset.estado||'').includes(estado);
-    row.style.display = matchQ && matchR && matchE ? '' : 'none';
+    row.style.display = matchQ ? '' : 'none';
   });
 }
 
