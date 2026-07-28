@@ -453,3 +453,6 @@ class ObleaQRImagenView(APIView):
         asegurar_qr(oblea)
         ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
         return FileResponse(open(ruta, "rb"), content_type="image/png")
+    
+
+        
