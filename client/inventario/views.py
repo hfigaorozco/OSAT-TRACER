@@ -62,7 +62,6 @@ def admin_inventario_crear(request):
 
 
 def admin_inventario_movimiento(request):
-    
     if request.method == 'POST':
         pieza_id = request.POST.get('pieza_id', '')
         tipo = request.POST.get('tipo_mov', '')

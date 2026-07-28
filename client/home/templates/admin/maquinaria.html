@@ -18,22 +18,21 @@
 </div>
 
 <div class="filter-bar">
-  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
-    <select name="tipo" class="form-control" style="width:180px;">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <select name="tipo" class="form-control" style="width:180px;" onchange="this.form.submit()">
       <option value="">Todos los tipos</option>
       {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}" {% if tipo_filtro == tipo.pk %}selected{% endif %}>{{ tipo.nombre }}</option>{% endfor %}
     </select>
-    <select name="estado" class="form-control" style="width:180px;">
+    <select name="estado" class="form-control" style="width:160px;" onchange="this.form.submit()">
       <option value="">Todos los estados</option>
       {% for est in estados_maquina %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
-    <select name="linea" class="form-control" style="width:180px;">
+    <select name="linea" class="form-control" style="width:160px;" onchange="this.form.submit()">
       <option value="">Todas las líneas</option>
       {% for linea in lineas %}<option value="{{ linea.pk }}" {% if linea_filtro == linea.pk %}selected{% endif %}>{{ linea.nombre }}</option>{% endfor %}
     </select>
-    <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
     {% if tipo_filtro or estado_filtro or linea_filtro %}
-      <a href="{% url 'admin_maquinaria' %}" class="btn btn-ghost btn-sm">Limpiar</a>
+      <a href="{% url 'admin_maquinaria' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
     {% endif %}
   </form>
 </div>
@@ -64,6 +63,14 @@
           <td class="table-actions">
             <button class="action-btn" title="Editar" onclick="openEditarMaquina('{{ maq.pk|escapejs }}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="action-btn" title="{% if maq.estado_pk == 'act' %}Desactivar{% else %}Activar{% endif %}"
+                    onclick="toggleEstadoMaquina('{{ maq.pk|escapejs }}', '{{ maq.estado_nombre|escapejs }}')">
+              {% if maq.estado_pk == 'act' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 11 12 14 22 4"/></svg>
+              {% endif %}
             </button>
           </td>
         </tr>
@@ -180,7 +187,9 @@ function openNuevaMaquina() {
   document.getElementById('maquina-numserie-input').value = '';
   document.getElementById('maquina-numserie-input').disabled = false;
   document.getElementById('maquina-nombre-input').value = '';
+  document.getElementById('maquina-nombre-input').disabled = false;
   document.getElementById('maquina-tipo-input').value = '';
+  document.getElementById('maquina-tipo-input').disabled = false;
   document.getElementById('maquina-linea-input').value = '';
   document.getElementById('maquina-estado-input').value = '';
   document.getElementById('maquina-empleado-input').value = '';
@@ -203,6 +212,20 @@ function openEditarMaquina(pk) {
   document.getElementById('maquina-empleado-input').value = m.empleado_pk;
   document.getElementById('maquina-form').action = URL_MAQUINA_EDITAR.replace('__PK__', pk);
   openModal('modal-maquina');
+}
+
+function toggleEstadoMaquina(pk, estadoActual) {
+  var accion = estadoActual === 'Activa' ? 'desactivar' : 'activar';
+  if (!confirm('¿Seguro que quieres ' + accion + ' esta máquina?')) return;
+  var form = document.createElement('form');
+  form.method = 'post';
+  form.action = '/admin/maquinaria/' + pk + '/estado/';
+  var csrf = document.createElement('input');
+  csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken';
+  csrf.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  form.appendChild(csrf);
+  document.body.appendChild(form);
+  form.submit();
 }
 
 </script>

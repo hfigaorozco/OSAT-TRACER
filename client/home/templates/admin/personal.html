@@ -18,23 +18,23 @@
 
 <!-- Filtros -->
 <div class="filter-bar" style="margin-bottom:16px;">
-  <form method="get" style="display:flex;gap:10px;width:100%;">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
     <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" name="q" class="form-control" placeholder="Buscar empleado" value="{{ q }}">
     </div>
-    <select name="rol" class="form-control" style="width:180px;" onchange="this.form.submit()">
+    <select name="rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
       <option value="">Todos los roles</option>
-      {% for rol in roles_list %}
-        <option value="{{ rol.pk }}" {% if rol_filtro == rol.pk %}selected{% endif %}>{{ rol.nombre }}</option>
-      {% endfor %}
+      {% for rol in roles_list %}<option value="{{ rol.pk }}" {% if rol_filtro == rol.pk %}selected{% endif %}>{{ rol.nombre }}</option>{% endfor %}
     </select>
-    <select name="estado" class="form-control" style="width:180px;" onchange="this.form.submit()">
+    <select name="estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
       <option value="">Todos los estados</option>
-      {% for est in estados_empleado %}
-        <option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>
-      {% endfor %}
+      {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
-    <button type="submit" class="btn btn-primary">Buscar</button>
+    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+    {% if q or rol_filtro or estado_filtro %}
+      <a href="{% url 'admin_personal' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
+    {% endif %}
   </form>
 </div>
 
@@ -130,7 +130,7 @@
     </table>
   </div>
 </div>
-{% include "components/pagination.html" %}
+{% include "components/pagination.html" with page_obj=empleados extra_params=personal_extra_params %}
 
 
 <!-- ═══ MODAL CREAR EMPLEADO ═══ -->
@@ -325,6 +325,11 @@
 
 {% block extra_js %}
 <script>
+
+// El buscador de texto, rol y estado se filtran en el servidor (ver
+// <form method="get"> arriba) para que busquen entre TODOS los
+// empleados, no solo los que caían en la página que se estaba viendo.
+
 // ── Toggle contraseña ────────────────────────────────────────────
 function togglePw(id, btn) {
   var inp = document.getElementById(id);

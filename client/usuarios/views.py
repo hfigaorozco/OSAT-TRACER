@@ -1,7 +1,10 @@
+from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
 from django.core.paginator import Paginator
+
+PAGE_SIZE_PERSONAL = 9
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
@@ -70,12 +73,27 @@ def admin_personal(request):
         '/v1/list/alertas/',
     )
 
+    # pk = código corto — es lo que espera el API al crear/editar un
+    # empleado (Empleado.rol es FK a Rol, cuya PK es el código corto).
+    roles_list = [
+        _FakeObj(pk='admin', nombre='Administrador'),
+        _FakeObj(pk='super', nombre='Supervisor'),
+        _FakeObj(pk='opera', nombre='Operador'),
+    ]
+    estados_empleado = [
+        _FakeObj(pk='act', nombre='Activo'),
+        _FakeObj(pk='ina', nombre='Inactivo'),
+    ]
+    roles_map = {r.pk: r.nombre for r in roles_list}
+
     empleados_lista = _build_empleados(empleados_bd)
 
-    # ── Filtros server-side ──
+    # Los filtros (texto, rol, estado) se aplican sobre la lista COMPLETA
+    # antes de paginar — si se paginara primero, filtrar solo buscaría
+    # dentro de la página actual en vez de en todos los empleados.
     q = request.GET.get('q', '').strip().lower()
-    rol_filtro = request.GET.get('rol', '').strip().lower()
-    estado_filtro = request.GET.get('estado', '').strip().lower()
+    rol_filtro = request.GET.get('rol', '')
+    estado_filtro = request.GET.get('estado', '')
 
     if q:
         empleados_lista = [
@@ -86,14 +104,25 @@ def admin_personal(request):
             or q in e['rfc'].lower()
         ]
     if rol_filtro:
-        empleados_lista = [e for e in empleados_lista if e['rol'].pk.lower() == rol_filtro.lower()]
+        rol_nombre = roles_map.get(rol_filtro, '')
+        empleados_lista = [e for e in empleados_lista if e['rol'].nombre == rol_nombre]
     if estado_filtro:
-        empleados_lista = [e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro]
+        empleados_lista = [
+            e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro.lower()
+        ]
 
-    # ── Paginación sobre la lista YA filtrada ──
-    paginator = Paginator(empleados_lista, 8)
+    paginator = Paginator(empleados_lista, PAGE_SIZE_PERSONAL)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
+
+    filtros_activos = {}
+    if q:
+        filtros_activos['q'] = q
+    if rol_filtro:
+        filtros_activos['rol'] = rol_filtro
+    if estado_filtro:
+        filtros_activos['estado'] = estado_filtro
+    personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
 
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
@@ -104,19 +133,18 @@ def admin_personal(request):
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Personal',  'url': '/admin/personal/'},
         ],
-        'empleados': page_obj,
-        'page_obj': page_obj,
-        'roles_list': [
-            _FakeObj(pk='Administrador', nombre='Administrador'),
-            _FakeObj(pk='Supervisor', nombre='Supervisor'),
-            _FakeObj(pk='Operador', nombre='Operador'),
-        ],
-        'estados_empleado': [
-            _FakeObj(pk='act', nombre='Activo'),
-            _FakeObj(pk='ina', nombre='Inactivo'),
-        ],
-        'q': q, 'rol_filtro': rol_filtro, 'estado_filtro': estado_filtro,
     }
+
+    ctx.update({
+        'empleados':            page_obj,
+        'page_obj':             page_obj,
+        'roles_list':           roles_list,
+        'estados_empleado':     estados_empleado,
+        'q':                    q,
+        'rol_filtro':           rol_filtro,
+        'estado_filtro':        estado_filtro,
+        'personal_extra_params': personal_extra_params,
+    })
     return render(request, 'admin/personal.html', ctx)
 
 
