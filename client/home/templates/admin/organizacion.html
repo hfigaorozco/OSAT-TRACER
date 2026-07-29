@@ -280,8 +280,8 @@
             <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Descripción</label>
-            <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3"></textarea>
+            <label class="form-label">Descripción <span class="required">*</span></label>
+            <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3" required></textarea>
           </div>
         </div>
       </form>
@@ -385,8 +385,8 @@
         <input type="text" id="paso-apilado-nombre" class="form-control" required>
       </div>
       <div class="form-group">
-        <label class="form-label">Descripción</label>
-        <textarea id="paso-apilado-descripcion" class="form-control" rows="2"></textarea>
+        <label class="form-label">Descripción <span class="required">*</span></label>
+        <textarea id="paso-apilado-descripcion" class="form-control" rows="2" required></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Tiempo estimado (minutos)</label>
@@ -465,7 +465,7 @@
       <div class="modal-body">
         <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="paso-codigo-input" class="form-control" maxlength="5" required></div>
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="paso-nombre-input" class="form-control" required></div>
-        <div class="form-group"><label class="form-label">Descripción</label><textarea name="descripcion" id="paso-desc-input" class="form-control" rows="3"></textarea></div>
+        <div class="form-group"><label class="form-label">Descripción <span class="required">*</span></label><textarea name="descripcion" id="paso-desc-input" class="form-control" rows="3" required></textarea></div>
         <div class="form-group"><label class="form-label">Tiempo estimado (minutos)</label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="0"></div>
       </div>
       <div class="modal-footer">
@@ -727,8 +727,8 @@ function guardarPasoApilado() {
   var descripcion = document.getElementById('paso-apilado-descripcion').value.trim();
   var tiempo = document.getElementById('paso-apilado-tiempo').value || 0;
 
-  if (!codigo || !nombre) {
-    alert('Código y nombre del paso son obligatorios.');
+  if (!codigo || !nombre || !descripcion) {
+    alert('Código, nombre y descripción del paso son obligatorios.');
     return;
   }
 

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api_kpi', '0007_alter_historial_alertas_id'),
+        ('api_kpi', '0002_initial'),
     ]
 
     operations = [

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api_inventario', '0003_alter_movimientoinventario_id'),
+        ('api_inventario', '0001_initial'),
     ]
 
     operations = [

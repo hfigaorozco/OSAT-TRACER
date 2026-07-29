@@ -21,7 +21,7 @@
   <div class="card kpi-card"><div class="kpi-label">Total lotes</div><div class="kpi-value">{{ orden.total_lotes|default:"0" }}</div></div>
   <div class="card kpi-card"><div class="kpi-label">Completados</div><div class="kpi-value" style="color:#16A85E;">{{ orden.lotes_completados|default:"0" }}</div></div>
   <div class="card kpi-card"><div class="kpi-label">En proceso</div><div class="kpi-value" style="color:#F5A623;">{{ orden.lotes_en_proceso|default:"0" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">Estado</div><div style="margin-top:8px;">{% if orden.estado == 'activa' %}<span class="badge badge-en-proceso">Activa</span>{% elif orden.estado == 'completada' %}<span class="badge badge-aprobado">Completada</span>{% else %}<span class="badge badge-inactivo">Cancelada</span>{% endif %}</div></div>
+  <div class="card kpi-card"><div class="kpi-label">Estado</div><div style="margin-top:8px;">{% if orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'aprobado' %}<span class="badge badge-aprobado">Aprobada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</div></div>
 </div>
 
 <div class="card" style="padding:0;">

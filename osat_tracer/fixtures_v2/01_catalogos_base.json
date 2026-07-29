@@ -53,6 +53,7 @@
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "proce", "descripcion": "En Proceso"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "termi", "descripcion": "Terminada"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "recha", "descripcion": "Rechazada"}},
+  {"model": "api_produccion.estado_oblea", "fields": {"codigo": "enhol", "descripcion": "En Hold"}},
 
   {"model": "api_produccion.defecto", "fields": {"codigo": "defic", "descripcion": "Wire bonding deficiente"}},
   {"model": "api_produccion.defecto", "fields": {"codigo": "delam", "descripcion": "Delaminación de encapsulado"}},
