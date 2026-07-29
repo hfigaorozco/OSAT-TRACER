@@ -82,6 +82,7 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
             'primerApell',
             'seguApell',
             'estado',
+            'rol',
             'username',
             'email',
             'password'

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api_produccion', '0011_alter_historial_defectos_id_alter_lineaproceso_id_and_more'),
+        ('api_produccion', '0001_initial'),
     ]
 
     operations = [

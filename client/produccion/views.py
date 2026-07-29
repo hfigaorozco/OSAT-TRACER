@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -7,6 +8,8 @@ from django.core.paginator import Paginator
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj, BACKEND_URL
 
 PAGE_SIZE_ORGANIZACION = 9
+
+_CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
 
 def _duracion_str(segundos):
     """Convierte segundos a un string que DurationField acepta (formato de str(timedelta))."""
@@ -383,6 +386,31 @@ def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales):
     return dies_activos, scrap_total, yield_pct
 
 
+def _estado_orden_display(edo_orden, lotes_de_orden):
+    """
+    Determina el estado visual de una orden y cuántos de sus lotes ya quedaron
+    resueltos (terminados o rechazados). Único punto de esta lógica — admin y
+    supervisor la comparten para no divergir entre sí.
+    Catálogo real: Estado_Orden abier/proce/cerra. Una orden 'cerra' se muestra
+    como 'rechazado' solo si TODOS sus lotes terminaron rechazados; si al menos
+    uno se completó, se considera 'aprobado'.
+    """
+    total      = len(lotes_de_orden)
+    rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
+    resueltos  = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() in ('termi', 'recha'))
+    pct        = round(resueltos / total * 100) if total > 0 else 0
+
+    edo = str(edo_orden or '').lower()
+    if edo == 'cerra':
+        edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'aprobado'
+    elif edo == 'proce':
+        edo_str = 'en_proceso'
+    else:
+        edo_str = 'pendiente'
+
+    return edo_str, resueltos, pct
+
+
 # ── Helper compartido para construir ordenes y lotes ─────────────────────────
 
 def _build_ordenes_lotes():
@@ -408,13 +436,7 @@ def _build_ordenes_lotes():
         num   = o.get('numero')
         obs   = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         total = len(obs)
-        comp  = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'termi')
-        pct = round(comp / total * 100) if total > 0 else 0
-        edo = str(o.get('estado', '')).lower()
-        if edo == 'cerra':
-            edo_str = 'aprobado'
-        else:
-            edo_str = 'en_proceso' if edo == 'proce' else 'pendiente'
+        edo_str, comp, pct = _estado_orden_display(o.get('estado'), obs)
 
         linea_pk = str(o.get('linea', '')) if o.get('linea') else ''
         tipo_pk  = str(o.get('tipoOblea', '')) if o.get('tipoOblea') else ''
@@ -740,25 +762,95 @@ def admin_organizacion(request):
 
 def admin_organizacion_plantilla_crear(request):
     if request.method == 'POST':
-        codigo = request.POST.get('codigo', '').strip()
+        codigo = request.POST.get('codigo', '').strip().lower()
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        errores = []
+        if not codigo:
+            errores.append('El código de la plantilla es obligatorio.')
+        elif len(codigo) > 5:
+            errores.append('El código no puede tener más de 5 caracteres.')
+        elif not _CODIGO_RE.match(codigo):
+            errores.append('El código solo puede tener letras minúsculas, números y guiones.')
+
+        if not nombre:
+            errores.append('El nombre de la plantilla es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if not descripcion:
+            errores.append('La descripción de la plantilla es obligatoria.')
+        elif len(descripcion) > 80:
+            errores.append('La descripción no puede tener más de 80 caracteres.')
+
+        if not errores:
+            procesos_bd = _get('/v1/list/Proceso/', [])
+            if any(str(p.get('codigo', '')).lower() == codigo for p in procesos_bd):
+                errores.append(f'Ya existe una plantilla con el código "{codigo}".')
+            if nombre and any(str(p.get('nombre', '')).strip().lower() == nombre.lower() for p in procesos_bd):
+                errores.append(f'Ya existe una plantilla con el nombre "{nombre}".')
+
+        # Validar los pasos nuevos definidos inline antes de crear nada
+        nuevos_codigo = request.POST.getlist('paso_nuevo_codigo')
+        nuevos_nombre = request.POST.getlist('paso_nuevo_nombre')
+        nuevos_desc   = request.POST.getlist('paso_nuevo_descripcion')
+        nuevos_tiempo = request.POST.getlist('paso_nuevo_tiempo')
+        pasos_bd = _get('/v1/list/pasos/', []) if not errores else []
+        codigos_nuevos_vistos = set()
+        for i, pcod in enumerate(nuevos_codigo):
+            pcod = pcod.strip().lower()
+            if not pcod:
+                continue
+            pnom = (nuevos_nombre[i] if i < len(nuevos_nombre) else '').strip()
+            pdesc = (nuevos_desc[i] if i < len(nuevos_desc) else '').strip()
+            if len(pcod) > 5 or not _CODIGO_RE.match(pcod):
+                errores.append(f'El código de paso "{pcod}" no es válido (máx. 5 caracteres, minúsculas/números/guiones).')
+            elif any(str(p.get('codigo', '')).lower() == pcod for p in pasos_bd) or pcod in codigos_nuevos_vistos:
+                errores.append(f'Ya existe un paso con el código "{pcod}".')
+            codigos_nuevos_vistos.add(pcod)
+            if not pnom:
+                errores.append(f'El paso "{pcod}" necesita un nombre.')
+            elif len(pnom) > 20:
+                errores.append(f'El nombre del paso "{pcod}" no puede tener más de 20 caracteres.')
+            if not pdesc:
+                errores.append(f'El paso "{pcod}" necesita una descripción.')
+            elif len(pdesc) > 80:
+                errores.append(f'La descripción del paso "{pcod}" no puede tener más de 80 caracteres.')
+            tiempo_raw = str(nuevos_tiempo[i]).strip() if i < len(nuevos_tiempo) else ''
+            if tiempo_raw and not tiempo_raw.isdigit():
+                errores.append(f'El tiempo del paso "{pcod}" debe ser un número.')
+
+        # Validar piezas asignadas
+        piezas_codigo   = request.POST.getlist('pieza_codigo')
+        piezas_cantidad = request.POST.getlist('pieza_cantidad')
+        for i, zcod in enumerate(piezas_codigo):
+            zcod = zcod.strip()
+            if not zcod:
+                continue
+            cant_raw = str(piezas_cantidad[i]).strip() if i < len(piezas_cantidad) else ''
+            if not cant_raw.isdigit() or int(cant_raw) < 1:
+                errores.append(f'La cantidad de la pieza "{zcod}" debe ser un número mayor a 0.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('plantillas')
+
         ok, resp = _post('/v1/create/Proceso/', {
             'codigo':      codigo,
-            'nombre':      request.POST.get('nombre', ''),
-            'descripcion': request.POST.get('descripcion', ''),
+            'nombre':      nombre,
+            'descripcion': descripcion,
         })
         if not ok:
             messages.error(request, f'Error al crear la plantilla: {resp}')
             return _organizacion_redirect('plantillas')
 
-        errores = []
+        errores_post = []
 
         # 1. Crear los pasos nuevos definidos inline (modal apilado, plantilla nueva)
-        nuevos_codigo = request.POST.getlist('paso_nuevo_codigo')
-        nuevos_nombre = request.POST.getlist('paso_nuevo_nombre')
-        nuevos_desc   = request.POST.getlist('paso_nuevo_descripcion')
-        nuevos_tiempo = request.POST.getlist('paso_nuevo_tiempo')
         for i, pcod in enumerate(nuevos_codigo):
-            pcod = pcod.strip()
+            pcod = pcod.strip().lower()
             if not pcod:
                 continue
             ok_p, resp_p = _post('/v1/create/Paso/', {
@@ -768,10 +860,10 @@ def admin_organizacion_plantilla_crear(request):
                 'tiempoEstimado': _duracion_str(int(nuevos_tiempo[i] or 0) * 60 if i < len(nuevos_tiempo) and nuevos_tiempo[i] else 0),
             })
             if not ok_p:
-                errores.append(f'Paso {pcod}: {resp_p}')
+                errores_post.append(f'Paso {pcod}: {resp_p}')
 
         # 2. Enlazar pasos (existentes + recién creados) en el orden en que se agregaron
-        orden_codigos = [c.strip() for c in request.POST.getlist('paso_orden_codigo') if c.strip()]
+        orden_codigos = [c.strip().lower() for c in request.POST.getlist('paso_orden_codigo') if c.strip()]
         for idx, pcod in enumerate(orden_codigos):
             ok_pp, resp_pp = _post('/v1/create/PasoProceso/', {
                 'paso':    pcod,
@@ -779,11 +871,9 @@ def admin_organizacion_plantilla_crear(request):
                 'orden':   idx + 1,
             })
             if not ok_pp:
-                errores.append(f'Vincular paso {pcod}: {resp_pp}')
+                errores_post.append(f'Vincular paso {pcod}: {resp_pp}')
 
         # 3. Piezas requeridas
-        piezas_codigo   = request.POST.getlist('pieza_codigo')
-        piezas_cantidad = request.POST.getlist('pieza_cantidad')
         for i, zcod in enumerate(piezas_codigo):
             zcod = zcod.strip()
             if not zcod:
@@ -795,10 +885,10 @@ def admin_organizacion_plantilla_crear(request):
                 'cantPiezas': int(cant or 0),
             })
             if not ok_z:
-                errores.append(f'Pieza {zcod}: {resp_z}')
+                errores_post.append(f'Pieza {zcod}: {resp_z}')
 
-        if errores:
-            messages.error(request, 'Plantilla creada con errores: ' + '; '.join(errores))
+        if errores_post:
+            messages.error(request, 'Plantilla creada con errores: ' + '; '.join(errores_post))
         else:
             messages.success(request, 'Plantilla creada.')
     return _organizacion_redirect('plantillas')
@@ -806,9 +896,32 @@ def admin_organizacion_plantilla_crear(request):
 
 def admin_organizacion_plantilla_editar(request, pk):
     if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El nombre de la plantilla es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+        if not descripcion:
+            errores.append('La descripción de la plantilla es obligatoria.')
+        elif len(descripcion) > 80:
+            errores.append('La descripción no puede tener más de 80 caracteres.')
+
+        if not errores and nombre:
+            procesos_bd = _get('/v1/list/Proceso/', [])
+            if any(str(p.get('nombre', '')).strip().lower() == nombre.lower() and str(p.get('codigo')) != str(pk) for p in procesos_bd):
+                errores.append(f'Ya existe una plantilla con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('plantillas', pk)
+
         ok, resp = _patch(f'/v1/update/Proceso/{pk}/', {
-            'nombre':      request.POST.get('nombre', ''),
-            'descripcion': request.POST.get('descripcion', ''),
+            'nombre':      nombre,
+            'descripcion': descripcion,
         })
         if ok:
             messages.success(request, 'Plantilla actualizada.')
@@ -819,15 +932,45 @@ def admin_organizacion_plantilla_editar(request, pk):
 
 def admin_organizacion_plantilla_paso_asignar(request, pk):
     if request.method == 'POST':
-        paso_codigo = request.POST.get('paso', '').strip()
+        paso_codigo = request.POST.get('paso', '').strip().lower()
+        nuevo_codigo = request.POST.get('paso_nuevo_codigo', '').strip().lower()
+        nuevo_nombre = request.POST.get('paso_nuevo_nombre', '').strip()
+        nuevo_desc = request.POST.get('paso_nuevo_descripcion', '').strip()
+        minutos = request.POST.get('paso_nuevo_tiempo', '').strip()
 
-        nuevo_codigo = request.POST.get('paso_nuevo_codigo', '').strip()
+        if not paso_codigo and not nuevo_codigo:
+            messages.error(request, 'Selecciona un paso existente o crea uno nuevo.')
+            return _organizacion_redirect('plantillas', pk)
+
         if nuevo_codigo:
-            minutos = request.POST.get('paso_nuevo_tiempo', 0)
+            errores = []
+            if len(nuevo_codigo) > 5 or not _CODIGO_RE.match(nuevo_codigo):
+                errores.append('El código del nuevo paso no es válido (máx. 5 caracteres, minúsculas/números/guiones).')
+            if not nuevo_nombre:
+                errores.append('El nombre del nuevo paso es obligatorio.')
+            elif len(nuevo_nombre) > 20:
+                errores.append('El nombre del nuevo paso no puede tener más de 20 caracteres.')
+            if not nuevo_desc:
+                errores.append('La descripción del nuevo paso es obligatoria.')
+            elif len(nuevo_desc) > 80:
+                errores.append('La descripción del nuevo paso no puede tener más de 80 caracteres.')
+            if minutos and not minutos.isdigit():
+                errores.append('El tiempo estimado debe ser un número.')
+
+            if not errores:
+                pasos_bd = _get('/v1/list/pasos/', [])
+                if any(str(p.get('codigo', '')).lower() == nuevo_codigo for p in pasos_bd):
+                    errores.append(f'Ya existe un paso con el código "{nuevo_codigo}".')
+
+            if errores:
+                for e in errores:
+                    messages.error(request, e)
+                return _organizacion_redirect('plantillas', pk)
+
             ok_p, resp_p = _post('/v1/create/Paso/', {
                 'codigo':         nuevo_codigo,
-                'nombre':         request.POST.get('paso_nuevo_nombre', nuevo_codigo),
-                'descripcion':    request.POST.get('paso_nuevo_descripcion', ''),
+                'nombre':         nuevo_nombre,
+                'descripcion':    nuevo_desc,
                 'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
             })
             if not ok_p:
@@ -835,18 +978,21 @@ def admin_organizacion_plantilla_paso_asignar(request, pk):
                 return _organizacion_redirect('plantillas', pk)
             paso_codigo = nuevo_codigo
 
-        if paso_codigo:
-            pasos_proceso = _get('/v1/list/PasoProceso/', [])
-            orden = sum(1 for pp in pasos_proceso if str(pp.get('proceso')) == str(pk)) + 1
-            ok, resp = _post('/v1/create/PasoProceso/', {
-                'paso':    paso_codigo,
-                'proceso': pk,
-                'orden':   orden,
-            })
-            if ok:
-                messages.success(request, 'Paso agregado a la plantilla.')
-            else:
-                messages.error(request, f'Error: {resp}')
+        pasos_proceso = _get('/v1/list/PasoProceso/', [])
+        if any(str(pp.get('proceso')) == str(pk) and str(pp.get('paso', '')).lower() == paso_codigo for pp in pasos_proceso):
+            messages.error(request, 'Ese paso ya está asignado a esta plantilla.')
+            return _organizacion_redirect('plantillas', pk)
+
+        orden = sum(1 for pp in pasos_proceso if str(pp.get('proceso')) == str(pk)) + 1
+        ok, resp = _post('/v1/create/PasoProceso/', {
+            'paso':    paso_codigo,
+            'proceso': pk,
+            'orden':   orden,
+        })
+        if ok:
+            messages.success(request, 'Paso agregado a la plantilla.')
+        else:
+            messages.error(request, f'Error: {resp}')
     return _organizacion_redirect('plantillas', pk)
 
 
@@ -864,17 +1010,33 @@ def admin_organizacion_plantilla_paso_quitar(request, rel_pk):
 def admin_organizacion_plantilla_pieza_asignar(request, pk):
     if request.method == 'POST':
         pieza_codigo = request.POST.get('pieza', '').strip()
-        cantidad = request.POST.get('cantidad', 0)
-        if pieza_codigo:
-            ok, resp = _post('/v1/create/ProcesoPieza/', {
-                'proceso':    pk,
-                'pieza':      pieza_codigo,
-                'cantPiezas': int(cantidad or 0),
-            })
-            if ok:
-                messages.success(request, 'Pieza asignada a la plantilla.')
-            else:
-                messages.error(request, f'Error: {resp}')
+        cantidad = request.POST.get('cantidad', '').strip()
+
+        errores = []
+        if not pieza_codigo:
+            errores.append('Selecciona una pieza.')
+        if not cantidad.isdigit() or int(cantidad or 0) < 1:
+            errores.append('La cantidad debe ser un número mayor a 0.')
+
+        if not errores:
+            piezas_rel = _get('/v1/list/ProcesoPieza/', [])
+            if any(str(pz.get('proceso')) == str(pk) and str(pz.get('pieza', '')) == pieza_codigo for pz in piezas_rel):
+                errores.append('Esa pieza ya está asignada a esta plantilla.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('plantillas', pk)
+
+        ok, resp = _post('/v1/create/ProcesoPieza/', {
+            'proceso':    pk,
+            'pieza':      pieza_codigo,
+            'cantPiezas': int(cantidad),
+        })
+        if ok:
+            messages.success(request, 'Pieza asignada a la plantilla.')
+        else:
+            messages.error(request, f'Error: {resp}')
     return _organizacion_redirect('plantillas', pk)
 
 
@@ -891,10 +1053,42 @@ def admin_organizacion_plantilla_pieza_quitar(request, rel_pk):
 
 def admin_organizacion_oblea_crear(request):
     if request.method == 'POST':
+        codigo = request.POST.get('codigo', '').strip().lower()
+        nombre = request.POST.get('nombre', '').strip()
+        dies_raw = request.POST.get('dies_maximos', '').strip()
+
+        errores = []
+        if not codigo:
+            errores.append('El código es obligatorio.')
+        elif len(codigo) > 5:
+            errores.append('El código no puede tener más de 5 caracteres.')
+        elif not _CODIGO_RE.match(codigo):
+            errores.append('El código solo puede tener letras minúsculas, números y guiones.')
+
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 25:
+            errores.append('El nombre no puede tener más de 25 caracteres.')
+
+        if not dies_raw.isdigit() or int(dies_raw or 0) < 1:
+            errores.append('La cantidad de dies debe ser un número mayor a 0.')
+
+        if not errores:
+            tipos_bd = _get('/v1/list/TipoOblea/', [])
+            if any(str(t.get('codigo', '')).lower() == codigo for t in tipos_bd):
+                errores.append(f'Ya existe un tipo de oblea con el código "{codigo}".')
+            if any(str(t.get('cantidadDies', '')) == dies_raw for t in tipos_bd):
+                errores.append(f'Ya existe un tipo de oblea con {dies_raw} dies.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('obleas')
+
         ok, resp = _post('/v1/create/TipoOblea/', {
-            'codigo':       request.POST.get('codigo', ''),
-            'descripcion':  request.POST.get('nombre', ''),
-            'cantidadDies': int(request.POST.get('dies_maximos', 0) or 0),
+            'codigo':       codigo,
+            'descripcion':  nombre,
+            'cantidadDies': int(dies_raw),
         })
         if ok:
             messages.success(request, 'Tipo de oblea creado.')
@@ -905,9 +1099,31 @@ def admin_organizacion_oblea_crear(request):
 
 def admin_organizacion_oblea_editar(request, pk):
     if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        dies_raw = request.POST.get('dies_maximos', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 25:
+            errores.append('El nombre no puede tener más de 25 caracteres.')
+
+        if not dies_raw.isdigit() or int(dies_raw or 0) < 1:
+            errores.append('La cantidad de dies debe ser un número mayor a 0.')
+
+        if not errores:
+            tipos_bd = _get('/v1/list/TipoOblea/', [])
+            if any(str(t.get('cantidadDies', '')) == dies_raw and str(t.get('codigo')) != str(pk) for t in tipos_bd):
+                errores.append(f'Ya existe un tipo de oblea con {dies_raw} dies.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('obleas')
+
         ok, resp = _patch(f'/v1/update/TipoOblea/{pk}/', {
-            'descripcion':  request.POST.get('nombre', ''),
-            'cantidadDies': int(request.POST.get('dies_maximos', 0) or 0),
+            'descripcion':  nombre,
+            'cantidadDies': int(dies_raw),
         })
         if ok:
             messages.success(request, 'Tipo de oblea actualizado.')
@@ -918,10 +1134,39 @@ def admin_organizacion_oblea_editar(request, pk):
 
 def admin_organizacion_linea_crear(request):
     if request.method == 'POST':
+        codigo = request.POST.get('codigo', '').strip().lower()
+        nombre = request.POST.get('nombre', '').strip()
+        proceso = request.POST.get('proceso', '').strip()
+
+        errores = []
+        if not codigo:
+            errores.append('El código es obligatorio.')
+        elif len(codigo) > 5:
+            errores.append('El código no puede tener más de 5 caracteres.')
+        elif not _CODIGO_RE.match(codigo):
+            errores.append('El código solo puede tener letras minúsculas, números y guiones.')
+
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if not errores:
+            lineas_bd = _get('/v1/list/Linea/', [])
+            if any(str(l.get('codigo', '')).lower() == codigo for l in lineas_bd):
+                errores.append(f'Ya existe una línea con el código "{codigo}".')
+            if nombre and any(str(l.get('nombre', '')).strip().lower() == nombre.lower() for l in lineas_bd):
+                errores.append(f'Ya existe una línea con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('lineas')
+
         ok, resp = _post('/v1/create/Linea/', {
-            'codigo':  request.POST.get('codigo', ''),
-            'nombre':  request.POST.get('nombre', ''),
-            'proceso': request.POST.get('proceso') or None,
+            'codigo':  codigo,
+            'nombre':  nombre,
+            'proceso': proceso or None,
         })
         if ok:
             messages.success(request, 'Línea creada.')
@@ -932,9 +1177,28 @@ def admin_organizacion_linea_crear(request):
 
 def admin_organizacion_linea_editar(request, pk):
     if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        proceso = request.POST.get('proceso', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if not errores and nombre:
+            lineas_bd = _get('/v1/list/Linea/', [])
+            if any(str(l.get('nombre', '')).strip().lower() == nombre.lower() and str(l.get('codigo')) != str(pk) for l in lineas_bd):
+                errores.append(f'Ya existe una línea con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('lineas')
+
         ok, resp = _patch(f'/v1/update/Linea/{pk}/', {
-            'nombre':  request.POST.get('nombre', ''),
-            'proceso': request.POST.get('proceso') or None,
+            'nombre':  nombre,
+            'proceso': proceso or None,
         })
         if ok:
             messages.success(request, 'Línea actualizada.')
@@ -945,11 +1209,48 @@ def admin_organizacion_linea_editar(request, pk):
 
 def admin_organizacion_paso_crear(request):
     if request.method == 'POST':
-        minutos = request.POST.get('tiempo_estimado', 0)
+        codigo = request.POST.get('codigo', '').strip().lower()
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        minutos = request.POST.get('tiempo_estimado', '').strip()
+
+        errores = []
+        if not codigo:
+            errores.append('El código es obligatorio.')
+        elif len(codigo) > 5:
+            errores.append('El código no puede tener más de 5 caracteres.')
+        elif not _CODIGO_RE.match(codigo):
+            errores.append('El código solo puede tener letras minúsculas, números y guiones.')
+
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if not descripcion:
+            errores.append('La descripción es obligatoria.')
+        elif len(descripcion) > 80:
+            errores.append('La descripción no puede tener más de 80 caracteres.')
+
+        if minutos and not minutos.isdigit():
+            errores.append('El tiempo estimado debe ser un número.')
+
+        if not errores:
+            pasos_bd = _get('/v1/list/pasos/', [])
+            if any(str(p.get('codigo', '')).lower() == codigo for p in pasos_bd):
+                errores.append(f'Ya existe un paso con el código "{codigo}".')
+            if nombre and any(str(p.get('nombre', '')).strip().lower() == nombre.lower() for p in pasos_bd):
+                errores.append(f'Ya existe un paso con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('pasos')
+
         ok, resp = _post('/v1/create/Paso/', {
-            'codigo':         request.POST.get('codigo', ''),
-            'nombre':         request.POST.get('nombre', ''),
-            'descripcion':    request.POST.get('descripcion', ''),
+            'codigo':         codigo,
+            'nombre':         nombre,
+            'descripcion':    descripcion,
             'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
         })
         if ok:
@@ -961,10 +1262,37 @@ def admin_organizacion_paso_crear(request):
 
 def admin_organizacion_paso_editar(request, pk):
     if request.method == 'POST':
-        minutos = request.POST.get('tiempo_estimado', 0)
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        minutos = request.POST.get('tiempo_estimado', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if not descripcion:
+            errores.append('La descripción es obligatoria.')
+        elif len(descripcion) > 80:
+            errores.append('La descripción no puede tener más de 80 caracteres.')
+
+        if minutos and not minutos.isdigit():
+            errores.append('El tiempo estimado debe ser un número.')
+
+        if not errores and nombre:
+            pasos_bd = _get('/v1/list/pasos/', [])
+            if any(str(p.get('nombre', '')).strip().lower() == nombre.lower() and str(p.get('codigo')) != str(pk) for p in pasos_bd):
+                errores.append(f'Ya existe un paso con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return _organizacion_redirect('pasos')
+
         ok, resp = _patch(f'/v1/update/Paso/{pk}/', {
-            'nombre':         request.POST.get('nombre', ''),
-            'descripcion':    request.POST.get('descripcion', ''),
+            'nombre':         nombre,
+            'descripcion':    descripcion,
             'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
         })
         if ok:
@@ -1013,16 +1341,8 @@ def supervisor_ordenes(request):
         num   = o.get('numero')
         obs   = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         total = len(obs)
-        comp  = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'termi')
         en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
-        pct = round(comp / total * 100) if total > 0 else 0
-        edo = str(o.get('estado', '')).lower()
-        if 'cerra' in edo:
-            edo_str = 'completada'
-        elif 'rechaz' in edo or 'cancel' in edo:
-            edo_str = 'cancelada'
-        else:
-            edo_str = 'activa'
+        edo_str, comp, pct = _estado_orden_display(o.get('estado'), obs)
 
         # proceso como FakeObj para que template acceda a orden.proceso.nombre
         proceso_codigo = str(o.get('proceso', ''))
@@ -1174,7 +1494,6 @@ def supervisor_orden_detalle(request, pk):
     num    = orden_data.get('numero')
     obs    = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
     total  = len(obs)
-    comp   = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'termi')
     en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
 
     proceso_codigo = str(orden_data.get('proceso', ''))
@@ -1192,13 +1511,7 @@ def supervisor_orden_detalle(request, pk):
     tipo_pk = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
     tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == tipo_pk), {})
 
-    edo = str(orden_data.get('estado', '')).lower()
-    if 'cerra' in edo:
-        edo_str = 'completada'
-    elif 'rechaz' in edo or 'cancel' in edo:
-        edo_str = 'cancelada'
-    else:
-        edo_str = 'activa'
+    edo_str, comp, _pct = _estado_orden_display(orden_data.get('estado'), obs)
 
     orden = {
         'pk':               num,

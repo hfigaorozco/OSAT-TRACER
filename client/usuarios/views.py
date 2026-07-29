@@ -1,10 +1,16 @@
+import re
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
 from django.core.paginator import Paginator
 
 PAGE_SIZE_PERSONAL = 9
+
+_RFC_RE = re.compile(r'^[A-Z0-9]{13}$')
+_USERNAME_RE = re.compile(r'^[a-z0-9._-]+$')
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
@@ -151,19 +157,66 @@ def admin_personal(request):
 def admin_personal_crear(request):
     if request.method == 'POST':
         seguApell = request.POST.get('apellido_materno', '').strip()
+        nombre = request.POST.get('primer_nombre', '').strip()
+        primer_apell = request.POST.get('apellido_paterno', '').strip()
+        rfc = request.POST.get('rfc', '').strip().upper()
+        rol = request.POST.get('rol', '')
+        username = request.POST.get('username', '').strip().lower()
+        password = request.POST.get('password', '')
+        email = request.POST.get('email', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El primer nombre es obligatorio.')
+        if not primer_apell:
+            errores.append('El apellido paterno es obligatorio.')
+        if not rfc:
+            errores.append('El RFC es obligatorio.')
+        elif not _RFC_RE.match(rfc):
+            errores.append('El RFC debe tener exactamente 13 caracteres, solo letras y números.')
+        if not rol:
+            errores.append('Selecciona un rol.')
+        if not username:
+            errores.append('El usuario es obligatorio.')
+        elif not _USERNAME_RE.match(username):
+            errores.append('El usuario solo puede tener letras minúsculas, números, puntos y guiones.')
+        if not email:
+            errores.append('El correo es obligatorio.')
+        else:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                errores.append('Ingresa un correo válido.')
+        if not password or len(password) < 8:
+            errores.append('La contraseña debe tener al menos 8 caracteres.')
+
+        if not errores:
+            empleados_bd = _get('/v1/list/empleados/', [])
+            if any(str(e.get('rfc', '')).upper() == rfc for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el RFC "{rfc}".')
+            if any(str(e.get('username', '')).lower() == username for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el usuario "{username}".')
+            if any(str(e.get('email', '')).lower() == email.lower() for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el correo "{email}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_personal')
+
         payload = {
-            'nombre': request.POST.get('primer_nombre', '').strip(),
-            'primerApell': request.POST.get('apellido_paterno', '').strip(),
+            'nombre': nombre,
+            'primerApell': primer_apell,
             'seguApell': seguApell if seguApell else '',
-            'rfc': request.POST.get('rfc', '').strip().upper(),
-            'rol': request.POST.get('rol', ''),
-            'username': request.POST.get('username', '').strip().lower(),
-            'password': request.POST.get('password', ''),
-            'email': request.POST.get('email', '').strip(),
+            'rfc': rfc,
+            'rol': rol,
+            'username': username,
+            'password': password,
+            'email': email,
         }
         ok, resp = _post('/v1/create/empleado/', payload)
         if ok:
-            messages.success(request, f"Empleado {payload['nombre']} {payload['primerApell']} creado correctamente.")
+            messages.success(request, f"Empleado {nombre} {primer_apell} creado correctamente.")
         else:
             messages.error(request, f'Error al crear empleado: {resp}')
     return redirect('admin_personal')
@@ -172,16 +225,60 @@ def admin_personal_crear(request):
 def admin_personal_editar(request, pk):
     if request.method == 'POST':
         seguApell = request.POST.get('apellido_materno', '').strip()
-        payload = {
-            'nombre':      request.POST.get('primer_nombre', '').strip(),
-            'primerApell': request.POST.get('apellido_paterno', '').strip(),
-            'seguApell':   seguApell if seguApell else '',
-            'estado':      request.POST.get('estado', ''),
-            'rol':         request.POST.get('rol', ''),
-            'username':    request.POST.get('username', '').strip().lower(),
-            'email':       request.POST.get('email', '').strip(),
-        }
+        nombre = request.POST.get('primer_nombre', '').strip()
+        primer_apell = request.POST.get('apellido_paterno', '').strip()
+        estado = request.POST.get('estado', '')
+        rol = request.POST.get('rol', '')
+        username = request.POST.get('username', '').strip().lower()
+        email = request.POST.get('email', '').strip()
         pw = request.POST.get('password', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El primer nombre es obligatorio.')
+        if not primer_apell:
+            errores.append('El apellido paterno es obligatorio.')
+        if not username:
+            errores.append('El usuario es obligatorio.')
+        elif not _USERNAME_RE.match(username):
+            errores.append('El usuario solo puede tener letras minúsculas, números, puntos y guiones.')
+        if not email:
+            errores.append('El correo es obligatorio.')
+        else:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                errores.append('Ingresa un correo válido.')
+        if pw and len(pw) < 8:
+            errores.append('La contraseña debe tener al menos 8 caracteres.')
+
+        if not errores:
+            empleados_bd = _get('/v1/list/empleados/', [])
+            if any(
+                str(e.get('username', '')).lower() == username and str(e.get('numero')) != str(pk)
+                for e in empleados_bd
+            ):
+                errores.append(f'Ya existe otro empleado con el usuario "{username}".')
+            if any(
+                str(e.get('email', '')).lower() == email.lower() and str(e.get('numero')) != str(pk)
+                for e in empleados_bd
+            ):
+                errores.append(f'Ya existe otro empleado con el correo "{email}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_personal')
+
+        payload = {
+            'nombre':      nombre,
+            'primerApell': primer_apell,
+            'seguApell':   seguApell if seguApell else '',
+            'estado':      estado,
+            'rol':         rol,
+            'username':    username,
+            'email':       email,
+        }
         if pw:
             payload['password'] = pw
         ok, resp = _patch(f'/v1/update/empleado/{pk}/', payload)

@@ -21,7 +21,7 @@
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
     <div class="search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" name="q" class="form-control" placeholder="Buscar empleado" value="{{ q }}">
+      <input type="text" name="q" class="form-control" placeholder="Buscar empleado" value="{{ q }}" onkeydown="if(event.key==='Enter'){this.form.submit();}">
     </div>
     <select name="rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
       <option value="">Todos los roles</option>
@@ -31,7 +31,6 @@
       <option value="">Todos los estados</option>
       {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
-    <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
     {% if q or rol_filtro or estado_filtro %}
       <a href="{% url 'admin_personal' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
     {% endif %}

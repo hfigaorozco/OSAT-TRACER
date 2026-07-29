@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import generic
@@ -5,6 +6,8 @@ from django.http import JsonResponse
 
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _post_file
 import requests
+
+_CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
 
 
 # ADMIN — INVENTARIO
@@ -35,15 +38,54 @@ class AdminInventarioDetail(generic.View):
 
 def admin_inventario_crear(request):
     if request.method == 'POST':
+        codigo = request.POST.get('codigo', '').strip().lower()
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        stock_raw = request.POST.get('stock', '').strip()
+        stock_min_raw = request.POST.get('stock_minimo', '').strip()
+
+        errores = []
+        if not codigo:
+            errores.append('El código es obligatorio.')
+        elif len(codigo) > 5:
+            errores.append('El código no puede tener más de 5 caracteres.')
+        elif not _CODIGO_RE.match(codigo):
+            errores.append('El código solo puede tener letras minúsculas, números y guiones.')
+
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 20:
+            errores.append('El nombre no puede tener más de 20 caracteres.')
+
+        if len(descripcion) > 80:
+            errores.append('La descripción no puede tener más de 80 caracteres.')
+
+        if not stock_raw.isdigit():
+            errores.append('El stock inicial debe ser un número mayor o igual a 0.')
+        if not stock_min_raw.isdigit():
+            errores.append('El stock mínimo debe ser un número mayor o igual a 0.')
+
+        if not errores:
+            piezas_bd = _get('/v1/list/piezas/', [])
+            if any(str(p.get('codigo', '')).lower() == codigo for p in piezas_bd):
+                errores.append(f'Ya existe una pieza con el código "{codigo}".')
+            if nombre and any(str(p.get('nombre', '')).strip().lower() == nombre.lower() for p in piezas_bd):
+                errores.append(f'Ya existe una pieza con el nombre "{nombre}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_inventario')
+
         data = {
-            'codigo': request.POST.get('codigo', ''),
-            'nombre': request.POST.get('nombre', ''),
-            'descripcion': request.POST.get('descripcion', ''),
-            'stockActual': request.POST.get('stock', 0),
-            'stockMinimo': request.POST.get('stock_minimo', 0),
+            'codigo': codigo,
+            'nombre': nombre,
+            'descripcion': descripcion,
+            'stockActual': stock_raw,
+            'stockMinimo': stock_min_raw,
         }
         files = {}
-        
+
         if request.FILES.get('imagen'):
             files['imagen'] = request.FILES['imagen']
         ok, resp = _post_file(
@@ -63,19 +105,43 @@ def admin_inventario_crear(request):
 
 def admin_inventario_movimiento(request):
     if request.method == 'POST':
-        pieza_id = request.POST.get('pieza_id', '')
-        tipo = request.POST.get('tipo_mov', '')
-        cantidad = int(request.POST.get('cantidad', 0))
-        cantidad_minima = int(request.POST.get('cantidad_minima', 0))
+        pieza_id = request.POST.get('pieza_id', '').strip()
+        tipo = request.POST.get('tipo_mov', '').strip()
+        cantidad_raw = request.POST.get('cantidad', '').strip()
+        cantidad_minima_raw = request.POST.get('cantidad_minima', '').strip()
+
+        errores = []
+        if not pieza_id:
+            errores.append('Selecciona una pieza.')
+        if tipo not in ('entrada', 'salida', 'ajuste'):
+            errores.append('Tipo de movimiento no válido.')
+
+        if tipo in ('entrada', 'salida'):
+            if not cantidad_raw.isdigit() or int(cantidad_raw) < 1:
+                errores.append('La cantidad debe ser un número mayor a 0.')
+        elif tipo == 'ajuste':
+            if not cantidad_minima_raw.isdigit():
+                errores.append('El nuevo stock mínimo debe ser un número mayor o igual a 0.')
+
+        if tipo == 'salida' and not errores:
+            piezas_bd = _get('/v1/list/piezas/', [])
+            pieza = next((p for p in piezas_bd if str(p.get('codigo')) == pieza_id), None)
+            if pieza and int(cantidad_raw) > int(pieza.get('stockActual', 0)):
+                errores.append(f'No hay suficiente stock: disponible {pieza.get("stockActual", 0)}.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_inventario')
 
         payload = {
             'pieza': pieza_id,
             'tipo': tipo,
-            'cantidad': cantidad,
+            'cantidad': int(cantidad_raw or 0),
             'usuario': request.session.get('user_name', ''),
         }
         if tipo == 'ajuste':
-            payload['cantidad_minima'] = cantidad_minima
+            payload['cantidad_minima'] = int(cantidad_minima_raw)
 
         ok, resp = _post('/v1/create/movimiento_inventario/', payload)
 
@@ -136,12 +202,24 @@ def supervisor_inventario(request):
 
 def supervisor_inventario_entrada(request):
     if request.method == 'POST':
-        pieza_id = request.POST.get('pieza_id', '')
-        cantidad = int(request.POST.get('cantidad', 0))
+        pieza_id = request.POST.get('pieza_id', '').strip()
+        cantidad_raw = request.POST.get('cantidad', '').strip()
+
+        errores = []
+        if not pieza_id:
+            errores.append('Selecciona una pieza.')
+        if not cantidad_raw.isdigit() or int(cantidad_raw) < 1:
+            errores.append('La cantidad debe ser un número mayor a 0.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('supervisor_inventario')
+
         ok, resp = _post('/v1/create/movimiento_inventario/', {
             'pieza': pieza_id,
             'tipo': 'entrada',
-            'cantidad': cantidad,
+            'cantidad': int(cantidad_raw),
             'usuario': request.session.get('user_name', ''),
         })
         if ok:
