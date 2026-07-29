@@ -43,7 +43,7 @@
         Liberar del Hold
       </button>
     </form>
-    {% elif lote.estado.nombre != 'Rechazada' %}
+    {% elif lote.estado.nombre != 'Rechazada' and lote.estado.nombre != 'Terminada' %}
     <button onclick="document.getElementById('modal-hold').style.display='flex'"
             style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
