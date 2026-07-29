@@ -612,7 +612,7 @@ function abrirLote(pk) {
   loteEstadoBadgeEl.textContent = leb[2];
 
   var btnHold = document.getElementById('btn-hold-lote');
-  if (lote.estado === 'rechazado') {
+  if (lote.estado === 'rechazado' || lote.estado === 'aprobado') {
     btnHold.style.display = 'none';
   } else if (lote.estado === 'hold') {
     btnHold.style.display = '';
@@ -647,7 +647,15 @@ function renderTrazabilidad(lote) {
   var container = document.getElementById('trazabilidad-container');
   var now = new Date();
 
-  container.innerHTML = lote.etapas.map(function(etapa, i) {
+  var completadoBanner = '';
+  if (lote.estado === 'aprobado') {
+    completadoBanner = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;background:#D4EDDA;color:#155724;font-size:14px;font-weight:600;margin-bottom:8px;">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
+      'Este lote ha completado todas sus etapas de trazabilidad.' +
+      '</div>';
+  }
+
+  container.innerHTML = completadoBanner + lote.etapas.map(function(etapa, i) {
     var isCompleted = etapa.estado === 'aprobado';
     var isRejected  = etapa.estado === 'rechazado';
     var isActive    = etapa.estado === 'en_curso';

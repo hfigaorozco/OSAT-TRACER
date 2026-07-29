@@ -1,4 +1,4 @@
-{% if page_obj %}
+{% if page_obj is not None %}
   {% if page_obj.paginator.num_pages > 1 %}
   <div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px;">
     {% if page_obj.has_previous %}
@@ -20,16 +20,6 @@
     {% endif %}
   </div>
   {% endif %}
-{% else %}
-<!-- Paginación de ejemplo cuando no hay page_obj real -->
-<div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px;">
-  <span class="pag-btn disabled">‹</span>
-  <span class="pag-btn active">1</span>
-  <a href="#" class="pag-btn">2</a>
-  <a href="#" class="pag-btn">3</a>
-  <a href="#" class="pag-btn">4</a>
-  <a href="#" class="pag-btn">›</a>
-</div>
 {% endif %}
 
 <style>

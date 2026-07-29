@@ -52,7 +52,6 @@ for e in empleados:
             "primerApell": primerApell,
             "seguApell":   seguApell,
             "rfc":         e["rfc"],
-            "fechaReg":    "2026-06-01",
             "estado":      e["estado"],
             "rol":         e["rol"],
             "usuario":     e["pk"]
