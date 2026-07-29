@@ -10,6 +10,8 @@ from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _Fake
 PAGE_SIZE_ORGANIZACION = 9
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
+_HORA_RE = re.compile(r'^\d{2}:\d{2}:\d{2}$')
+_ESTADOS_ORDEN_VALIDOS = {'abier', 'proce', 'cerra'}
 
 def _duracion_str(segundos):
     """Convierte segundos a un string que DurationField acepta (formato de str(timedelta))."""
@@ -95,7 +97,7 @@ def _crear_orden(request):
     linea_pk   = request.POST.get('linea', '').strip()
     tipo_oblea = request.POST.get('tipo_oblea', '').strip()
     empleado_pk = request.session.get('user_id')
-    cantidad_lotes = int(request.POST.get('cantidad_lotes', 0) or 0)
+    cantidad_raw = request.POST.get('cantidad_lotes', '').strip()
     hora_inicio = _normalizar_hora(request.POST.get('hora_inicio', ''))
     hora_fin    = _normalizar_hora(request.POST.get('hora_fin', ''))
 
@@ -105,6 +107,16 @@ def _crear_orden(request):
     if not hora_inicio or not hora_fin:
         messages.error(request, 'Indica hora de inicio y hora de fin.')
         return
+    if not _HORA_RE.match(hora_inicio) or not _HORA_RE.match(hora_fin):
+        messages.error(request, 'Las horas indicadas no son válidas.')
+        return
+    if hora_inicio >= hora_fin:
+        messages.error(request, 'La hora de inicio debe ser anterior a la hora de fin.')
+        return
+    if cantidad_raw and not cantidad_raw.isdigit():
+        messages.error(request, 'La cantidad de lotes debe ser un número.')
+        return
+    cantidad_lotes = int(cantidad_raw or 0)
     proceso_pk = _get_linea_proceso(linea_pk)
     if not proceso_pk:
         messages.error(request, 'La línea seleccionada no tiene un proceso asignado.')
@@ -140,14 +152,38 @@ def _editar_orden(request, pk):
     estado_anterior = str(orden_antes.get('estado', '')).lower()
 
     linea_pk = request.POST.get('linea', '').strip()
-    tipo_oblea = request.POST.get('tipo_oblea', '')
-    cantidad_lotes_extra = int(request.POST.get('cantidad_lotes_extra', 0) or 0)
+    tipo_oblea = request.POST.get('tipo_oblea', '').strip()
+    estado = request.POST.get('estado', '').strip()
+    cantidad_extra_raw = request.POST.get('cantidad_lotes_extra', '').strip()
     hora_inicio = _normalizar_hora(request.POST.get('hora_inicio', ''))
     hora_fin    = _normalizar_hora(request.POST.get('hora_fin', ''))
 
+    if not tipo_oblea:
+        messages.error(request, 'Selecciona el tipo de oblea.')
+        return
+    if estado not in _ESTADOS_ORDEN_VALIDOS:
+        messages.error(request, 'El estado indicado no es válido.')
+        return
+    if hora_inicio and not _HORA_RE.match(hora_inicio):
+        messages.error(request, 'La hora de inicio no es válida.')
+        return
+    if hora_fin and not _HORA_RE.match(hora_fin):
+        messages.error(request, 'La hora de fin no es válida.')
+        return
+    hora_inicio_efectiva = hora_inicio or _hora_display(orden_antes.get('horaIni', ''))
+    hora_fin_efectiva    = hora_fin or _hora_display(orden_antes.get('horaFin', ''))
+    if (hora_inicio_efectiva != '—' and hora_fin_efectiva != '—'
+            and hora_inicio_efectiva >= hora_fin_efectiva):
+        messages.error(request, 'La hora de inicio debe ser anterior a la hora de fin.')
+        return
+    if cantidad_extra_raw and not cantidad_extra_raw.isdigit():
+        messages.error(request, 'La cantidad de lotes a agregar debe ser un número.')
+        return
+    cantidad_lotes_extra = int(cantidad_extra_raw or 0)
+
     payload = {
         'tipoOblea': tipo_oblea,
-        'estado':    request.POST.get('estado', ''),
+        'estado':    estado,
     }
     hoy = date.today().isoformat()
     if hora_inicio:
@@ -183,10 +219,11 @@ def _editar_orden(request, pk):
 
 def _agregar_lotes(request):
     orden_pk = request.POST.get('orden_id', '').strip()
-    cantidad = int(request.POST.get('cantidad_lotes', 0) or 0)
-    if not orden_pk or cantidad <= 0:
+    cantidad_raw = request.POST.get('cantidad_lotes', '').strip()
+    if not orden_pk or not cantidad_raw.isdigit() or int(cantidad_raw) <= 0:
         messages.error(request, 'Indica cuántos lotes quieres agregar.')
         return
+    cantidad = int(cantidad_raw)
     orden = _get(f'/v1/detail/Orden/{orden_pk}/')
     tipo_oblea = (orden or {}).get('tipoOblea')
     if not tipo_oblea:
@@ -204,6 +241,14 @@ def _lote_hold(request, pk):
     if not motivo:
         messages.error(request, 'Indica el motivo del hold.')
         return
+    ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+    edo = str(ob.get('estado', '')).lower()
+    if edo in ('termi', 'recha'):
+        messages.error(request, 'No se puede poner en hold un lote que ya está finalizado.')
+        return
+    if edo == 'enhol':
+        messages.error(request, 'Este lote ya está en hold.')
+        return
     ok, resp = _patch(f'/v1/update/Oblea/{pk}/', {'estado': 'enhol', 'hold_motivo': motivo})
     if ok:
         messages.success(request, 'Lote puesto en hold.')
@@ -212,6 +257,10 @@ def _lote_hold(request, pk):
 
 
 def _lote_liberar(request, pk):
+    ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+    if str(ob.get('estado', '')).lower() != 'enhol':
+        messages.error(request, 'Este lote no está en hold.')
+        return
     ok, resp = _patch(f'/v1/update/Oblea/{pk}/', {'estado': 'proce'})
     if ok:
         messages.success(request, 'Lote liberado del hold.')
@@ -220,6 +269,14 @@ def _lote_liberar(request, pk):
 
 
 def _lote_scrap(request, pk):
+    ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+    edo = str(ob.get('estado', '')).lower()
+    if edo == 'termi':
+        messages.error(request, 'No se puede rechazar un lote que ya fue terminado exitosamente.')
+        return
+    if edo == 'recha':
+        messages.error(request, 'Este lote ya está marcado como rechazado.')
+        return
     ok, resp = _patch(f'/v1/update/Oblea/{pk}/', {'estado': 'recha'})
     if ok:
         messages.success(request, 'Lote marcado como rechazado (scrap).')
@@ -228,10 +285,40 @@ def _lote_scrap(request, pk):
 
 
 def _etapa_completar(request, pk):
-    paso          = request.POST.get('paso', '')
-    resultado     = request.POST.get('resultado', 'aprobado')
+    paso          = request.POST.get('paso', '').strip()
+    resultado     = request.POST.get('resultado', 'aprobado').strip()
     observaciones = request.POST.get('observaciones', '')
-    unidades_defecto = int(request.POST.get('unidades_defecto', 0) or 0)
+    unidades_defecto_raw = request.POST.get('unidades_defecto', '').strip()
+
+    if not paso:
+        messages.error(request, 'Selecciona el paso a completar.')
+        return
+    if resultado not in ('aprobado', 'rechazado'):
+        messages.error(request, 'El resultado indicado no es válido.')
+        return
+    if unidades_defecto_raw and not unidades_defecto_raw.isdigit():
+        messages.error(request, 'Las unidades con defecto deben ser un número.')
+        return
+    unidades_defecto = int(unidades_defecto_raw or 0)
+
+    ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+    edo_lote = str(ob.get('estado', '')).lower()
+    if edo_lote == 'enhol':
+        messages.error(request, 'Este lote está en Hold. No se pueden completar etapas.')
+        return
+    if edo_lote in ('termi', 'recha'):
+        messages.error(request, 'Este lote fue rechazado o ya está terminado y no puede continuar con más etapas.')
+        return
+
+    if resultado == 'rechazado':
+        dies_iniciales = ob.get('diesGenerados', 0)
+        pasos_realizados_bd = _get('/v1/list/PasoRealizado/', [])
+        dies_activos, _scrap_previo, _yield_pct = _calcular_yield(pk, pasos_realizados_bd, dies_iniciales)
+        umbral = dies_activos * 0.10
+        if dies_activos <= 0 or unidades_defecto <= umbral:
+            messages.error(request, f'Solo se puede rechazar una etapa si las unidades con defecto superan el 10% de los dies activos ({int(umbral)}).')
+            return
+
     estado_map = {'aprobado': 'compl', 'rechazado': 'nocom'}
     estado = estado_map.get(resultado, 'compl')
 

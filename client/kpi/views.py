@@ -160,11 +160,46 @@ def admin_configuracion(request):
 
 def admin_config_kpi_save(request):
     if request.method == 'POST':
-        clave = request.POST.get('kpi', '')
+        clave = request.POST.get('kpi', '').strip()
+        verde_raw    = request.POST.get('verde', '').strip()
+        amarillo_raw = request.POST.get('amarillo', '').strip()
+        rojo_raw     = request.POST.get('rojo', '').strip()
+
+        errores = []
+        if not clave:
+            errores.append('No se indicó el KPI a configurar.')
+        for etiqueta, raw in (('verde', verde_raw), ('amarillo', amarillo_raw), ('rojo', rojo_raw)):
+            if not raw.lstrip('-').isdigit():
+                errores.append(f'El umbral {etiqueta} debe ser un número entero.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_organizacion')
+
+        verde, amarillo, rojo = int(verde_raw), int(amarillo_raw), int(rojo_raw)
+        if not (verde >= amarillo >= rojo):
+            messages.error(request, 'Los umbrales deben cumplir verde ≥ amarillo ≥ rojo.')
+            return redirect('admin_organizacion')
+
+        kpis_bd = _get('/v1/list/kpis/', [])
+        otros_kpis = [k for k in kpis_bd if str(k.get('clave')) != clave]
+        if any(k.get('umbralVerde') == verde for k in otros_kpis):
+            errores.append(f'Ya existe otro KPI con umbral verde {verde}.')
+        if any(k.get('umbralAmarillo') == amarillo for k in otros_kpis):
+            errores.append(f'Ya existe otro KPI con umbral amarillo {amarillo}.')
+        if any(k.get('umbralRojo') == rojo for k in otros_kpis):
+            errores.append(f'Ya existe otro KPI con umbral rojo {rojo}.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_organizacion')
+
         ok, resp = _patch(f'/v1/update/kpi/{clave}/', {
-            'umbralVerde':    int(request.POST.get('verde', 0)),
-            'umbralAmarillo': int(request.POST.get('amarillo', 0)),
-            'umbralRojo':     int(request.POST.get('rojo', 0)),
+            'umbralVerde':    verde,
+            'umbralAmarillo': amarillo,
+            'umbralRojo':     rojo,
         })
         if ok:
             messages.success(request, 'Umbrales actualizados.')

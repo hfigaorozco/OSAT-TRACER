@@ -612,7 +612,7 @@ function abrirLote(pk) {
   loteEstadoBadgeEl.textContent = leb[2];
 
   var btnHold = document.getElementById('btn-hold-lote');
-  if (lote.estado === 'rechazado') {
+  if (lote.estado === 'rechazado' || lote.estado === 'aprobado') {
     btnHold.style.display = 'none';
   } else if (lote.estado === 'hold') {
     btnHold.style.display = '';
