@@ -19,13 +19,39 @@ class CreateDefectoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreateDefectoSerializer
 
 
-## List 
+## List
 class ListDefectoAPIView(APIView):
-    
+
     def get(self, request):
         defectos = models.Defecto.objects.all()
         data = serializers.ListDefectoSerializer(defectos, many=True).data
         return Response(data)
+
+
+## Update
+class UpdateDefectoAPIView(generics.UpdateAPIView):
+    queryset = models.Defecto.objects.all()
+    serializer_class = serializers.UpdateDefectoSerializer
+    lookup_field = 'codigo'
+
+
+# Vistas PasoDefecto (relación paso-defecto)
+#CREATE
+class CreatePasoDefectoAPIView(generics.CreateAPIView):
+    serializer_class = serializers.CreatePasoDefectoSerializer
+
+#LIST
+class ListPasoDefectoAPIView(APIView):
+
+    def get(self, request):
+        relaciones = models.PasoDefecto.objects.all()
+        data = serializers.ListPasoDefectoSerializer(relaciones, many=True).data
+        return Response(data)
+
+#DELETE (quita solo la relación paso-defecto, no borra el Defecto)
+class DeletePasoDefectoAPIView(generics.DestroyAPIView):
+    queryset = models.PasoDefecto.objects.all()
+    lookup_field = 'pk'
 
 
 #Vistas  Tipo Oblea
