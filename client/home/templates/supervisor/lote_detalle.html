@@ -350,11 +350,9 @@
 {% block extra_js %}
 <script>
 var _supDefCount = 0;
+// Solo los defectos ligados al paso actualmente en curso de este lote.
 var _supCatalogo = [
-  {codigo:'defic', descripcion:'Wire bonding deficiente'},
-  {codigo:'delam', descripcion:'Delaminación de encapsulado'},
-  {codigo:'griet', descripcion:'Grieta en die'},
-  {codigo:'desal', descripcion:'Desalineación en die'},
+  {% for d in tipos_defecto %}{codigo:'{{ d.codigo|escapejs }}', descripcion:'{{ d.descripcion|escapejs }}'}{% if not forloop.last %},{% endif %}{% endfor %}
 ];
 var SUP_DIES_ACTIVOS = {{ lote.dies_activos|default:0 }};
 
@@ -411,6 +409,10 @@ function supSelectRes(val) {
 }
 
 function supAgregarDefecto() {
+  if (_supCatalogo.length === 0) {
+    showToast('Este paso no tiene defectos configurados.', 'warning');
+    return;
+  }
   _supDefCount++;
   var list = document.getElementById('sup-defectos-list');
   var row  = document.createElement('div');

@@ -629,6 +629,17 @@ def admin_produccion(request):
         ],
         'breadcrumbs': [],
     }
+
+    defectos_bd, paso_defecto_bd = _get_many('/v1/list/Defecto/', '/v1/list/PasoDefecto/')
+    defectos_map = {str(d.get('codigo')): d for d in defectos_bd if d.get('activo', True)}
+    defectos_por_paso = {}
+    for rel in paso_defecto_bd:
+        d = defectos_map.get(str(rel.get('defecto')))
+        if d:
+            defectos_por_paso.setdefault(str(rel.get('paso')), []).append(
+                {'codigo': d.get('codigo'), 'descripcion': d.get('descripcion', '')}
+            )
+
     ctx.update({
         'ordenes':              ordenes,
         'lotes':                lotes,
@@ -637,6 +648,7 @@ def admin_produccion(request):
         'tipos_oblea':          tipos_oblea,
         'ordenes_json':         json.dumps(ordenes),
         'lotes_json':           json.dumps(lotes),
+        'defectos_por_paso_json': json.dumps(defectos_por_paso),
         'maquinas_disponibles': [],
         'empleados':            [],
         'backend_url':          BACKEND_URL,
@@ -709,12 +721,11 @@ def admin_etapa_completar(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def admin_organizacion(request):
-    (procesos_bd, tipos_oblea, lineas_bd, kpis, alertas_bd,
+    (procesos_bd, tipos_oblea, lineas_bd, alertas_bd,
      pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd) = _get_many(
         '/v1/list/Proceso/',
         '/v1/list/TipoOblea/',
         '/v1/list/Linea/',
-        '/v1/list/kpis/',
         '/v1/list/alertas/',
         '/v1/list/pasos/',
         '/v1/list/PasoProceso/',
@@ -804,21 +815,6 @@ def admin_organizacion(request):
         for p in pasos_bd
     ]
 
-    kpi_cards = [
-        {
-            'nombre':         k.get('nombre', ''),
-            'key':            k.get('clave', ''),
-            'unidad':         '%',
-            'verde':          k.get('umbralVerde', 0),
-            'amarillo':       k.get('umbralAmarillo', 0),
-            'rojo':           k.get('umbralRojo', 0),
-            'label_verde':    f"≥ {k.get('umbralVerde', 0)}",
-            'label_amarillo': f"{k.get('umbralAmarillo', 0)} – {k.get('umbralVerde', 0)}",
-            'label_rojo':     f"< {k.get('umbralRojo', 0)}",
-        }
-        for k in kpis
-    ]
-
     plantillas_page = Paginator(plantillas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page', 1))
     lineas_page     = Paginator(lineas, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_lineas', 1))
     obleas_page     = Paginator(tipos_oblea_front, PAGE_SIZE_ORGANIZACION).get_page(request.GET.get('page_obleas', 1))
@@ -836,7 +832,6 @@ def admin_organizacion(request):
         'procesos_activos': plantillas,
         'pasos': pasos_page,
         'pasos_extra_params': 'tab=pasos&',
-        'kpi_cards': kpi_cards,
         'pasos_activos': pasos,
         'piezas_catalogo': [{'pk': z.get('codigo'), 'nombre': z.get('nombre', '')} for z in piezas_bd],
         'breadcrumbs': [
@@ -1652,12 +1647,15 @@ def supervisor_orden_detalle(request, pk):
 
 
 def supervisor_lote_detalle(request, pk):
-    obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados, alertas_bd = _get_many(
+    (obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados,
+     defectos_bd, paso_defecto_bd, alertas_bd) = _get_many(
         '/v1/list/Oblea/',
         '/v1/list/Orden/',
         '/v1/list/PasoProceso/',
         '/v1/list/pasos/',
         '/v1/list/PasoRealizado/',
+        '/v1/list/Defecto/',
+        '/v1/list/PasoDefecto/',
         '/v1/list/alertas/',
     )
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
@@ -1750,9 +1748,21 @@ def supervisor_lote_detalle(request, pk):
         'etapa_activa':   etapa_activa,
     }
 
+    defectos_map = {str(d.get('codigo')): d for d in defectos_bd if d.get('activo', True)}
+    codigos_defecto_paso = {
+        str(rel.get('defecto'))
+        for rel in paso_defecto_bd
+        if etapa_activa and str(rel.get('paso')) == str(etapa_activa.codigo)
+    }
+    tipos_defecto = [
+        {'codigo': cod, 'descripcion': d.get('descripcion', '')}
+        for cod, d in defectos_map.items()
+        if cod in codigos_defecto_paso
+    ]
+
     ctx.update({
         'lote':          lote,
-        'tipos_defecto': [],
+        'tipos_defecto': tipos_defecto,
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Órdenes',   'url': '/supervisor/ordenes/'},

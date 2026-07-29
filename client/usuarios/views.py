@@ -295,7 +295,10 @@ def admin_personal_toggle_estado(request, pk):
         emp = next((e for e in empleados if str(e.get('numero')) == str(pk)), None)
         if emp:
             estado_actual = str(emp.get('estado', '')).lower()
-            nuevo_estado = 'ina' if 'activ' in estado_actual else 'act'
+            nuevo_estado = 'ina' if estado_actual == 'activo' else 'act'
+            if nuevo_estado == 'ina' and str(pk) == str(request.session.get('user_id')):
+                messages.error(request, 'No puedes desactivar tu propia cuenta.')
+                return redirect('admin_personal')
             ok, resp = _patch(f'/v1/update/empleado/{pk}/', {
                 'nombre':      emp.get('nombre', ''),
                 'primerApell': emp.get('primerApell', ''),
