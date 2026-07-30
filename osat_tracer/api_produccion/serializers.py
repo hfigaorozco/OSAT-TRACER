@@ -10,20 +10,51 @@ class CreateDefectoSerializer(serializers.ModelSerializer):
         model = models.Defecto
         fields = [
             "codigo",
-            "descripcion"
+            "descripcion",
+            "activo",
         ]
-        
+
 #LIST
 class ListDefectoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Defecto
         fields = [
             "codigo",
-            "descripcion"
+            "descripcion",
+            "activo",
         ]
-        
+
 #DETAIL
 #UPDATE
+class UpdateDefectoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Defecto
+        fields = [
+            "descripcion",
+            "activo",
+        ]
+
+
+#SERIALIZERS PasoDefecto (relación muchos a muchos: un paso puede tener
+#varios defectos posibles, un defecto puede aparecer en varios pasos)
+#CREATE
+class CreatePasoDefectoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoDefecto
+        fields = [
+            "paso",
+            "defecto",
+        ]
+
+#LIST
+class ListPasoDefectoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PasoDefecto
+        fields = [
+            "id",
+            "paso",
+            "defecto",
+        ]
 
 #SERIALIZERS TipoOblea
 #CREATE

@@ -8,7 +8,8 @@ from api_kpi.models import Alerta
 class Defecto(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     descripcion = models.CharField(max_length=50)
-    
+    activo = models.BooleanField(default=True)
+
     class Meta:
         db_table = 'defecto'
     
@@ -175,11 +176,32 @@ class ProcesoPieza(models.Model):
                 fields=['proceso', 'pieza'],
                 name='uk_proceso_pieza'
             )
-        ] 
-        
+        ]
+
     def __str__(self):
         return f"{self.proceso} - {self.pieza}"
-    
+
+
+class PasoDefecto(models.Model):
+    """Un paso puede tener varios defectos posibles y un defecto puede
+    ocurrir en varios pasos: al registrar defectos durante la ejecución
+    de un paso, solo se deben mostrar los defectos ligados a ese paso."""
+    paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_defecto')
+    defecto = models.ForeignKey(Defecto, on_delete=models.RESTRICT, related_name='paso_defecto')
+
+    class Meta:
+        db_table = 'paso-defecto'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['paso', 'defecto'],
+                name='uk_paso_defecto'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.paso} - {self.defecto}"
+
+
     
 class MaquinaPaso(models.Model):
     maquina = models.ForeignKey(Maquina, on_delete=models.RESTRICT, related_name='maquina_paso')
