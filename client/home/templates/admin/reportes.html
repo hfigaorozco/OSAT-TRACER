@@ -48,7 +48,7 @@
       <input type="hidden" name="tab" value="produccion">
       <div style="flex:2;min-width:220px;">
         <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Orden (solo cerradas)</label>
-        <select name="orden_id" class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
+        <select id="orden_id" name="orden_id" class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
           <option value="">Seleccionar…</option>
           {% for o in ordenes %}<option value="{{ o.pk }}" {% if orden_id_actual == o.pk|stringformat:"s" %}selected{% endif %}>{{ o.numero }} — {{ o.proceso_nombre }}</option>{% endfor %}
         </select>
@@ -90,7 +90,7 @@
           <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ reporte_orden.dies_finales }}</td>
           <td style="padding:12px 16px;text-align:left;color:#EF5350;font-weight:600;">{{ reporte_orden.scrap }}</td>
           <td style="padding:12px 16px;">
-            <button class="action-btn" title="Ver detalle" onclick="openModal('modal-detalle-reporte')">
+            <button class="action-btn" title="Ver detalle" onclick="generarreporteproduccion()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </td>
@@ -339,6 +339,11 @@ function generarreporteinventario() {
     + encodeURIComponent(fin);
   window.open(url, '_blank');
   document.getElementById('modal-generar-reporte').style.display = 'none';
+}
+function generarreporteproduccion() {
+  const orden_id = document.getElementById("orden_id").value;
+  const url = `http://127.0.0.1:8001/api/v1/reporte/produccion/${orden_id}/`;
+  window.open(url, '_blank');
 }
 (function () {
 
