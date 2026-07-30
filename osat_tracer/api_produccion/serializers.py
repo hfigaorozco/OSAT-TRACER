@@ -548,20 +548,31 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 'Este lote no puede recibir más etapas: está en Hold o ya fue rechazado.'
             )
 
-        # Rechazar una etapa implica que hubo scrap de más — solo se permite
-        # si el scrap de esta etapa supera el 10% de los dies activos del lote.
-        if oblea and estado_codigo == 'nocom':
-            dies_iniciales = oblea.diesGenerados or 0
-            scrap_previo = sum(
-                pr.scrap or 0
-                for pr in models.Paso_Realizado.objects.filter(oblea=oblea)
+        # Tampoco si la ORDEN completa quedó en Hold (t_scrap_excedente_del_permitido
+        # la pone así cuando el yield global de alguno de sus lotes cae bajo el 95%).
+        if oblea and oblea.orden_id and str(oblea.orden.estado_id).lower() == 'enhol':
+            raise serializers.ValidationError(
+                'La orden de este lote está en Hold por exceso de scrap. '
+                'Libérala antes de continuar.'
             )
-            dies_activos = max(0, dies_iniciales - scrap_previo)
-            pct_scrap = (unidades_defecto / dies_activos * 100) if dies_activos > 0 else 100
-            if pct_scrap <= 10:
+
+        # Rechazar una etapa es una decisión sobre el YIELD GLOBAL del lote, no
+        # sobre el scrap de una sola etapa: solo se permite si, al aplicar este
+        # scrap, el yield del lote completo (dies activos tras este paso /
+        # cantidadDies fijo del Tipo_Oblea) cae por debajo del 95% — el mismo
+        # umbral que usa el trigger t_scrap_excedente_del_permitido para poner
+        # la orden en hold, para que ambas reglas queden consistentes.
+        if oblea and estado_codigo == 'nocom':
+            dies_activos = oblea.diesGenerados or 0
+            dies_iniciales = 0
+            if oblea.orden_id and oblea.orden.tipoOblea_id:
+                dies_iniciales = oblea.orden.tipoOblea.cantidadDies or 0
+            dies_activos_despues = dies_activos - unidades_defecto
+            yield_pct_despues = (dies_activos_despues / dies_iniciales * 100) if dies_iniciales > 0 else 0
+            if yield_pct_despues >= 95:
                 raise serializers.ValidationError(
-                    'Solo se puede rechazar una etapa si el scrap supera el 10% '
-                    'de los dies activos del lote.'
+                    'Solo se puede rechazar una etapa si el scrap hace que el yield '
+                    'global del lote caiga por debajo del 95%.'
                 )
 
         # Si no se manda alerta y el resultado es Rechazado (nocom), crear una
@@ -665,12 +676,16 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
     """
     etapas = serializers.SerializerMethodField()
     orden_numero = serializers.SerializerMethodField()
+    dies_iniciales = serializers.SerializerMethodField()
+    dies_activos = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Oblea
         fields = [
             "numero",
             "diesGenerados",
+            "dies_iniciales",
+            "dies_activos",
             "orden",
             "orden_numero",
             "estado",
@@ -680,6 +695,18 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
 
     def get_orden_numero(self, obj):
         return obj.orden.numero if obj.orden else None
+
+    def get_dies_iniciales(self, obj):
+        """Fijo: cantidadDies del Tipo_Oblea de la orden. A diferencia de
+        diesGenerados, este valor nunca lo toca el trigger t_actualizar_dies_por_paso."""
+        if obj.orden and obj.orden.tipoOblea:
+            return obj.orden.tipoOblea.cantidadDies
+        return obj.diesGenerados
+
+    def get_dies_activos(self, obj):
+        """diesGenerados ya lo mantiene al día el trigger t_actualizar_dies_por_paso
+        restando el scrap de cada paso registrado — no se le resta nada aquí de nuevo."""
+        return obj.diesGenerados
 
     def get_etapas(self, obj):
         if not obj.orden or not obj.orden.proceso:
