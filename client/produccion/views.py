@@ -468,7 +468,7 @@ def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales):
         for pr in pasos_realizados_bd
         if str(pr.get('oblea', '')) == str(oblea_num)
     )
-    dies_activos = max(0, dies_iniciales - scrap_total)
+    dies_activos = max(0, dies_iniciales - 0)
     yield_pct = round(dies_activos / dies_iniciales * 100, 1) if dies_iniciales > 0 else 0
     return dies_activos, scrap_total, yield_pct
 
