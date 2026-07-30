@@ -360,7 +360,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .badge-aprobado  { background: #D4EDDA; color: #155724; }
 .badge-rechazado { background: #F8D7DA; color: #721C24; }
 .badge-en-proceso{ background: #FFF3CD; color: #856404; }
-.badge-pendiente { background: #E9ECEF; color: #495057; }
+.badge-pendiente { background: #E9ECEF; color: #856404; }
 .badge-hold      { background: #FFF3CD; color: #856404; }
 .badge-ok        { background: #D4EDDA; color: #155724; }
 .badge-bajo      { background: #FFF3CD; color: #856404; }
@@ -412,7 +412,7 @@ select.form-control {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-xl);
-  width: 100%;
+  width: 40%;
 }
 .modal-sm  { max-width: 400px; }
 .modal-md  { max-width: 520px; }

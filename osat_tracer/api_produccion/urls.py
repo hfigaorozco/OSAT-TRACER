@@ -5,6 +5,11 @@ urlpatterns = [
     #Defecto
     path('v1/list/Defecto/', views.ListDefectoAPIView.as_view(), name='list_Defectos'),
     path('v1/create/Defecto/', views.CreateDefectoAPIView.as_view(), name='create_Defecto'),
+    path('v1/update/Defecto/<str:codigo>/', views.UpdateDefectoAPIView.as_view(), name='update_Defecto'),
+    #PasoDefecto
+    path('v1/list/PasoDefecto/', views.ListPasoDefectoAPIView.as_view(), name='list_PasoDefectos'),
+    path('v1/create/PasoDefecto/', views.CreatePasoDefectoAPIView.as_view(), name='create_PasoDefecto'),
+    path('v1/delete/PasoDefecto/<int:pk>/', views.DeletePasoDefectoAPIView.as_view(), name='delete_PasoDefecto'),
     #TipoOblea
     path('v1/list/TipoOblea/', views.ListTipoObleaAPIView.as_view(), name='list_TipoObleas'),
     path('v1/create/TipoOblea/', views.CreateTipoObleaAPIView.as_view(), name='create_TipoOblea'),

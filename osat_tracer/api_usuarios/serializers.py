@@ -51,6 +51,8 @@ class EmpleadoCreateSerializer(serializers.ModelSerializer):
 class EmpleadoListSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='usuario.username', read_only=True)
     email = serializers.EmailField(source='usuario.email', read_only=True)
+    last_login = serializers.DateTimeField(source='usuario.last_login', read_only=True)
+    date_joined = serializers.DateTimeField(source='usuario.date_joined', read_only=True)
     estado = serializers.StringRelatedField()
     rol = serializers.StringRelatedField()
 
@@ -64,6 +66,8 @@ class EmpleadoListSerializer(serializers.ModelSerializer):
             'rfc',
             'username',
             'email',
+            'last_login',
+            'date_joined',
             'estado',
             'rol'
         ]
@@ -82,6 +86,7 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
             'primerApell',
             'seguApell',
             'estado',
+            'rol',
             'username',
             'email',
             'password'
