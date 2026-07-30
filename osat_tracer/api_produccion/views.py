@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from django.http import FileResponse
 from api_kpi.models import Alerta
-from .services import generar_pdf_etiquetas_QR
+from .services import generar_pdf_etiquetas_QR, generar_pdf_etiqueta_qr_lote, asegurar_qr
 from rest_framework.exceptions import ValidationError
 from django.db import DatabaseError, transaction
 
@@ -403,6 +403,25 @@ class ListMaquinaPasoAPIView(APIView):
 #CREATE
 class CreatePasoRealizadoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreatePasoRealizadoSerializer
+
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+
+        except DatabaseError as e:
+            msg_raw = str(e)
+            if ',' in msg_raw:
+                msg_limpio = msg_raw.split(',')[-1].replace("'", "").replace(")", "").strip()
+            else:
+                msg_limpio = msg_raw
+
+            Alerta.objects.create(
+                descripcion=msg_limpio,
+                estadoAlerta_id='sinre'
+            )
+
+            raise ValidationError({'detail': msg_limpio})
 
 #LIST
 class ListPasoRealizadoAPIView(APIView):
