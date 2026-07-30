@@ -410,12 +410,9 @@ var _ordenActual = null;
 var _loteActual  = null;
 var _compResultado = 'aprobado';
 var _defCompCount  = 0;
-var _catalogoDefectos = [
-  {codigo:'defic', descripcion:'Wire bonding deficiente'},
-  {codigo:'delam', descripcion:'Delaminación de encapsulado'},
-  {codigo:'griet', descripcion:'Grieta en die'},
-  {codigo:'desal', descripcion:'Desalineación en die'},
-];
+// Defectos posibles por paso (solo se muestran los ligados al paso que se está completando)
+var _defectosPorPaso = {{ defectos_por_paso_json|safe }};
+var _compPasoCodigo = null;
 
 var URL_LOTE_HOLD        = "{% url 'admin_lote_hold' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTE_LIBERAR     = "{% url 'admin_lote_liberar' pk=0 %}".replace('/0/', '/__PK__/');
@@ -707,7 +704,7 @@ function renderTrazabilidad(lote) {
         (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' : 'Este lote fue rechazado y ya no puede continuar con más etapas.')+
         '</div>';
     } else if (isActive) {
-      completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+')" '+
+      completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+',\''+etapa.codigo+'\')" '+
         'style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">'+
         '✓ Completar etapa'+
         '</button>';
@@ -809,10 +806,11 @@ function toggleEtapaDetalle(el) {
 var _compDiesActivos = 0;
 var _compRechazoHabilitado = false;
 
-function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos) {
+function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos, pasoCodigo) {
   _compResultado = 'aprobado';
   _defCompCount  = 0;
   _compDiesActivos = diesActivos || 0;
+  _compPasoCodigo = pasoCodigo || null;
   document.getElementById('defectos-comp-list').innerHTML = '';
   document.getElementById('comp-scrap').value = 0;
   document.getElementById('comp-comentarios').value = '';
@@ -886,6 +884,11 @@ function calcularYieldPreviewComp() {
 }
 
 function agregarDefectoComp() {
+  var catalogo = _defectosPorPaso[_compPasoCodigo] || [];
+  if (catalogo.length === 0) {
+    showToast('Este paso no tiene defectos configurados. Ligalos desde Configuración.', 'warning');
+    return;
+  }
   _defCompCount++;
   var list = document.getElementById('defectos-comp-list');
   var row  = document.createElement('div');
@@ -894,7 +897,7 @@ function agregarDefectoComp() {
   row.innerHTML =
     '<select class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">' +
       '<option value="">Tipo de defecto…</option>' +
-      _catalogoDefectos.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
+      catalogo.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
     '</select>' +
     '<button type="button" onclick="this.closest(\'.defecto-comp-row\').remove()" style="background:none;border:none;color:#EF5350;cursor:pointer;font-size:18px;line-height:1;">✕</button>';
   list.appendChild(row);
