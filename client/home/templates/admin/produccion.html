@@ -72,7 +72,8 @@
             </div>
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if orden.estado == 'en_proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">En proceso</span>
+            {% if orden.estado == 'hold' %}<span style="background:#FEF3C7;color:#92400E;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:700;">⏸ En Hold</span>
+            {% elif orden.estado == 'en_proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">En proceso</span>
             {% elif orden.estado == 'aprobado' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Aprobado</span>
             {% elif orden.estado == 'rechazado' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Rechazado</span>
             {% else %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
@@ -118,7 +119,13 @@
       </div>
       <p id="det-orden-meta" style="font-size:14px;color:var(--text-muted);"></p>
     </div>
-    <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
+    <div style="display:flex;gap:10px;">
+      <button id="btn-liberar-orden" class="btn btn-outline" style="display:none;border-color:#EF5350;color:#EF5350;" onclick="liberarOrdenActual()">⏸ Liberar orden</button>
+      <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
+    </div>
+  </div>
+  <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:14px;font-weight:600;border:1px solid #EF5350;">
+    ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla.
   </div>
   <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -357,6 +364,36 @@
   </div>
 </div>
 
+<!-- Modal stock insuficiente (se abre solo si venimos de un intento fallido de crear orden) -->
+{% if stock_insuficiente %}
+<div id="modal-stock-insuficiente" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:14px;width:92%;max-width:480px;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:17px;font-weight:700;color:#1A202C;margin:0;">Stock insuficiente</h2>
+      <button onclick="document.getElementById('modal-stock-insuficiente').style.display='none'" style="background:none;border:none;cursor:pointer;color:#718096;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px 24px;">
+      <p style="font-size:14px;color:#4A5568;margin:0 0 16px;">No se pudo crear la orden porque no alcanza el stock de estas piezas:</p>
+      {% for p in stock_insuficiente %}
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border:1px solid #F8D7DA;background:#FDEDEE;border-radius:10px;margin-bottom:10px;">
+        {% if p.imagen %}
+        <img src="{{ backend_url|cut:'/api' }}{{ p.imagen }}" alt="{{ p.nombre }}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #E2E8F0;flex-shrink:0;">
+        {% else %}
+        <div style="width:52px;height:52px;border-radius:8px;background:#E2E8F0;flex-shrink:0;"></div>
+        {% endif %}
+        <div style="flex:1;">
+          <div style="font-size:14.5px;font-weight:700;color:#1A202C;">{{ p.nombre }}</div>
+          <div style="font-size:13px;color:#721C24;margin-top:2px;">Disponible: {{ p.disponible }} · Necesario: {{ p.necesario }} · Faltan: {{ p.faltante }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <!-- Modal completar etapa (compartido) -->
 <div class="modal-overlay" id="modal-completar-etapa" style="display:none;" onclick="if(event.target===this)closeModal('modal-completar-etapa')">
   <div class="modal-card modal-lg">
@@ -374,7 +411,7 @@
           <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#D4EDDA;color:#155724;font-weight:600;font-size:14px;cursor:pointer;">✓ Aprobado</div>
           <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#F7FAFC;color:#A0AEC0;font-weight:600;font-size:14px;cursor:not-allowed;">✕ Rechazado</div>
         </div>
-        <div style="font-size:12px;color:#A0AEC0;margin-top:6px;">"Rechazado" se habilita cuando el scrap de esta etapa supera el 10% de los dies activos (<span id="comp-rechazo-umbral">0</span>).</div>
+        <div style="font-size:12px;color:#A0AEC0;margin-top:6px;">"Rechazado" se habilita cuando el yield global del lote caería por debajo del 95% (scrap mayor a <span id="comp-rechazo-umbral">0</span>).</div>
       </div>
       <div class="form-group">
         <label class="form-label">Unidades con defecto en esta etapa</label>
@@ -416,6 +453,7 @@ var _compPasoCodigo = null;
 
 var URL_LOTE_HOLD        = "{% url 'admin_lote_hold' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTE_LIBERAR     = "{% url 'admin_lote_liberar' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_ORDEN_LIBERAR    = "{% url 'admin_orden_liberar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ETAPA_COMPLETAR  = "{% url 'admin_etapa_completar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_EDITAR     = "{% url 'admin_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 
@@ -536,6 +574,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   document.getElementById('det-orden-meta').textContent = proceso + ' · ' + fi + ' → ' + ff;
 
   var badgeMap = {
+    hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
     en_proceso: ['#FFF3CD','#856404','En proceso'],
     aprobado:   ['#D4EDDA','#155724','Aprobado'],
     rechazado:  ['#F8D7DA','#721C24','Rechazado'],
@@ -545,6 +584,10 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   var badge = document.getElementById('det-orden-badge');
   badge.style.cssText = 'background:'+b[0]+';color:'+b[1]+';padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;';
   badge.textContent = b[2];
+
+  var enHold = estado === 'hold';
+  document.getElementById('orden-hold-banner').style.display = enHold ? 'block' : 'none';
+  document.getElementById('btn-liberar-orden').style.display = enHold ? 'inline-flex' : 'none';
 
   var tbody = document.getElementById('tbody-lotes-orden');
   var lotesDeLaOrden = _lotes.filter(function(l){ return l.orden_pk === pk; });
@@ -697,14 +740,17 @@ function renderTrazabilidad(lote) {
     }
 
     // Botón completar etapa — SOLO en el paso activo, ancho completo dentro del paso.
-    // Si el lote ya está en Hold o Rechazado, no se puede seguir avanzando.
+    // Si el lote ya está en Hold o Rechazado, o si la ORDEN completa quedó en
+    // Hold por exceso de scrap, no se puede seguir avanzando.
     var completarBtn = '';
-    if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado')) {
+    if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado' || lote.orden_en_hold)) {
       completarBtn = '<div style="margin-top:14px;padding:12px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:13px;text-align:center;font-weight:600;">'+
-        (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' : 'Este lote fue rechazado y ya no puede continuar con más etapas.')+
+        (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' :
+          lote.estado === 'rechazado' ? 'Este lote fue rechazado y ya no puede continuar con más etapas.' :
+          'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')+
         '</div>';
     } else if (isActive) {
-      completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+',\''+etapa.codigo+'\')" '+
+      completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+',\''+etapa.codigo+'\','+lote.dies_iniciales+')" '+
         'style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">'+
         '✓ Completar etapa'+
         '</button>';
@@ -804,12 +850,14 @@ function toggleEtapaDetalle(el) {
 
 // ── Completar etapa ──
 var _compDiesActivos = 0;
+var _compDiesIniciales = 0;
 var _compRechazoHabilitado = false;
 
-function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos, pasoCodigo) {
+function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos, pasoCodigo, diesIniciales) {
   _compResultado = 'aprobado';
   _defCompCount  = 0;
   _compDiesActivos = diesActivos || 0;
+  _compDiesIniciales = diesIniciales || 0;
   _compPasoCodigo = pasoCodigo || null;
   document.getElementById('defectos-comp-list').innerHTML = '';
   document.getElementById('comp-scrap').value = 0;
@@ -822,13 +870,15 @@ function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos, pasoCodigo) {
   openModal('modal-completar-etapa');
 }
 
-// Rechazar una etapa implica rechazar el lote completo (hubo scrap de más),
-// así que solo se habilita si el scrap de esta etapa supera el 10% de los
-// dies activos del lote.
+// Rechazar una etapa implica rechazar el lote completo — es una decisión
+// sobre el YIELD GLOBAL del lote, no sobre el scrap de esta etapa sola: solo
+// se habilita si, al aplicar este scrap, el yield del lote completo (dies
+// activos tras este paso / dies iniciales fijos) cae por debajo del 95%,
+// el mismo umbral que usa el trigger que pone la orden en hold.
 function compActualizarRechazoDisponible() {
   var scrap = parseInt(document.getElementById('comp-scrap').value, 10) || 0;
-  var pct = _compDiesActivos > 0 ? (scrap / _compDiesActivos * 100) : 0;
-  _compRechazoHabilitado = pct > 10;
+  var yieldDespues = _compDiesIniciales > 0 ? ((_compDiesActivos - scrap) / _compDiesIniciales * 100) : 0;
+  _compRechazoHabilitado = yieldDespues < 95;
 
   var btn = document.getElementById('btn-res-rechazado');
   btn.style.cursor = _compRechazoHabilitado ? 'pointer' : 'not-allowed';
@@ -844,7 +894,10 @@ function compActualizarRechazoDisponible() {
   }
 
   var umbral = document.getElementById('comp-rechazo-umbral');
-  if (umbral) umbral.textContent = Math.floor(_compDiesActivos * 0.10) + ' unidades';
+  if (umbral) {
+    var scrapUmbral = Math.max(0, _compDiesActivos - 0.95 * _compDiesIniciales);
+    umbral.textContent = Math.floor(scrapUmbral) + ' unidades';
+  }
 }
 
 function selectResultadoComp(val) {
@@ -940,6 +993,12 @@ function volverAOrdenes() {
 }
 function volverAOrden() {
   if (_ordenActual) abrirOrden(_ordenActual.pk, _ordenActual.numero, _ordenActual.proceso, _ordenActual.fi, _ordenActual.ff, _ordenActual.estado);
+}
+
+function liberarOrdenActual() {
+  if (!_ordenActual) return;
+  if (!confirm('¿Liberar esta orden del Hold? Se podrán volver a completar etapas de sus lotes.')) return;
+  _submitForm(URL_ORDEN_LIBERAR.replace('__PK__', _ordenActual.pk), {});
 }
 
 // ── Registrar lote ──

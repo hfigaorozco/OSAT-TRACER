@@ -26,7 +26,8 @@ class ListPiezaSerializer(serializers.ModelSerializer):
             'nombre',
             'descripcion',
             'stockMinimo',
-            'stockActual'
+            'stockActual',
+            'imagen'
         ]
         
 ### Detail Pieza Serializer

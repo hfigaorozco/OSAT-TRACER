@@ -404,6 +404,25 @@ class ListMaquinaPasoAPIView(APIView):
 class CreatePasoRealizadoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreatePasoRealizadoSerializer
 
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+
+        except DatabaseError as e:
+            msg_raw = str(e)
+            if ',' in msg_raw:
+                msg_limpio = msg_raw.split(',')[-1].replace("'", "").replace(")", "").strip()
+            else:
+                msg_limpio = msg_raw
+
+            Alerta.objects.create(
+                descripcion=msg_limpio,
+                estadoAlerta_id='sinre'
+            )
+
+            raise ValidationError({'detail': msg_limpio})
+
 #LIST
 class ListPasoRealizadoAPIView(APIView):
     

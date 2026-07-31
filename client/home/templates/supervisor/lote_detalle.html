@@ -188,14 +188,16 @@
       </div>
 
       <!-- Botón completar etapa — ancho completo, llena el cuadro del paso -->
-      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' %}
+      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and not lote.orden_en_hold %}
       <button onclick="document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
               style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">
         ✓ Completar etapa
       </button>
       {% else %}
       <div style="margin-top:14px;padding:12px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:13px;text-align:center;font-weight:600;">
-        Este lote fue rechazado y ya no puede continuar con más etapas.
+        {% if lote.estado.nombre == 'En Hold' %}Este lote está en Hold. No se pueden completar etapas.
+        {% elif lote.orden_en_hold %}La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.
+        {% else %}Este lote fue rechazado y ya no puede continuar con más etapas.{% endif %}
       </div>
       {% endif %}
     </div>
@@ -250,7 +252,7 @@
             </label>
           </div>
           <div id="sup-rechazo-hint" style="font-size:12px;color:#A0AEC0;margin-top:6px;">
-            "Rechazado" se habilita cuando el scrap de esta etapa supera el 10% de los dies activos (<span id="sup-rechazo-umbral">0</span>).
+            "Rechazado" se habilita cuando el yield global del lote caería por debajo del 95% (scrap mayor a <span id="sup-rechazo-umbral">0</span>).
           </div>
         </div>
 
@@ -355,15 +357,18 @@ var _supCatalogo = [
   {% for d in tipos_defecto %}{codigo:'{{ d.codigo|escapejs }}', descripcion:'{{ d.descripcion|escapejs }}'}{% if not forloop.last %},{% endif %}{% endfor %}
 ];
 var SUP_DIES_ACTIVOS = {{ lote.dies_activos|default:0 }};
+var SUP_DIES_INICIALES = {{ lote.dies_iniciales|default:0 }};
 
-// Rechazar una etapa implica rechazar el lote completo (hubo scrap de más),
-// así que solo se habilita si el scrap de esta etapa supera el 10% de los
-// dies activos del lote.
+// Rechazar una etapa implica rechazar el lote completo — es una decisión
+// sobre el YIELD GLOBAL del lote, no sobre el scrap de esta etapa sola: solo
+// se habilita si, al aplicar este scrap, el yield del lote completo (dies
+// activos tras este paso / dies iniciales fijos) cae por debajo del 95%, el
+// mismo umbral que usa el trigger que pone la orden en hold.
 function supActualizarRechazoDisponible() {
   var scrapInput = document.getElementById('sup-scrap-input');
   var scrap = parseInt(scrapInput.value, 10) || 0;
-  var pct = SUP_DIES_ACTIVOS > 0 ? (scrap / SUP_DIES_ACTIVOS * 100) : 0;
-  var habilitado = pct > 10;
+  var yieldDespues = SUP_DIES_INICIALES > 0 ? ((SUP_DIES_ACTIVOS - scrap) / SUP_DIES_INICIALES * 100) : 0;
+  var habilitado = yieldDespues < 95;
 
   var label = document.getElementById('sup-label-rechazado');
   var input = document.getElementById('sup-res-rechazado');
@@ -382,7 +387,7 @@ function supActualizarRechazoDisponible() {
   }
 
   document.getElementById('sup-rechazo-umbral').textContent =
-    Math.floor(SUP_DIES_ACTIVOS * 0.10) + ' unidades';
+    Math.floor(Math.max(0, SUP_DIES_ACTIVOS - 0.95 * SUP_DIES_INICIALES)) + ' unidades';
 }
 
 function supSelectRes(val) {
