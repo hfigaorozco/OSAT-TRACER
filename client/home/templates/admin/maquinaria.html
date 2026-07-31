@@ -32,7 +32,7 @@
       {% for linea in lineas %}<option value="{{ linea.pk }}" {% if linea_filtro == linea.pk %}selected{% endif %}>{{ linea.nombre }}</option>{% endfor %}
     </select>
     {% if tipo_filtro or estado_filtro or linea_filtro %}
-      <a href="{% url 'admin_maquinaria' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
+      <a href="{% url 'admin_maquinaria' %}" class="btn btn-outline">Limpiar filtros</a>
     {% endif %}
   </form>
 </div>

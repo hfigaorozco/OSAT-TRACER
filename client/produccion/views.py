@@ -65,11 +65,12 @@ def _normalizar_hora(valor):
 
 
 def _get_linea_proceso(linea_pk):
-    """Devuelve el código de proceso asignado a una línea, o None."""
-    linea = _get(f'/v1/detail/Linea/{linea_pk}/')
-    if not linea:
-        return None
-    return linea.get('proceso')
+    """Devuelve el código de proceso asignado a una línea, o None.
+    La relación real vive en la tabla puente LineaProceso — Linea.proceso
+    (el campo directo del modelo) no se usa y siempre está en null."""
+    relaciones = _get('/v1/list/LineaProceso/', [])
+    rel = next((r for r in relaciones if str(r.get('linea')) == str(linea_pk)), None)
+    return rel.get('proceso') if rel else None
 
 
 def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
@@ -91,6 +92,45 @@ def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
         else:
             errores.append(str(resp))
     return creados, errores
+
+
+def _piezas_insuficientes(proceso_pk, tipo_oblea_pk):
+    """Identifica qué pieza(s) tienen stock insuficiente, con el mismo
+    criterio que usa el trigger t_alerta_stock_insuficiente (stockActual de
+    la pieza vs. cantidadDies del tipo de oblea × cantPiezas del proceso).
+
+    OJO: la validación real que bloquea la creación de la orden la sigue
+    haciendo el trigger (SIGNAL SQLSTATE '45000') — eso no se toca ni se
+    duplica aquí. Esta función solo se llama DESPUÉS de que el trigger ya
+    rechazó la orden, únicamente para poder mostrar qué pieza fue y su
+    imagen, ya que desde MySQL no se pudo concatenar el nombre de la pieza
+    dentro del mensaje del trigger."""
+    proceso_pieza_bd, piezas_bd, tipos_oblea_bd = _get_many(
+        '/v1/list/ProcesoPieza/', '/v1/list/piezas/', '/v1/list/TipoOblea/'
+    )
+    tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == str(tipo_oblea_pk)), {})
+    cantidad_dies = int(tipo_data.get('cantidadDies', 0) or 0)
+    piezas_map = {str(p.get('codigo')): p for p in piezas_bd}
+
+    faltantes = []
+    for rel in proceso_pieza_bd:
+        if str(rel.get('proceso')) != str(proceso_pk):
+            continue
+        pieza = piezas_map.get(str(rel.get('pieza')))
+        if not pieza:
+            continue
+        necesario = cantidad_dies * int(rel.get('cantPiezas', 0) or 0)
+        disponible = int(pieza.get('stockActual', 0) or 0)
+        if disponible < necesario:
+            faltantes.append({
+                'codigo': pieza.get('codigo'),
+                'nombre': pieza.get('nombre', pieza.get('codigo')),
+                'imagen': pieza.get('imagen'),
+                'disponible': disponible,
+                'necesario': necesario,
+                'faltante': necesario - disponible,
+            })
+    return faltantes
 
 
 def _crear_orden(request):
@@ -133,6 +173,17 @@ def _crear_orden(request):
         'empleado': empleado_pk,
     })
     if not ok:
+        # El trigger t_alerta_stock_insuficiente ya rechazó la orden (o
+        # cualquier otro error de BD que CreateOrdenAPIView haya limpiado).
+        # Si fue por stock, identificamos aquí la pieza exacta solo para
+        # mostrarla bonita — el trigger es quien realmente bloqueó la orden.
+        if 'stock insuficiente' in str(resp).lower():
+            faltantes = _piezas_insuficientes(proceso_pk, tipo_oblea)
+            if faltantes:
+                request.session['stock_insuficiente'] = faltantes
+                nombres = ', '.join(f['nombre'] for f in faltantes)
+                messages.error(request, f'No hay stock suficiente de: {nombres}.')
+                return
         messages.error(request, f'Error: {resp}')
         return
 
@@ -700,6 +751,7 @@ def admin_produccion(request):
         'maquinas_disponibles': [],
         'empleados':            [],
         'backend_url':          BACKEND_URL,
+        'stock_insuficiente':   request.session.pop('stock_insuficiente', None),
         'breadcrumbs': [
             {'label': 'Dashboard',  'url': '/admin-dash/'},
             {'label': 'Producción', 'url': '/admin/produccion/'},
@@ -1544,6 +1596,7 @@ def supervisor_ordenes(request):
         'ordenes_json_data': ordenes_json_data,
         'lineas':            lineas_activas,
         'tipos_oblea':       tipos_oblea_activos,
+        'stock_insuficiente': request.session.pop('stock_insuficiente', None),
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Órdenes',   'url': '/supervisor/ordenes/'},
