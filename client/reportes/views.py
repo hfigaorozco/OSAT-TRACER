@@ -52,7 +52,7 @@ def _hora_corta(hora_str):
     return s[:5] if len(s) >= 5 else s
 
 
-def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos_map):
+def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos_map,obleas_bd,pasos_bd,):
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(orden_id)), None)
     if not orden_data:
         return None, 'La orden no existe.'
@@ -63,10 +63,18 @@ def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos
     if not reporte:
         return None, 'Esta orden aún no tiene un reporte generado.'
 
-    apro = int(reporte.get('unidades_apro', 0) or 0)
-    defect = int(reporte.get('unidaes_defect', 0) or 0)
-    dies_iniciales = apro + defect
-    yield_pct = round(apro / dies_iniciales * 100, 1) if dies_iniciales > 0 else 0
+    obleas = [o for o in obleas_bd if str(o.get("orden")) == str(orden_id)]
+    
+    dies_finales = sum(int(o.get("diesGenerados", 0) or 0)for o in obleas)
+    scrap = 0
+    for oblea in obleas:
+        scrap += sum(int(p.get("scrap", 0) or 0)for p in pasos_bd if str(p.get("oblea")) == str(oblea.get("numero")))
+    
+    dies_iniciales = dies_finales + scrap
+    
+    yield_pct = round(dies_finales / dies_iniciales * 100,1) if dies_iniciales else 0
+    
+    
     num = orden_data.get('numero')
     empleado_pk = str(orden_data.get('empleado', ''))
     proceso_pk = str(orden_data.get('proceso', ''))
@@ -77,8 +85,8 @@ def _reporte_de_orden(orden_id, ordenes_bd, reportes_bd, empleados_map, procesos
         'proceso_nombre': procesos_map.get(proceso_pk, {}).get('nombre', proceso_pk),
         'operador': empleados_map.get(empleado_pk, 'Sin asignar'),
         'dies_iniciales': dies_iniciales,
-        'dies_finales': apro,
-        'scrap': defect,
+        'dies_finales': dies_finales,
+        'scrap': scrap,
         'yield_pct': yield_pct,
         'comentarios': reporte.get('comentarios', ''),
         'fecha': reporte.get('fecha', ''),
@@ -146,7 +154,7 @@ class BaseReportesView(View):
 
     def get(self, request):
         (ordenes_bd, reportes_bd, empleados_bd, procesos_bd,
-         piezas_bd, registros_kpi_bd, kpis_bd, semaforos_bd, alertas_bd) = _get_many(
+         piezas_bd, registros_kpi_bd, kpis_bd, semaforos_bd, alertas_bd,obleas_bd, pasos_bd,) = _get_many(
             '/v1/list/Orden/',
             '/v1/list/reportes/',
             '/v1/list/empleados/',
@@ -156,6 +164,8 @@ class BaseReportesView(View):
             '/v1/list/kpis/',
             '/v1/list/semaforos/',
             '/v1/list/alertas/',
+            '/v1/list/Oblea/',
+            '/v1/list/PasoRealizado/',
         )
 
         empleados_map = _empleados_map(empleados_bd)
@@ -169,7 +179,7 @@ class BaseReportesView(View):
         error_orden = None
         if orden_id:
             reporte_orden, error_orden = _reporte_de_orden(
-                orden_id, ordenes_bd, reportes_bd, empleados_map, procesos_map
+                orden_id, ordenes_bd, reportes_bd, empleados_map, procesos_map, obleas_bd,pasos_bd,
             )
 
         kpi_tipo = request.GET.get('kpi_tipo', '')
