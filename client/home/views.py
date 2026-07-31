@@ -46,6 +46,15 @@ def _get_many(*endpoints):
         return [f.result() for f in futures]
 
 
+def _mensaje_error(data):
+    """Las vistas que atrapan errores de BD devuelven {'detail': '...'} —
+    preferimos ese texto limpio en vez de convertir el dict entero a string
+    (lo que mostraba cosas como "{'detail': '...'}" con llaves y comillas)."""
+    if isinstance(data, dict) and 'detail' in data:
+        return str(data['detail'])
+    return str(data)
+
+
 def _post(endpoint, data):
     try:
         r = _session.post(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
@@ -53,13 +62,13 @@ def _post(endpoint, data):
         return True, r.json()
     except requests.HTTPError as e:
         try:
-            return False, str(e.response.json())
+            return False, _mensaje_error(e.response.json())
         except Exception:
             return False, str(e)
     except Exception as e:
         return False, str(e)
-    
-    
+
+
 def _post_file(endpoint, data, files):
     try:
         r = _session.post(
@@ -74,7 +83,7 @@ def _post_file(endpoint, data, files):
 
     except requests.HTTPError as e:
         try:
-            return False, str(e.response.json())
+            return False, _mensaje_error(e.response.json())
         except Exception:
             return False, str(e)
 
@@ -87,6 +96,11 @@ def _patch(endpoint, data):
         r = _session.patch(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
         r.raise_for_status()
         return True, r.json()
+    except requests.HTTPError as e:
+        try:
+            return False, _mensaje_error(e.response.json())
+        except Exception:
+            return False, str(e)
     except Exception as e:
         return False, str(e)
 
