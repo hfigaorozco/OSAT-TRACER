@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from django.http import FileResponse
 from api_kpi.models import Alerta
-from .services import generar_pdf_etiquetas_QR, generar_pdf_etiqueta_qr_lote, asegurar_qr
+from .services import generar_pdf_etiquetas_QR, asegurar_qr, generar_pdf_etiqueta_qr_lote, generar_pdf_reporte_produccion
 from rest_framework.exceptions import ValidationError
 from django.db import DatabaseError, transaction
 
@@ -499,5 +499,19 @@ class ObleaQRImagenView(APIView):
         ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
         return FileResponse(open(ruta, "rb"), content_type="image/png")
     
-
+class GenerarReporteProduccionView(APIView):
+    def get(self, request, pk):
+        orden_id = pk
+        try:
+            pdf = generar_pdf_reporte_produccion(orden_id)
+        except ValueError as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         
+        filename = f"reporte_produccion_orden_{orden_id}.pdf"
+        return FileResponse(
+            pdf,
+            as_attachment=False,
+            filename=filename,
+            content_type='application/pdf',
+            
+        )
