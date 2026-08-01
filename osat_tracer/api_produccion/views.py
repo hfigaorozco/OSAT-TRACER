@@ -1,11 +1,15 @@
+from pathlib import Path
+from django.conf import settings
 from django.shortcuts import render
 from . import serializers, models
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from django.http import FileResponse
-
-from .services import generar_pdf_etiquetas_QR
+from api_kpi.models import Alerta
+from .services import generar_pdf_etiquetas_QR, asegurar_qr, generar_pdf_etiqueta_qr_lote, generar_pdf_reporte_produccion
+from rest_framework.exceptions import ValidationError
+from django.db import DatabaseError, transaction
 
 # Create your views here.
 # Vistas Defecto 
@@ -15,13 +19,39 @@ class CreateDefectoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreateDefectoSerializer
 
 
-## List 
+## List
 class ListDefectoAPIView(APIView):
-    
+
     def get(self, request):
         defectos = models.Defecto.objects.all()
         data = serializers.ListDefectoSerializer(defectos, many=True).data
         return Response(data)
+
+
+## Update
+class UpdateDefectoAPIView(generics.UpdateAPIView):
+    queryset = models.Defecto.objects.all()
+    serializer_class = serializers.UpdateDefectoSerializer
+    lookup_field = 'codigo'
+
+
+# Vistas PasoDefecto (relación paso-defecto)
+#CREATE
+class CreatePasoDefectoAPIView(generics.CreateAPIView):
+    serializer_class = serializers.CreatePasoDefectoSerializer
+
+#LIST
+class ListPasoDefectoAPIView(APIView):
+
+    def get(self, request):
+        relaciones = models.PasoDefecto.objects.all()
+        data = serializers.ListPasoDefectoSerializer(relaciones, many=True).data
+        return Response(data)
+
+#DELETE (quita solo la relación paso-defecto, no borra el Defecto)
+class DeletePasoDefectoAPIView(generics.DestroyAPIView):
+    queryset = models.PasoDefecto.objects.all()
+    lookup_field = 'pk'
 
 
 #Vistas  Tipo Oblea
@@ -181,6 +211,26 @@ class UpdatePasoAPIView(generics.UpdateAPIView):
 #CREATE
 class CreateOrdenAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreateOrdenSerializer
+    
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+
+        except DatabaseError as e:
+            msg_raw = str(e)
+            if ',' in msg_raw:
+                msg_limpio = msg_raw.split(',')[-1].replace("'", "").replace(")", "").strip()
+            else:
+                msg_limpio = msg_raw
+
+            # Guardar alerta en la tabla de alertas
+            Alerta.objects.create(
+                descripcion=msg_limpio,
+                estadoAlerta_id='sinre'
+            )
+
+            raise ValidationError({'detail': msg_limpio})
 
 #LIST
 class ListOrdenAPIView(APIView):
@@ -354,6 +404,25 @@ class ListMaquinaPasoAPIView(APIView):
 class CreatePasoRealizadoAPIView(generics.CreateAPIView):
     serializer_class = serializers.CreatePasoRealizadoSerializer
 
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                serializer.save()
+
+        except DatabaseError as e:
+            msg_raw = str(e)
+            if ',' in msg_raw:
+                msg_limpio = msg_raw.split(',')[-1].replace("'", "").replace(")", "").strip()
+            else:
+                msg_limpio = msg_raw
+
+            Alerta.objects.create(
+                descripcion=msg_limpio,
+                estadoAlerta_id='sinre'
+            )
+
+            raise ValidationError({'detail': msg_limpio})
+
 #LIST
 class ListPasoRealizadoAPIView(APIView):
     
@@ -386,8 +455,8 @@ class GenerarEtiquetasQRView(APIView):
             pdf = generar_pdf_etiquetas_QR(id_orden)
             return FileResponse(
                 pdf,
-                as_attachment=True,
-                filename=f"Orden_{id_orden}.pdf",
+                as_attachment=False,
+                filename=f"Orden_{id_orden}_QR.pdf",
                 content_type="application/pdf"
             )
         except Exception as e:
@@ -395,3 +464,54 @@ class GenerarEtiquetasQRView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+## Etiqueta QR de un solo lote (Oblea) — vista + impresión desde el detalle de lote
+class GenerarEtiquetaQRLoteView(APIView):
+    def get(self, request, pk):
+        try:
+            oblea = models.Oblea.objects.get(pk=pk)
+        except models.Oblea.DoesNotExist:
+            return Response({"error": "Lote no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            pdf = generar_pdf_etiqueta_qr_lote(oblea)
+            return FileResponse(
+                pdf,
+                as_attachment=False,
+                filename=f"Lote_{oblea.numero}_QR.pdf",
+                content_type="application/pdf"
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+## Imagen PNG del QR de un lote (para previsualizar antes de imprimir el PDF)
+class ObleaQRImagenView(APIView):
+    def get(self, request, pk):
+        try:
+            oblea = models.Oblea.objects.get(pk=pk)
+        except models.Oblea.DoesNotExist:
+            return Response({"error": "Lote no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        asegurar_qr(oblea)
+        ruta = Path(settings.MEDIA_ROOT) / oblea.codigoQR
+        return FileResponse(open(ruta, "rb"), content_type="image/png")
+    
+class GenerarReporteProduccionView(APIView):
+    def get(self, request, pk):
+        orden_id = pk
+        try:
+            pdf = generar_pdf_reporte_produccion(orden_id)
+        except ValueError as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        filename = f"reporte_produccion_orden_{orden_id}.pdf"
+        return FileResponse(
+            pdf,
+            as_attachment=False,
+            filename=filename,
+            content_type='application/pdf',
+            
+        )

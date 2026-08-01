@@ -1,6 +1,6 @@
 [
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "activo"}},
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "inactivo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "Activo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "Inactivo"}},
 
   {"model": "api_usuarios.rol", "fields": {"codigo": "admin", "descripcion": "Administrador"}},
   {"model": "api_usuarios.rol", "fields": {"codigo": "super", "descripcion": "Supervisor"}},
@@ -49,10 +49,12 @@
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "abier", "descripcion": "Abierta"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "proce", "descripcion": "En proceso"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "cerra", "descripcion": "Cerrada"}},
+  {"model": "api_produccion.estado_orden", "fields": {"codigo": "enhol", "descripcion": "En Hold"}},
 
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "proce", "descripcion": "En Proceso"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "termi", "descripcion": "Terminada"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "recha", "descripcion": "Rechazada"}},
+  {"model": "api_produccion.estado_oblea", "fields": {"codigo": "enhol", "descripcion": "En Hold"}},
 
   {"model": "api_produccion.defecto", "fields": {"codigo": "defic", "descripcion": "Wire bonding deficiente"}},
   {"model": "api_produccion.defecto", "fields": {"codigo": "delam", "descripcion": "Delaminación de encapsulado"}},

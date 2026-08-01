@@ -46,6 +46,15 @@ def _get_many(*endpoints):
         return [f.result() for f in futures]
 
 
+def _mensaje_error(data):
+    """Las vistas que atrapan errores de BD devuelven {'detail': '...'} —
+    preferimos ese texto limpio en vez de convertir el dict entero a string
+    (lo que mostraba cosas como "{'detail': '...'}" con llaves y comillas)."""
+    if isinstance(data, dict) and 'detail' in data:
+        return str(data['detail'])
+    return str(data)
+
+
 def _post(endpoint, data):
     try:
         r = _session.post(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
@@ -53,13 +62,13 @@ def _post(endpoint, data):
         return True, r.json()
     except requests.HTTPError as e:
         try:
-            return False, str(e.response.json())
+            return False, _mensaje_error(e.response.json())
         except Exception:
             return False, str(e)
     except Exception as e:
         return False, str(e)
-    
-    
+
+
 def _post_file(endpoint, data, files):
     try:
         r = _session.post(
@@ -74,7 +83,7 @@ def _post_file(endpoint, data, files):
 
     except requests.HTTPError as e:
         try:
-            return False, str(e.response.json())
+            return False, _mensaje_error(e.response.json())
         except Exception:
             return False, str(e)
 
@@ -87,6 +96,11 @@ def _patch(endpoint, data):
         r = _session.patch(f'{BACKEND_URL}{endpoint}', json=data, timeout=5)
         r.raise_for_status()
         return True, r.json()
+    except requests.HTTPError as e:
+        try:
+            return False, _mensaje_error(e.response.json())
+        except Exception:
+            return False, str(e)
     except Exception as e:
         return False, str(e)
 
@@ -172,8 +186,11 @@ def _build_semaforo(kpi_list):
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        if not username or not password:
+            messages.error(request, 'Ingresa usuario y contraseña.')
+            return render(request, 'base/login.html')
         payload = {
             'username': username,
             'password': password
@@ -187,14 +204,19 @@ def login_view(request):
                 usuarioRol = data['user']['rol'].lower()
                 usuarioNombre = data['user']['username'].lower()
                 usuarioID = data['user']['id']
-                request.session['user_id'] = usuarioID 
-                request.session['user_name'] = usuarioNombre 
-                request.session['user_rol'] = usuarioRol 
+
                 if 'supervisor' in usuarioRol:
                     response_redirect = redirect('supervisor_dashboard')
                 elif 'admin' in usuarioRol:
                     response_redirect = redirect('admin_dashboard')
-                
+                else:
+                    messages.error(request, 'Tu rol no tiene acceso al sistema web.')
+                    return render(request, 'base/login.html')
+
+                request.session['user_id'] = usuarioID
+                request.session['user_name'] = usuarioNombre
+                request.session['user_rol'] = usuarioRol
+
                 DJANGO_RESERVED_COOKIES = {'sessionid', 'csrftoken'}
 
                 for cookie_name, cookie_value in response.cookies.items():
@@ -342,3 +364,7 @@ def registro_view(request):
             })
 
     return render(request, 'base/registro.html')
+
+
+def horario_laboral(request):
+    return render(request, '404pages/horario_laboral.html', status=503)

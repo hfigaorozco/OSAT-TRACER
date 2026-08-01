@@ -1,7 +1,16 @@
+import re
+from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
 from django.core.paginator import Paginator
+
+PAGE_SIZE_PERSONAL = 9
+
+_RFC_RE = re.compile(r'^[A-Z0-9]{13}$')
+_USERNAME_RE = re.compile(r'^[a-z0-9._-]+$')
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
@@ -32,6 +41,16 @@ def admin_dashboard(request):
 # ADMIN — PERSONAL (tabla unificada)
 # ════════════════════════════════════════════════════════════════
 
+ESTADO_MAP = {
+    'act': 'Activo', 'ina': 'Inactivo',
+    'activo': 'Activo', 'inactivo': 'Inactivo',
+}
+
+ESTADO_PK_MAP = {
+    'activo': 'act', 'inactivo': 'ina',
+    'act': 'act', 'ina': 'ina',
+}
+
 def _build_empleados(empleados_bd):
     """Construye la lista de empleados con todos los campos para la tabla unificada."""
     return [
@@ -44,7 +63,10 @@ def _build_empleados(empleados_bd):
             'username': e.get('username', '—'),
             'email':   e.get('email', ''),
             'rol':  _FakeObj(pk=e.get('rol', ''), nombre=e.get('rol', '—')),
-            'estado':  _FakeObj(pk=e.get('estado', ''), nombre=e.get('estado', '—')),
+            'estado':  _FakeObj(
+                pk=ESTADO_PK_MAP.get(str(e.get('estado', '')).lower(), 'act'),
+                nombre=ESTADO_MAP.get(str(e.get('estado', '')).lower(), e.get('estado', '—'))
+            ),
             'fecha_contrato':   e.get('fechaReg', '—'),
         }
         for e in empleados_bd
@@ -57,17 +79,8 @@ def admin_personal(request):
         '/v1/list/alertas/',
     )
 
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {
-        'user_role':    'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [],
-        'breadcrumbs': [
-            {'label': 'Dashboard', 'url': '/admin-dash/'},
-            {'label': 'Personal',  'url': '/admin/personal/'},
-        ],
-    }
-
+    # pk = código corto — es lo que espera el API al crear/editar un
+    # empleado (Empleado.rol es FK a Rol, cuya PK es el código corto).
     roles_list = [
         _FakeObj(pk='admin', nombre='Administrador'),
         _FakeObj(pk='super', nombre='Supervisor'),
@@ -77,36 +90,133 @@ def admin_personal(request):
         _FakeObj(pk='act', nombre='Activo'),
         _FakeObj(pk='ina', nombre='Inactivo'),
     ]
+    roles_map = {r.pk: r.nombre for r in roles_list}
 
     empleados_lista = _build_empleados(empleados_bd)
-    paginator = Paginator(empleados_lista, 8)
+
+    # Los filtros (texto, rol, estado) se aplican sobre la lista COMPLETA
+    # antes de paginar — si se paginara primero, filtrar solo buscaría
+    # dentro de la página actual en vez de en todos los empleados.
+    q = request.GET.get('q', '').strip().lower()
+    rol_filtro = request.GET.get('rol', '')
+    estado_filtro = request.GET.get('estado', '')
+
+    if q:
+        empleados_lista = [
+            e for e in empleados_lista
+            if q in e['primer_nombre'].lower()
+            or q in e['apellido_paterno'].lower()
+            or q in e['username'].lower()
+            or q in e['rfc'].lower()
+        ]
+    if rol_filtro:
+        rol_nombre = roles_map.get(rol_filtro, '')
+        empleados_lista = [e for e in empleados_lista if e['rol'].nombre == rol_nombre]
+    if estado_filtro:
+        empleados_lista = [
+            e for e in empleados_lista if e['estado'].pk.lower() == estado_filtro.lower()
+        ]
+
+    paginator = Paginator(empleados_lista, PAGE_SIZE_PERSONAL)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
+    filtros_activos = {}
+    if q:
+        filtros_activos['q'] = q
+    if rol_filtro:
+        filtros_activos['rol'] = rol_filtro
+    if estado_filtro:
+        filtros_activos['estado'] = estado_filtro
+    personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
+
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    ctx = {
+        'user_role': 'Administrador',
+        'unread_count': unread,
+        'recent_notifications': [],
+        'breadcrumbs': [
+            {'label': 'Dashboard', 'url': '/admin-dash/'},
+            {'label': 'Personal',  'url': '/admin/personal/'},
+        ],
+    }
+
     ctx.update({
-        'empleados':        page_obj,
-        'page_obj':         page_obj,
-        'roles_list':       roles_list,
-        'estados_empleado': estados_empleado,
+        'empleados':            page_obj,
+        'page_obj':             page_obj,
+        'roles_list':           roles_list,
+        'estados_empleado':     estados_empleado,
+        'q':                    q,
+        'rol_filtro':           rol_filtro,
+        'estado_filtro':        estado_filtro,
+        'personal_extra_params': personal_extra_params,
     })
     return render(request, 'admin/personal.html', ctx)
+
 
 def admin_personal_crear(request):
     if request.method == 'POST':
         seguApell = request.POST.get('apellido_materno', '').strip()
+        nombre = request.POST.get('primer_nombre', '').strip()
+        primer_apell = request.POST.get('apellido_paterno', '').strip()
+        rfc = request.POST.get('rfc', '').strip().upper()
+        rol = request.POST.get('rol', '')
+        username = request.POST.get('username', '').strip().lower()
+        password = request.POST.get('password', '')
+        email = request.POST.get('email', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El primer nombre es obligatorio.')
+        if not primer_apell:
+            errores.append('El apellido paterno es obligatorio.')
+        if not rfc:
+            errores.append('El RFC es obligatorio.')
+        elif not _RFC_RE.match(rfc):
+            errores.append('El RFC debe tener exactamente 13 caracteres, solo letras y números.')
+        if not rol:
+            errores.append('Selecciona un rol.')
+        if not username:
+            errores.append('El usuario es obligatorio.')
+        elif not _USERNAME_RE.match(username):
+            errores.append('El usuario solo puede tener letras minúsculas, números, puntos y guiones.')
+        if not email:
+            errores.append('El correo es obligatorio.')
+        else:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                errores.append('Ingresa un correo válido.')
+        if not password or len(password) < 8:
+            errores.append('La contraseña debe tener al menos 8 caracteres.')
+
+        if not errores:
+            empleados_bd = _get('/v1/list/empleados/', [])
+            if any(str(e.get('rfc', '')).upper() == rfc for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el RFC "{rfc}".')
+            if any(str(e.get('username', '')).lower() == username for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el usuario "{username}".')
+            if any(str(e.get('email', '')).lower() == email.lower() for e in empleados_bd):
+                errores.append(f'Ya existe un empleado con el correo "{email}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_personal')
+
         payload = {
-            'nombre': request.POST.get('primer_nombre', '').strip(),
-            'primerApell': request.POST.get('apellido_paterno', '').strip(),
+            'nombre': nombre,
+            'primerApell': primer_apell,
             'seguApell': seguApell if seguApell else '',
-            'rfc': request.POST.get('rfc', '').strip().upper(),
-            'rol': request.POST.get('rol', ''),
-            'username': request.POST.get('username', '').strip().lower(),
-            'password': request.POST.get('password', ''),
-            'email': request.POST.get('email', '').strip(),
+            'rfc': rfc,
+            'rol': rol,
+            'username': username,
+            'password': password,
+            'email': email,
         }
         ok, resp = _post('/v1/create/empleado/', payload)
         if ok:
-            messages.success(request, f"Empleado {payload['nombre']} {payload['primerApell']} creado correctamente.")
+            messages.success(request, f"Empleado {nombre} {primer_apell} creado correctamente.")
         else:
             messages.error(request, f'Error al crear empleado: {resp}')
     return redirect('admin_personal')
@@ -115,16 +225,60 @@ def admin_personal_crear(request):
 def admin_personal_editar(request, pk):
     if request.method == 'POST':
         seguApell = request.POST.get('apellido_materno', '').strip()
-        payload = {
-            'nombre':      request.POST.get('primer_nombre', '').strip(),
-            'primerApell': request.POST.get('apellido_paterno', '').strip(),
-            'seguApell':   seguApell if seguApell else '',
-            'estado':      request.POST.get('estado', ''),
-            'rol':         request.POST.get('rol', ''),
-            'username':    request.POST.get('username', '').strip().lower(),
-            'email':       request.POST.get('email', '').strip(),
-        }
+        nombre = request.POST.get('primer_nombre', '').strip()
+        primer_apell = request.POST.get('apellido_paterno', '').strip()
+        estado = request.POST.get('estado', '')
+        rol = request.POST.get('rol', '')
+        username = request.POST.get('username', '').strip().lower()
+        email = request.POST.get('email', '').strip()
         pw = request.POST.get('password', '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El primer nombre es obligatorio.')
+        if not primer_apell:
+            errores.append('El apellido paterno es obligatorio.')
+        if not username:
+            errores.append('El usuario es obligatorio.')
+        elif not _USERNAME_RE.match(username):
+            errores.append('El usuario solo puede tener letras minúsculas, números, puntos y guiones.')
+        if not email:
+            errores.append('El correo es obligatorio.')
+        else:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                errores.append('Ingresa un correo válido.')
+        if pw and len(pw) < 8:
+            errores.append('La contraseña debe tener al menos 8 caracteres.')
+
+        if not errores:
+            empleados_bd = _get('/v1/list/empleados/', [])
+            if any(
+                str(e.get('username', '')).lower() == username and str(e.get('numero')) != str(pk)
+                for e in empleados_bd
+            ):
+                errores.append(f'Ya existe otro empleado con el usuario "{username}".')
+            if any(
+                str(e.get('email', '')).lower() == email.lower() and str(e.get('numero')) != str(pk)
+                for e in empleados_bd
+            ):
+                errores.append(f'Ya existe otro empleado con el correo "{email}".')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('admin_personal')
+
+        payload = {
+            'nombre':      nombre,
+            'primerApell': primer_apell,
+            'seguApell':   seguApell if seguApell else '',
+            'estado':      estado,
+            'rol':         rol,
+            'username':    username,
+            'email':       email,
+        }
         if pw:
             payload['password'] = pw
         ok, resp = _patch(f'/v1/update/empleado/{pk}/', payload)
@@ -141,7 +295,10 @@ def admin_personal_toggle_estado(request, pk):
         emp = next((e for e in empleados if str(e.get('numero')) == str(pk)), None)
         if emp:
             estado_actual = str(emp.get('estado', '')).lower()
-            nuevo_estado = 'ina' if 'activ' in estado_actual else 'act'
+            nuevo_estado = 'ina' if estado_actual == 'activo' else 'act'
+            if nuevo_estado == 'ina' and str(pk) == str(request.session.get('user_id')):
+                messages.error(request, 'No puedes desactivar tu propia cuenta.')
+                return redirect('admin_personal')
             ok, resp = _patch(f'/v1/update/empleado/{pk}/', {
                 'nombre':      emp.get('nombre', ''),
                 'primerApell': emp.get('primerApell', ''),
