@@ -9,11 +9,24 @@
     <main class="main-content">
       {% if messages %}
         {% for message in messages %}
-          <div class="banner banner-{{ message.tags }}" style="margin-bottom:1rem;">{{ message }}</div>
+          {% if not message.extra_tags %}
+            <div class="banner banner-{{ message.tags }}" style="margin-bottom:1rem;">{{ message }}</div>
+          {% endif %}
         {% endfor %}
       {% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>
 </div>
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% for message in messages %}
+  {% if message.extra_tags %}
+    showReportNotification("{{ message|escapejs }}", "{{ message.extra_tags|escapejs }}", "{{ message.level_tag|escapejs }}");
+  {% endif %}
+  {% endfor %}
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -67,16 +67,19 @@
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#D4EDDA;display:inline-block;"></span>Verde</span>
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#FFF3CD;display:inline-block;"></span>Amarillo</span>
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#F8D7DA;display:inline-block;"></span>Rojo</span>
+        <button onclick="openModal('modal-generar-reporte-kpi')" title="Generar reporte de KPI"
+                style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:#718096;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        </button>
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
       <thead style="background:#F7FAFC;">
         <tr>
           <th style="padding:10px 20px;text-align:left;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;width:120px;">KPI</th>
-          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea A</th>
-          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea B</th>
-          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Línea C</th>
-          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Global</th>
+          {% for columna in semaforo_columnas %}
+          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">{{ columna }}</th>
+          {% endfor %}
         </tr>
       </thead>
       <tbody>
@@ -86,7 +89,7 @@
           {% for celda in row.celdas %}
           <td style="padding:14px 20px;text-align:center;">
             <span style="display:inline-block;width:90px;padding:8px 0;text-align:center;border-radius:6px;font-weight:700;font-size:16px;background:{{ celda.bg }};color:{{ celda.color }};">
-              {{ celda.valor }}{{ celda.unidad }}
+              {{ celda.valor }}
             </span>
           </td>
           {% endfor %}
@@ -176,5 +179,31 @@
     </table>
   </div>
 
+</div>
+
+<!-- Modal generar reporte de KPI -->
+<div class="modal-overlay" id="modal-generar-reporte-kpi" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-kpi')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de KPI</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-kpi')">&times;</button></div>
+    <form method="post" action="{% url 'admin_reportes_generar' %}">{% csrf_token %}
+      <input type="hidden" name="tipo" value="kpi">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Fecha inicial <span class="required">*</span></label>
+          <input type="date" name="fecha_inicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha final</label>
+          <input type="date" name="fecha_fin" class="form-control">
+          <p style="font-size:12px;color:#718096;margin-top:4px;">Déjala vacía para incluir todas las lecturas desde la fecha inicial hasta ahora.</p>
+        </div>
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en la página de Reportes, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-kpi')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}

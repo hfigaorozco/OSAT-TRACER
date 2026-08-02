@@ -35,6 +35,13 @@
             style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="14"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
     </button>
+    <form method="post" action="{% url 'supervisor_lote_generar_reporte' lote.pk %}" style="margin:0;" onsubmit="return confirm('¿Generar un reporte de este lote? Podrás verlo e imprimirlo desde la página de Reportes.');">{% csrf_token %}
+      <input type="hidden" name="orden_id" value="{{ lote.orden.pk }}">
+      <button type="submit" title="Generar reporte de este lote"
+              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      </button>
+    </form>
     {% if lote.estado.nombre == 'En Hold' %}
     <form method="post" action="{% url 'supervisor_lote_liberar' lote.pk %}" style="margin:0;">{% csrf_token %}
       <button type="submit"
@@ -88,7 +95,7 @@
     {% for etapa in lote.etapas %}
     {% if etapa.completado %}
     <!-- Etapa completada (aprobada o rechazada) -->
-    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;cursor:default;{% if etapa.rechazado %}background:#FDEDEE;{% endif %}">
+    <div onclick="toggleSupEtapaDetalle(this)" style="border-radius:10px;padding:14px 16px;border:1px solid transparent;cursor:pointer;{% if etapa.rechazado %}background:#FDEDEE;{% endif %}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;flex:1;">
           <div style="width:30px;height:30px;border-radius:50%;background:{% if etapa.rechazado %}#EF5350{% else %}#16A85E{% endif %};color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -111,12 +118,20 @@
             {% if etapa.notas %}<div style="font-size:13px;color:#718096;margin-top:2px;">{{ etapa.notas }}</div>{% endif %}
           </div>
         </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13.5px;color:#4A5568;">
+        {% if etapa.descripcion %}<div style="margin-bottom:4px;">{{ etapa.descripcion }}</div>{% endif %}
+        <div>Máquina asignada: <strong>{{ etapa.maquina }}</strong></div>
+        <div>Duración estimada: <strong>{{ etapa.tiempo_estimado_seg|default:0 }}s</strong></div>
+        {% if etapa.hora_inicio_iso %}<div>Completado a las: <strong>{{ etapa.hora_inicio_iso }}</strong></div>{% endif %}
+        <div>Scrap de esta etapa: <strong>{{ etapa.scrap|default:0 }}</strong></div>
       </div>
     </div>
 
     {% elif etapa.activo %}
     <!-- Etapa activa: barra de progreso + botón completar -->
-    <div style="border-radius:10px;padding:14px 16px;background:#E0F7FA;border:1.5px solid #B2EBF2;">
+    <div onclick="toggleSupEtapaDetalle(this)" style="border-radius:10px;padding:14px 16px;background:#E0F7FA;border:1.5px solid #B2EBF2;cursor:pointer;">
       <div style="display:flex;align-items:flex-start;gap:12px;">
         <div style="display:flex;align-items:flex-start;gap:12px;flex:1;">
           <div style="width:30px;height:30px;border-radius:50%;background:#009EAF;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
@@ -189,7 +204,7 @@
 
       <!-- Botón completar etapa — ancho completo, llena el cuadro del paso -->
       {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and not lote.orden_en_hold %}
-      <button onclick="document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
+      <button onclick="event.stopPropagation();document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
               style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">
         ✓ Completar etapa
       </button>
@@ -200,14 +215,27 @@
         {% else %}Este lote fue rechazado y ya no puede continuar con más etapas.{% endif %}
       </div>
       {% endif %}
+      <div class="etapa-detalle-body" style="display:none;margin-top:12px;padding:12px;background:#fff;border-radius:8px;border:1px solid #B2EBF2;font-size:13.5px;color:#4A5568;">
+        {% if etapa.descripcion %}<div style="margin-bottom:4px;">{{ etapa.descripcion }}</div>{% endif %}
+        <div>Máquina asignada: <strong>{{ etapa.maquina }}</strong></div>
+        <div>Duración estimada: <strong>{{ etapa.tiempo_estimado_seg|default:0 }}s</strong></div>
+      </div>
     </div>
 
     {% else %}
     <!-- Etapa pendiente -->
-    <div style="border-radius:10px;padding:14px 16px;border:1px solid transparent;opacity:.45;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:30px;height:30px;border-radius:50%;background:#E2E8F0;color:#718096;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">{{ forloop.counter }}</div>
-        <span style="font-size:15px;color:#A0AEC0;">{{ etapa.nombre }}</span>
+    <div onclick="toggleSupEtapaDetalle(this)" style="border-radius:10px;padding:14px 16px;border:1px solid transparent;opacity:.45;cursor:pointer;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#E2E8F0;color:#718096;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">{{ forloop.counter }}</div>
+          <span style="font-size:15px;color:#A0AEC0;">{{ etapa.nombre }}</span>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13.5px;color:#4A5568;">
+        {% if etapa.descripcion %}<div style="margin-bottom:4px;">{{ etapa.descripcion }}</div>{% endif %}
+        <div>Máquina asignada: <strong>{{ etapa.maquina }}</strong></div>
+        <div>Duración estimada: <strong>{{ etapa.tiempo_estimado_seg|default:0 }}s</strong></div>
       </div>
     </div>
     {% endif %}
@@ -351,6 +379,11 @@
 
 {% block extra_js %}
 <script>
+function toggleSupEtapaDetalle(el) {
+  var det = el.querySelector('.etapa-detalle-body');
+  if (det) det.style.display = det.style.display === 'none' ? 'block' : 'none';
+}
+
 var _supDefCount = 0;
 // Solo los defectos ligados al paso actualmente en curso de este lote.
 var _supCatalogo = [

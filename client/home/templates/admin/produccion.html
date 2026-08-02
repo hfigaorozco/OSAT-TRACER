@@ -121,6 +121,10 @@
     </div>
     <div style="display:flex;gap:10px;">
       <button id="btn-liberar-orden" class="btn btn-outline" style="display:none;border-color:#EF5350;color:#EF5350;" onclick="liberarOrdenActual()">⏸ Liberar orden</button>
+      <button class="btn btn-outline" title="Generar reporte de esta orden" onclick="generarReporteOrden()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        Generar reporte
+      </button>
       <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
     </div>
   </div>
@@ -181,6 +185,10 @@
       <button type="button" onclick="verQR(_loteActual.pk, _loteActual.folio)" title="Ver / imprimir código QR"
               style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+      </button>
+      <button type="button" onclick="generarReporteLote()" title="Generar reporte de este lote"
+              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       </button>
       <button id="btn-hold-lote" onclick="onHoldButtonClick()"
               style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
@@ -454,6 +462,8 @@ var _compPasoCodigo = null;
 var URL_LOTE_HOLD        = "{% url 'admin_lote_hold' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTE_LIBERAR     = "{% url 'admin_lote_liberar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_LIBERAR    = "{% url 'admin_orden_liberar' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_ORDEN_REPORTE    = "{% url 'admin_orden_generar_reporte' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_LOTE_REPORTE     = "{% url 'admin_lote_generar_reporte' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ETAPA_COMPLETAR  = "{% url 'admin_etapa_completar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_EDITAR     = "{% url 'admin_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 
@@ -758,12 +768,26 @@ function renderTrazabilidad(lote) {
 
     var rowBg   = isActive ? 'background:#E0F7FA;border:1px solid #B2EBF2;' : isRejected ? 'background:#FEF2F2;border:1px solid #FECACA;' : 'border:1px solid transparent;';
     var rowOp   = isPending ? 'opacity:.45;' : '';
-    var chevron = (isCompleted || isRejected)
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>'
-      : '';
-    var clickHandler = (isCompleted || isRejected) ? 'onclick="toggleEtapaDetalle(this)"' : '';
+    // El chevron ahora aparece en TODOS los pasos (antes solo en completados/
+    // rechazados) — un paso pendiente también puede querer ver qué hace,
+    // cuánto dura y qué máquina tiene asignada, aunque no tenga estadísticas
+    // de ejecución todavía.
+    var chevron = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    var clickHandler = 'onclick="toggleEtapaDetalle(this)"';
 
-    return '<div class="etapa-row" style="border-radius:10px;padding:14px 16px;'+rowBg+rowOp+'cursor:'+((isCompleted||isRejected)?'pointer':'default')+';" '+clickHandler+'>' +
+    var dur = etapa.tiempo_estimado_seg || 0;
+    var durTxt = dur > 0 ? (Math.floor(dur/3600) ? Math.floor(dur/3600)+'h ' : '') + Math.floor((dur%3600)/60)+'min' : 'Sin tiempo estimado';
+    var detalleHtml = '<div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13.5px;color:#4A5568;">'+
+      (etapa.descripcion ? '<div style="margin-bottom:4px;">'+etapa.descripcion+'</div>' : '')+
+      '<div>Máquina asignada: <strong>'+(etapa.maquina_nombre || 'Sin máquina asignada')+'</strong></div>'+
+      '<div>Duración estimada: <strong>'+durTxt+'</strong></div>'+
+      ((isCompleted || isRejected) ? (
+        (etapa.hora_inicio_iso ? '<div>Completado a las: <strong>'+etapa.hora_inicio_iso+'</strong></div>' : '')+
+        '<div>Scrap de esta etapa: <strong>'+(etapa.scrap != null ? etapa.scrap : 0)+'</strong></div>'
+      ) : '')+
+      '</div>';
+
+    return '<div class="etapa-row" style="border-radius:10px;padding:14px 16px;'+rowBg+rowOp+'cursor:pointer;" '+clickHandler+'>' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
         '<div style="display:flex;align-items:flex-start;gap:12px;flex:1;">' +
           '<div style="width:30px;height:30px;border-radius:50%;'+circleStyle+'display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">' +
@@ -787,11 +811,7 @@ function renderTrazabilidad(lote) {
           chevron +
         '</div>' +
       '</div>' +
-      (isCompleted && etapa.detalle
-        ? '<div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13.5px;">'+
-          (etapa.detalle.defectos && etapa.detalle.defectos.length ? '<div>Defectos: '+etapa.detalle.defectos.join(', ')+'</div>' : '')+
-          '</div>'
-        : '') +
+      detalleHtml +
     '</div>';
   }).join('');
 
@@ -999,6 +1019,18 @@ function liberarOrdenActual() {
   if (!_ordenActual) return;
   if (!confirm('¿Liberar esta orden del Hold? Se podrán volver a completar etapas de sus lotes.')) return;
   _submitForm(URL_ORDEN_LIBERAR.replace('__PK__', _ordenActual.pk), {});
+}
+
+function generarReporteOrden() {
+  if (!_ordenActual) return;
+  if (!confirm('¿Generar un reporte de esta orden? Podrás verlo e imprimirlo desde la página de Reportes.')) return;
+  _submitForm(URL_ORDEN_REPORTE.replace('__PK__', _ordenActual.pk), {});
+}
+
+function generarReporteLote() {
+  if (!_loteActual) return;
+  if (!confirm('¿Generar un reporte de este lote? Podrás verlo e imprimirlo desde la página de Reportes.')) return;
+  _submitForm(URL_LOTE_REPORTE.replace('__PK__', _loteActual.pk), {orden_id: _loteActual.orden_pk});
 }
 
 // ── Registrar lote ──

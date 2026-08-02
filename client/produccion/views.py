@@ -502,19 +502,70 @@ def _generar_reporte_orden(orden_num):
         'comentarios': 'Generado automáticamente al cerrar la orden.',
         'orden': orden_num,
     })
-    
-    
+
+
+def _generar_reporte_manual(request, orden_num, oblea_num=None, reportes_url_name='admin_reportes'):
+    """Botón "generar reporte" desde el detalle de una orden (oblea_num=None,
+    reporte de toda la orden) o de un lote específico (oblea_num=pk) — mismo
+    cálculo que _generar_reporte_orden, pero puede acotarse a un solo lote y
+    siempre queda marcado como generado manualmente por quien lo pidió."""
+    obleas_bd, pasos_realizados_bd = _get_many('/v1/list/Oblea/', '/v1/list/PasoRealizado/')
+    if oblea_num:
+        obleas_incluidas = [o for o in obleas_bd if str(o.get('numero')) == str(oblea_num)]
+    else:
+        obleas_incluidas = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
+
+    dies_finales = sum(int(o.get('diesGenerados', 0) or 0) for o in obleas_incluidas)
+    obleas_pks = {str(o.get('numero')) for o in obleas_incluidas}
+    scrap_total = sum(
+        int(pr.get('scrap', 0) or 0)
+        for pr in pasos_realizados_bd
+        if str(pr.get('oblea', '')) in obleas_pks
+    )
+    ok, resp = _post('/v1/create/reportes/', {
+        'unidades_apro': dies_finales,
+        'unidaes_defect': scrap_total,
+        'comentarios': 'Generado manualmente desde producción.',
+        'orden': orden_num,
+        'oblea': oblea_num,
+        'tipo_generacion': 'manual',
+        'generado_por': request.session.get('user_id'),
+    })
+    if ok:
+        ver_url = f"{reverse(reportes_url_name)}?tab=produccion"
+        messages.success(request, 'Reporte generado correctamente.', extra_tags=ver_url)
+    else:
+        messages.error(request, f'Error al generar el reporte: {resp}')
+
+
 # ── Cálculo de etapas de un lote (mismo criterio que usa la app móvil) ───────
 
-def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea):
+def _maquinas_por_paso():
+    """codigo_paso -> 'nombre1, nombre2' de las máquinas del catálogo
+    (MaquinaPaso) que pueden correr ese paso. Es dato de catálogo (qué
+    máquina está pensada para ese paso), no de esta ejecución en particular
+    — el proyecto no rastrea qué máquina física corrió cada Paso_Realizado."""
+    maquina_paso_bd, maquinas_bd = _get_many('/v1/list/MaquinaPaso/', '/v1/list/maquinaria/')
+    nombres_map = {str(m.get('numSerie')): m.get('nombre', '') for m in maquinas_bd}
+    agrupado = {}
+    for mp in maquina_paso_bd:
+        nombre = nombres_map.get(str(mp.get('maquina')))
+        if nombre:
+            agrupado.setdefault(str(mp.get('paso', '')), []).append(nombre)
+    return {codigo: ', '.join(nombres) for codigo, nombres in agrupado.items()}
+
+
+def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea, maquinas_por_paso=None):
     """
     pasos_de_proceso: lista de PasoProceso (dicts) ya ordenados por 'orden'.
     pasos_realizados_de_oblea: dict {codigo_paso: paso_realizado} SOLO de esta oblea.
+    maquinas_por_paso: dict {codigo_paso: 'nombre de máquina(s)'} de _maquinas_por_paso().
     Marca completado cada paso con Paso_Realizado propio; el primer paso pendiente
     queda en_curso. No avanza si el paso fue rechazado ('nocom'): se queda visible
     como completado igual (el registro ya existe), consistente con el criterio
     que ya usa el endpoint de la app móvil.
     """
+    maquinas_por_paso = maquinas_por_paso or {}
     etapas = []
     for p in pasos_de_proceso:
         codigo = str(p.get('paso', ''))
@@ -528,9 +579,11 @@ def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea)
         etapas.append({
             'codigo':              codigo,
             'nombre':              cat.get('nombre', codigo),
+            'descripcion':         cat.get('descripcion', ''),
             'estado':              estado,
             'meta':                realizado.get('observaciones') if realizado else None,
-            'detalle':             None,
+            'scrap':               int(realizado.get('scrap', 0) or 0) if realizado else None,
+            'maquina_nombre':      maquinas_por_paso.get(codigo) or None,
             'tiempo_estimado_seg': cat.get('tiempoEstimado', 0),
             'hora_inicio_iso':     str(realizado.get('hora', '') or '') if realizado else '',
         })
@@ -643,6 +696,8 @@ def _build_ordenes_lotes():
             'tiene_hold': any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
         })
 
+    maquinas_por_paso = _maquinas_por_paso()
+
     lotes = []
     for ob in obleas_bd:
         num       = ob.get('numero')
@@ -662,7 +717,7 @@ def _build_ordenes_lotes():
             for pr in pasos_realizados_bd
             if str(pr.get('oblea', '')) == str(num)
         }
-        etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea)
+        etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea, maquinas_por_paso)
         pasos_completados = sum(1 for e in etapas if e['estado'] in ('aprobado', 'rechazado'))
 
         tipo_pk_lote  = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
@@ -813,6 +868,19 @@ def admin_orden_liberar(request, pk):
     if request.method == 'POST':
         _orden_liberar(request, pk)
     return _admin_produccion_redirect(orden_pk=pk)
+
+
+def admin_orden_generar_reporte(request, pk):
+    if request.method == 'POST':
+        _generar_reporte_manual(request, pk, reportes_url_name='admin_reportes')
+    return _admin_produccion_redirect(orden_pk=pk)
+
+
+def admin_lote_generar_reporte(request, pk):
+    orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
+    if request.method == 'POST':
+        _generar_reporte_manual(request, orden_pk, oblea_num=pk, reportes_url_name='admin_reportes')
+    return _admin_produccion_redirect(orden_pk=orden_pk, lote_pk=pk)
 
 
 def admin_etapa_completar(request, pk):
@@ -1648,6 +1716,19 @@ def supervisor_orden_liberar(request, pk):
     return redirect('supervisor_orden_detalle', pk=pk)
 
 
+def supervisor_orden_generar_reporte(request, pk):
+    if request.method == 'POST':
+        _generar_reporte_manual(request, pk, reportes_url_name='supervisor_reportes')
+    return redirect('supervisor_orden_detalle', pk=pk)
+
+
+def supervisor_lote_generar_reporte(request, pk):
+    orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
+    if request.method == 'POST':
+        _generar_reporte_manual(request, orden_pk, oblea_num=pk, reportes_url_name='supervisor_reportes')
+    return redirect('supervisor_lote_detalle', pk=pk)
+
+
 def supervisor_lote_scrap(request, pk):
     if request.method == 'POST':
         _lote_scrap(request, pk)
@@ -1819,27 +1900,21 @@ def supervisor_lote_detalle(request, pk):
         if str(pr.get('oblea', '')) == str(num)
     }
 
-    etapas_raw = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_map)
+    etapas_raw = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_map, _maquinas_por_paso())
 
     etapas = []
     etapa_activa = None
     for e in etapas_raw:
-        catalogo = catalogo_map.get(e['codigo'], {})
         etapa = _FakeObj(
             codigo=e['codigo'],
             nombre=e['nombre'],
-            descripcion=catalogo.get('descripcion', ''),
+            descripcion=e['descripcion'],
             completado=e['estado'] in ('aprobado', 'rechazado'),
             rechazado=e['estado'] == 'rechazado',
             activo=e['estado'] == 'en_curso',
-            operador_nombre='—',
-            maquina='—',
-            iniciado_en=None,
-            completado_en=None,
-            scrap=int((realizados_map.get(e['codigo'], {}) or {}).get('scrap', 0) or 0),
-            yield_pct=0,
+            maquina=e['maquina_nombre'] or 'Sin máquina asignada',
+            scrap=e['scrap'],
             notas=e['meta'] or '',
-            tipo_maquina='—',
             tiempo_estimado_seg=e['tiempo_estimado_seg'],
             hora_inicio_iso=e['hora_inicio_iso'],
         )

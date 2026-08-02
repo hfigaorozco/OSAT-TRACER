@@ -3,6 +3,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from . import serializers, models
+from .services import calcular_kpi_por_linea
 
 # Create your views here.
 
@@ -138,3 +139,13 @@ class DetailHistorialAlertaAPIView(generics.RetrieveAPIView):
 
     def get_object(self):
         return get_object_or_404(models.Historial_Alertas, registroKPI_id=self.kwargs['registroKPI'], alerta_id=self.kwargs['alerta'])
+
+
+### KPI POR LINEA (semáforo real, usado por el dashboard y por el reporte de KPI)
+class KpiPorLineaAPIView(APIView):
+
+    def get(self, request):
+        fecha_inicio = request.query_params.get('fecha_inicio')
+        fecha_fin = request.query_params.get('fecha_fin')
+        data = calcular_kpi_por_linea(fecha_inicio, fecha_fin)
+        return Response(data)

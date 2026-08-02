@@ -1,4 +1,6 @@
 import requests
+from datetime import date, timedelta
+from urllib.parse import urlencode
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from concurrent.futures import ThreadPoolExecutor
@@ -162,22 +164,40 @@ def _semaforo_color(valor, kpi_dict, unidad='%'):
     return {'bg': bg, 'color': color, 'valor': val_str, 'unidad': unidad}
 
 
-def _build_semaforo(kpi_list):
-    kpi_map = {k.get('nombre', '').lower(): k for k in kpi_list}
-    ky = kpi_map.get('yield')
-    kt = kpi_map.get('throughput')
-    ko = kpi_map.get('oee')
-    return [
-        {'nombre': 'Yield',
-         'celdas': [_semaforo_color(94.2, ky), _semaforo_color(91.5, ky),
-                    _semaforo_color(88.3, ky), _semaforo_color(91.3, ky)]},
-        {'nombre': 'Throughput',
-         'celdas': [_semaforo_color(210, kt, ''), _semaforo_color(185, kt, ''),
-                    _semaforo_color(95,  kt, ''), _semaforo_color(163, kt, '')]},
-        {'nombre': 'OEE',
-         'celdas': [_semaforo_color(88.1, ko), _semaforo_color(82.4, ko),
-                    _semaforo_color(71.2, ko), _semaforo_color(80.6, ko)]},
-    ]
+def _build_semaforo(fecha_inicio=None, fecha_fin=None):
+    """Trae el KPI real por línea (join Registro_Kpi->Oblea->Orden->Linea,
+    calculado en el backend) y lo acomoda en la forma que ya consume la
+    plantilla del dashboard: una fila por KPI, una celda por línea + Global,
+    coloreada según los umbrales reales de cada KPI. Si no se pasan fechas,
+    usa "desde hace 30 días" sin límite superior (ventana "reciente" para el
+    dashboard en vivo, sin fecha_fin para no ocultar registros con fecha de
+    hoy/futura por diferencias de reloj entre servidor y datos de prueba; los
+    reportes de KPI sí pasan su propio rango explícito con fecha_fin).
+
+    Devuelve (filas, columnas) — columnas es la lista de nombres de línea
+    (+ 'Global' al final) para pintar el encabezado de la tabla dinámicamente,
+    ya que el número real de líneas no es fijo (hoy son 2, antes se asumían 3).
+    """
+    if not fecha_inicio and not fecha_fin:
+        fecha_inicio = (date.today() - timedelta(days=30)).isoformat()
+    params = {k: v for k, v in {'fecha_inicio': fecha_inicio, 'fecha_fin': fecha_fin}.items() if v}
+    endpoint = '/v1/kpi/semaforo_por_linea/'
+    if params:
+        endpoint += '?' + urlencode(params)
+    datos = _get(endpoint, [])
+
+    columnas = [c.get('linea_nombre', '—') for c in datos[0]['celdas']] if datos else []
+
+    filas = []
+    for kpi_row in datos:
+        celdas = []
+        for c in kpi_row.get('celdas', []):
+            if c.get('valor') is None:
+                celdas.append({'bg': '#E9ECEF', 'color': '#495057', 'valor': '—', 'unidad': ''})
+            else:
+                celdas.append(_semaforo_color(c['valor'], kpi_row, kpi_row.get('unidad', '%')))
+        filas.append({'nombre': kpi_row.get('kpi_nombre', ''), 'celdas': celdas})
+    return filas, columnas
 
 
 # ════════════════════════════════════════════════════════════════
