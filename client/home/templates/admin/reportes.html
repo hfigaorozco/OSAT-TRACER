@@ -3,353 +3,140 @@
 {% block page_title %}Reportes{% endblock %}
 
 {% block content %}
-<style>
-@media print {
-  body.printing-reporte > *:not(.modal-overlay) { visibility: hidden; }
-  body.printing-reporte .modal-overlay:not(#modal-detalle-reporte) { display: none !important; }
-  body.printing-reporte #modal-detalle-reporte { position: absolute; inset: 0; background: #fff; }
-  body.printing-reporte #modal-detalle-reporte, body.printing-reporte #modal-detalle-reporte * { visibility: visible; }
-  body.printing-reporte #modal-detalle-reporte .modal-card { box-shadow: none; max-width: 100%; }
-  body.printing-reporte #modal-detalle-reporte .modal-close,
-  body.printing-reporte #modal-detalle-reporte .modal-footer { display: none; }
-}
-</style>
-
 <div class="page-header">
   <div>
     <h1 class="page-title">Reportes</h1>
-    <p class="page-subtitle">Informes de producción, inventario y KPIs</p>
+    <p class="page-subtitle">Informes ya generados de producción, inventario y KPIs — listos para ver e imprimir</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'admin_reportes_mensual' %}" class="btn btn-outline">Mensual</a>
   </div>
 </div>
 
 <div class="tab-bar">
-  <button id="btn-produccion"
-          class="tab-btn active"
-          onclick="switchReportTab('tab-produccion', this)">
-      Producción
-  </button>
-
-  <button id="btn-inventario"
-          class="tab-btn"
-          onclick="switchReportTab('tab-inventario', this)">
-      Inventario
-  </button>
-
-  <button id="btn-kpi"
-          class="tab-btn"
-          onclick="switchReportTab('tab-kpi', this)">
-      KPI
-  </button>
+  <button id="btn-produccion" class="tab-btn active" onclick="switchReportTab('tab-produccion', this)">Producción</button>
+  <button id="btn-inventario" class="tab-btn" onclick="switchReportTab('tab-inventario', this)">Inventario</button>
+  <button id="btn-kpi" class="tab-btn" onclick="switchReportTab('tab-kpi', this)">KPI</button>
 </div>
 
 <div id="tab-produccion">
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:20px;">
-    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-      <input type="hidden" name="tab" value="produccion">
-      <div style="flex:2;min-width:220px;">
-        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Orden (solo cerradas)</label>
-        <select id="orden_id" name="orden_id" class="form-control" style="background:#fff;color:#1A202C;border-color:#CBD5E0;">
-          <option value="">Seleccionar…</option>
-          {% for o in ordenes %}<option value="{{ o.pk }}" {% if orden_id_actual == o.pk|stringformat:"s" %}selected{% endif %}>{{ o.numero }} — {{ o.proceso_nombre }}</option>{% endfor %}
-        </select>
-      </div>
-      <div>
-        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Desde</label>
-        <input type="date" name="desde" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
-      </div>
-      <div>
-        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Hasta</label>
-        <input type="date" name="hasta" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
-      </div>
-      <button type="submit" class="btn btn-primary btn-sm">Generar reporte de orden</button>
-    </form>
+  <div style="display:flex;justify-content:flex-start;margin-bottom:10px;">
+    <select class="form-control" style="width:auto;" onchange="location.href='?tab=produccion&alcance_prod='+this.value">
+      <option value="todos" {% if alcance_prod == 'todos' %}selected{% endif %}>Todos</option>
+      <option value="orden" {% if alcance_prod == 'orden' %}selected{% endif %}>Solo órdenes</option>
+      <option value="lote" {% if alcance_prod == 'lote' %}selected{% endif %}>Solo lotes</option>
+    </select>
   </div>
-
-  {% if error_orden %}
-  <div style="background:#F8D7DA;color:#721C24;padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:14px;">{{ error_orden }}</div>
-  {% endif %}
-
-  {% if reporte_orden %}
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
-    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
-      <thead style="background:#F7FAFC;">
-        <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Orden</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Operador</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies iniciales</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Dies finales</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Scrap</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="padding:12px 16px;font-family:monospace;font-weight:600;color:#009EAF;">{{ reporte_orden.numero }}</td>
-          <td style="padding:12px 16px;color:#2D3748;">{{ reporte_orden.operador }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ reporte_orden.dies_iniciales }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ reporte_orden.dies_finales }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#EF5350;font-weight:600;">{{ reporte_orden.scrap }}</td>
-          <td style="padding:12px 16px;">
-            <button class="action-btn" title="Ver detalle" onclick="generarreporteproduccion()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card-table">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Alcance</th><th>Fecha</th><th>Tipo</th><th>Generado por</th><th>Dies finales</th><th>Scrap</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for r in reportes_produccion_page %}
+          <tr>
+            <td>
+              <div style="font-family:monospace;font-weight:600;color:#009EAF;">{{ r.alcance }}</div>
+              {% if r.padre_numero %}<div style="font-size:11px;color:#718096;margin-top:2px;">↳ Deriva del reporte #{{ r.padre_numero }} de {{ r.orden_ref }}</div>{% endif %}
+            </td>
+            <td>{{ r.fecha }}</td>
+            <td>{{ r.tipo }}</td>
+            <td>{{ r.generado_por }}</td>
+            <td>{{ r.dies_finales }}</td>
+            <td style="color:#EF5350;font-weight:600;">{{ r.scrap }}</td>
+            <td>
+              <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte/{{ r.numero }}/pdf/" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de producción generados. Genera uno desde el detalle de una orden o un lote.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  {% elif not error_orden %}
-  <div class="empty-state" style="padding:48px;text-align:center;color:#718096;">
-    <p>Selecciona una orden cerrada y genera el reporte</p>
-  </div>
-  {% endif %}
+  {% include "components/pagination.html" with page_obj=reportes_produccion_page page_param="page_prod" extra_params=extra_params_prod %}
 </div>
 
 <div id="tab-inventario" style="display:none;">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte')">Generar reporte de inventario</button>
-    
+  <div class="card-table">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Rango de fechas</th><th>Fecha generado</th><th>Tipo</th><th>Generado por</th><th>Materiales</th><th>Bajo mínimo</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for r in reportes_inventario_page %}
+          <tr>
+            <td>{{ r.rango }}</td>
+            <td>{{ r.fecha_generado }}</td>
+            <td>{{ r.tipo }}</td>
+            <td>{{ r.generado_por }}</td>
+            <td>{{ r.materiales }}</td>
+            <td style="color:#EF5350;font-weight:600;">{{ r.bajo_minimo }}</td>
+            <td>
+              <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte_inventario/{{ r.numero }}/pdf/" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de inventario generados. Usa el botón "Generar reporte" en la página de Inventario.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-    <table id="tabla-inventario" style="width:100%;border-collapse:collapse;font-size:14.5px;">
-      <thead style="background:#F7FAFC;">
-        <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Código</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Pieza</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in reporte_inventario %}
-        <tr style="border-bottom:1px solid #EDF2F7;">
-          <td style="padding:12px 16px;font-family:monospace;color:#009EAF;font-weight:600;">{{ item.codigo }}</td>
-          <td style="padding:12px 16px;color:#2D3748;">{{ item.nombre }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#2D3748;">{{ item.stock_minimo }}</td>
-          <td style="padding:12px 16px;text-align:left;font-weight:700;color:#1A202C;">{{ item.stock_actual }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  {% include "components/pagination.html" with page_obj=reportes_inventario_page page_param="page_inv" extra_params="tab=inventario&" %}
 </div>
 
 <div id="tab-kpi" style="display:none;">
-  <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-      <input type="hidden" name="tab" value="kpi">
-      <input type="hidden" name="imprimir" value="1">
-      <div>
-        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Indicador</label>
-        <select name="kpi_tipo" class="form-control" style="width:180px;background:#fff;color:#1A202C;border-color:#CBD5E0;">
-          <option value="">Todos</option>
-          {% for k in kpis_catalogo %}<option value="{{ k.pk }}">{{ k.nombre }}</option>{% endfor %}
-        </select>
-      </div>
-      <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Desde</label><input type="date" name="desde" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;"></div>
-      <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Hasta</label><input type="date" name="hasta" class="form-control" style="width:160px;background:#fff;color:#1A202C;border-color:#CBD5E0;"></div>
-      <button type="submit" class="btn btn-primary btn-sm">Generar reporte de KPIs</button>
-    </form>
-  </div>
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
-      <thead style="background:#F7FAFC;">
-        <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">KPI</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Valor</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Verde</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Amarillo</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Rojo</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Semáforo</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for fila in reporte_kpi %}
-        <tr style="border-bottom:1px solid #EDF2F7;">
-          <td style="padding:12px 16px;color:#2D3748;">{{ fila.fecha }}</td>
-          <td style="padding:12px 16px;color:#2D3748;">{{ fila.kpi_nombre }}</td>
-          <td style="padding:12px 16px;text-align:left;font-weight:600;color:{% if fila.cumple %}#16A85E{% else %}#EF5350{% endif %};">{{ fila.valor }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#16A85E;">{{ fila.umbral_verde }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#F5A623;">{{ fila.umbral_amarillo }}</td>
-          <td style="padding:12px 16px;text-align:left;color:#EF5350;">{{ fila.umbral_rojo }}</td>
-          <td style="padding:12px 16px;color:#2D3748;">{{ fila.semaforo }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     MODAL GENERAR REPORTE
-═══════════════════════════════════════════ -->
-<div id="modal-generar-reporte" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;box-shadow:0 16px 48px rgba(0,0,0,.2);">
-        <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #E2E8F0;">
-            <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0;">
-                Generar reporte de movimientos
-            </h2>
-            <button onclick="document.getElementById('modal-generar-reporte').style.display='none';"
-                    style="width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#718096;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-        </div>
-        <!-- Contenido -->
-        <div style="padding:24px;">
-            <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-                <div style="width:48px;height:48px;border-radius:10px;background:#EBF8FF;display:flex;align-items:center;justify-content:center;">
-                    <svg width="24" height="24" viewBox="0 0 24 24"
-                         fill="none" stroke="#3182CE" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="8" y1="13" x2="16" y2="13"/>
-                        <line x1="8" y1="17" x2="16" y2="17"/>
-                        <line x1="8" y1="9" x2="10" y2="9"/>
-                    </svg>
-                </div>
-                <div>
-                    <div style="font-size:17px;font-weight:600;color:#1A202C;">
-                        Reporte PDF
-                    </div>
-                    <div style="font-size:14px;color:#718096;">
-                        Seleccione el rango de fechas del reporte que desea generar.
-                    </div>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div>
-                    <label style="display:block;font-size:13px;font-weight:600;color:#4A5568;margin-bottom:6px;">
-                        Fecha inicial
-                    </label>
-                    <input type="date"
-                           id="fecha_inicio"
-                           style="width:100%;padding:10px 12px;border:1px solid #CBD5E0;border-radius:8px;font-size:14px;">
-                </div>
-                <div>
-                    <label style="display:block;font-size:13px;font-weight:600;color:#4A5568;margin-bottom:6px;">
-                        Fecha final
-                    </label>
-
-                    <input type="date"
-                           id="fecha_fin"
-                           style="width:100%;padding:10px 12px;border:1px solid #CBD5E0;border-radius:8px;font-size:14px;">
-                </div>
-            </div>
-        </div>
-        <!-- Footer -->
-        <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid #E2E8F0;">
-            <button onclick="document.getElementById('modal-generar-reporte').style.display='none';"
-                    style="padding:10px 18px;border:1px solid #CBD5E0;background:#fff;border-radius:8px;font-weight:500;cursor:pointer;">
-                Cancelar
-            </button>
-            <button onclick="generarreporteinventario()"
-                    style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#3182CE;color:#fff;border:none;border-radius:8px;font-weight:500;cursor:pointer;">
-                <svg width="15" height="15" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="8" y1="13" x2="16" y2="13"/>
-                    <line x1="8" y1="17" x2="16" y2="17"/>
-                </svg>
-                Generar reporte
-            </button>
-        </div>
+  <div class="card-table">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Rango de fechas</th><th>Fecha generado</th><th>Tipo</th><th>Generado por</th><th>KPIs evaluados</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for r in reportes_kpi_page %}
+          <tr>
+            <td>{{ r.rango }}</td>
+            <td>{{ r.fecha_generado }}</td>
+            <td>{{ r.tipo }}</td>
+            <td>{{ r.generado_por }}</td>
+            <td>{{ r.kpis_evaluados }}</td>
+            <td>
+              <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte_kpi/{{ r.numero }}/pdf/" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de KPI generados. Usa el botón junto al semáforo del Dashboard.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
+  {% include "components/pagination.html" with page_obj=reportes_kpi_page page_param="page_kpi" extra_params="tab=kpi&" %}
 </div>
 
 {% block extra_js %}
 <script>
 function switchReportTab(id, btn) {
     ['tab-produccion', 'tab-inventario', 'tab-kpi'].forEach(function (t) {
-        document.getElementById(t).style.display =
-            t === id ? 'block' : 'none';
+        document.getElementById(t).style.display = t === id ? 'block' : 'none';
     });
-    document.querySelectorAll('.tab-btn').forEach(function (b) {
-        b.classList.remove('active');
-    });
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    const params = {
-        'tab-produccion': 'produccion',
-        'tab-inventario': 'inventario',
-        'tab-kpi': 'kpi'
-    };
-    history.replaceState(
-        null,
-        '',
-        '?tab=' + params[id]
-    );
-}
-(function(){
-  var params = new URLSearchParams(window.location.search);
-  if (params.get('tab') === 'kpi' && params.get('imprimir') === '1') {
-    setTimeout(function(){ window.print(); }, 150);
-  }
-})();
-function imprimirDetalleReporte() {
-  document.body.classList.add('printing-reporte');
-  window.print();
-  setTimeout(function(){ document.body.classList.remove('printing-reporte'); }, 300);
-}
-function imprimirTabla() {
-  window.print();
-}
-function generarreporteinventario() {
-  var inicio = document.getElementById('fecha_inicio').value;
-  var fin = document.getElementById('fecha_fin').value;
-  if (!inicio || !fin) {
-    alert('Selecciona fecha inicial y fecha final.');
-    return;
-  }
-  var url = 'http://127.0.0.1:8001/api/v1/reporte/inventario/?fecha_inicio='
-    + encodeURIComponent(inicio)
-    + '&fecha_fin='
-    + encodeURIComponent(fin);
-  window.open(url, '_blank');
-  document.getElementById('modal-generar-reporte').style.display = 'none';
-}
-function generarreporteproduccion() {
-  const orden_id = document.getElementById("orden_id").value;
-  const url = `http://127.0.0.1:8001/api/v1/reporte/produccion/${orden_id}/`;
-  window.open(url, '_blank');
+    const params = {'tab-produccion': 'produccion', 'tab-inventario': 'inventario', 'tab-kpi': 'kpi'};
+    history.replaceState(null, '', '?tab=' + params[id]);
 }
 (function () {
-
     const params = new URLSearchParams(window.location.search);
-
-    const tab = params.get("tab") || "produccion";
-
-    const map = {
-        produccion: {
-            tab: "tab-produccion",
-            btn: "btn-produccion"
-        },
-        inventario: {
-            tab: "tab-inventario",
-            btn: "btn-inventario"
-        },
-        kpi: {
-            tab: "tab-kpi",
-            btn: "btn-kpi"
-        }
-    };
-
+    const tab = params.get('tab') || 'produccion';
+    const map = {produccion: {tab: 'tab-produccion', btn: 'btn-produccion'},
+                 inventario: {tab: 'tab-inventario', btn: 'btn-inventario'},
+                 kpi: {tab: 'tab-kpi', btn: 'btn-kpi'}};
     const actual = map[tab];
-
-    if (actual) {
-        switchReportTab(
-            actual.tab,
-            document.getElementById(actual.btn)
-        );
-    }
-
+    if (actual) switchReportTab(actual.tab, document.getElementById(actual.btn));
 })();
 </script>
 {% endblock %}

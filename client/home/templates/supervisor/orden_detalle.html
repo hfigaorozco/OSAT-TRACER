@@ -21,6 +21,12 @@
       </button>
     </form>
     {% endif %}
+    <form method="post" action="{% url 'supervisor_orden_generar_reporte' orden.pk %}" style="margin:0;" onsubmit="return confirm('¿Generar un reporte de esta orden? Podrás verlo e imprimirlo desde la página de Reportes.');">{% csrf_token %}
+      <button type="submit" class="btn btn-outline" title="Generar reporte de esta orden">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        Generar reporte
+      </button>
+    </form>
     <button class="btn btn-primary" onclick="openModal('modal-registrar-lote')">+ Agregar lotes</button>
   </div>
 </div>
@@ -38,7 +44,7 @@
   <div class="card kpi-card"><div class="kpi-label">Estado</div><div style="margin-top:8px;">{% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'aprobado' %}<span class="badge badge-aprobado">Aprobada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</div></div>
 </div>
 
-<div class="card" style="padding:0;">
+<div class="card-table">
   <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <h3 style="font-weight:600;font-size:15px;margin:0;">Lotes de esta orden</h3>
     <div style="position:relative;">
