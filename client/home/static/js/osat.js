@@ -65,6 +65,30 @@ function showToast(message, type, duration) {
   if (duration > 0) setTimeout(function(){ toast.remove(); }, duration);
 }
 
+/* ── Notificación de reporte (estilo notif-dropdown, arriba, con botón "Ver") ── */
+function showReportNotification(message, url, type) {
+  type = type || 'success';
+  var stack = document.querySelector('.report-notif-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'report-notif-stack';
+    document.body.appendChild(stack);
+  }
+  var colors = {success:'#16A85E',error:'#EF5350',warning:'#F5A623',info:'#009EAF'};
+  var color = colors[type] || colors.success;
+  var notif = document.createElement('div');
+  notif.className = 'report-notif';
+  notif.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div class="notif-title">' + message + '</div>' +
+      (url ? '<a class="report-notif-ver" href="' + url + '">Ver</a>' : '') +
+    '</div>' +
+    '<button onclick="this.closest(\'.report-notif\').remove()" style="color:#A0AEC0;background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;">&#10005;</button>';
+  stack.appendChild(notif);
+  setTimeout(function(){ if (notif.parentNode) notif.remove(); }, 12000);
+}
+
 /* ── Password toggle ── */
 function togglePassword(inputId, btn) {
   var input = document.getElementById(inputId);

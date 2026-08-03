@@ -17,11 +17,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   {% for message in messages %}
-  {% if message.tags == 'success' %}
+  {% if message.extra_tags %}
+    showReportNotification("{{ message|escapejs }}", "{{ message.extra_tags|escapejs }}", "{{ message.level_tag|escapejs }}");
+  {% elif message.level_tag == 'success' %}
     showToast("{{ message|escapejs }}", "success");
-  {% elif message.tags == 'error' or message.tags == 'danger' %}
+  {% elif message.level_tag == 'error' or message.level_tag == 'danger' %}
     showToast("{{ message|escapejs }}", "error");
-  {% elif message.tags == 'warning' %}
+  {% elif message.level_tag == 'warning' %}
     showToast("{{ message|escapejs }}", "warning");
   {% else %}
     showToast("{{ message|escapejs }}", "info");

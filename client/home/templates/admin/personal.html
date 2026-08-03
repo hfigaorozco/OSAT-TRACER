@@ -32,13 +32,13 @@
       {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
     {% if q or rol_filtro or estado_filtro %}
-      <a href="{% url 'admin_personal' %}" class="btn btn-outline btn-sm">Limpiar filtros</a>
+      <a href="{% url 'admin_personal' %}" class="btn btn-outline">Limpiar filtros</a>
     {% endif %}
   </form>
 </div>
 
 <!-- Tabla unificada -->
-<div class="card" style="padding:0;">
+<div class="card-table">
   <div class="table-wrap">
     <table class="data-table" id="tabla-personal">
       <thead>

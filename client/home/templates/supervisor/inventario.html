@@ -4,6 +4,37 @@
 {% block content %}
 <div class="page-header">
   <div><h1 class="page-title">Inventario de materiales</h1><p class="page-subtitle">Consulta de existencias y registro de entradas</p></div>
+  <div class="page-actions">
+    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      Generar reporte
+    </button>
+  </div>
+</div>
+
+<!-- Modal generar reporte de inventario -->
+<div class="modal-overlay" id="modal-generar-reporte-inv" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-inv')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de inventario</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-inv')">&times;</button></div>
+    <form method="post" action="{% url 'supervisor_reportes_generar' %}">{% csrf_token %}
+      <input type="hidden" name="tipo" value="inventario">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Fecha inicial <span class="required">*</span></label>
+          <input type="date" name="fecha_inicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha final <span class="required">*</span></label>
+          <input type="date" name="fecha_fin" class="form-control" required>
+        </div>
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en la página de Reportes, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-inv')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
 </div>
 <div class="filter-bar">
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -12,7 +43,7 @@
     {% if request.GET.q %}<a href="{% url 'supervisor_inventario' %}" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
   </form>
 </div>
-<div class="card" style="padding:0;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:left;">Stock</th><th style="text-align:left;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
+<div class="card-table"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:left;">Stock</th><th style="text-align:left;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
   <tbody>
     {% for pieza in piezas %}
     <tr {% if pieza.stock <= pieza.stock_minimo %}style="background:rgba(239,83,80,.06);"{% endif %}>

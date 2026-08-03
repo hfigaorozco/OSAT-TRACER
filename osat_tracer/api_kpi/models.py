@@ -54,8 +54,8 @@ class Alerta(models.Model):
 
 class Registro_Kpi(models.Model):
     numero = models.AutoField(primary_key=True)
-    fecha = models.DateField(auto_now=True, auto_now_add=False)
-    hora = models.TimeField(auto_now=True, auto_now_add=False)
+    fecha = models.DateField(auto_now=False, auto_now_add=True)
+    hora = models.TimeField(auto_now=False, auto_now_add=True)
     valor = models.IntegerField()
     oblea = models.ForeignKey("api_produccion.Oblea", on_delete=models.RESTRICT, related_name='registro_kpi')
     kpi = models.ForeignKey(Kpi, on_delete=models.RESTRICT, related_name='registro_kpi')

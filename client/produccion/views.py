@@ -65,11 +65,12 @@ def _normalizar_hora(valor):
 
 
 def _get_linea_proceso(linea_pk):
-    """Devuelve el código de proceso asignado a una línea, o None."""
-    linea = _get(f'/v1/detail/Linea/{linea_pk}/')
-    if not linea:
-        return None
-    return linea.get('proceso')
+    """Devuelve el código de proceso asignado a una línea, o None.
+    La relación real vive en la tabla puente LineaProceso — Linea.proceso
+    (el campo directo del modelo) no se usa y siempre está en null."""
+    relaciones = _get('/v1/list/LineaProceso/', [])
+    rel = next((r for r in relaciones if str(r.get('linea')) == str(linea_pk)), None)
+    return rel.get('proceso') if rel else None
 
 
 def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
@@ -91,6 +92,45 @@ def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
         else:
             errores.append(str(resp))
     return creados, errores
+
+
+def _piezas_insuficientes(proceso_pk, tipo_oblea_pk):
+    """Identifica qué pieza(s) tienen stock insuficiente, con el mismo
+    criterio que usa el trigger t_alerta_stock_insuficiente (stockActual de
+    la pieza vs. cantidadDies del tipo de oblea × cantPiezas del proceso).
+
+    OJO: la validación real que bloquea la creación de la orden la sigue
+    haciendo el trigger (SIGNAL SQLSTATE '45000') — eso no se toca ni se
+    duplica aquí. Esta función solo se llama DESPUÉS de que el trigger ya
+    rechazó la orden, únicamente para poder mostrar qué pieza fue y su
+    imagen, ya que desde MySQL no se pudo concatenar el nombre de la pieza
+    dentro del mensaje del trigger."""
+    proceso_pieza_bd, piezas_bd, tipos_oblea_bd = _get_many(
+        '/v1/list/ProcesoPieza/', '/v1/list/piezas/', '/v1/list/TipoOblea/'
+    )
+    tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == str(tipo_oblea_pk)), {})
+    cantidad_dies = int(tipo_data.get('cantidadDies', 0) or 0)
+    piezas_map = {str(p.get('codigo')): p for p in piezas_bd}
+
+    faltantes = []
+    for rel in proceso_pieza_bd:
+        if str(rel.get('proceso')) != str(proceso_pk):
+            continue
+        pieza = piezas_map.get(str(rel.get('pieza')))
+        if not pieza:
+            continue
+        necesario = cantidad_dies * int(rel.get('cantPiezas', 0) or 0)
+        disponible = int(pieza.get('stockActual', 0) or 0)
+        if disponible < necesario:
+            faltantes.append({
+                'codigo': pieza.get('codigo'),
+                'nombre': pieza.get('nombre', pieza.get('codigo')),
+                'imagen': pieza.get('imagen'),
+                'disponible': disponible,
+                'necesario': necesario,
+                'faltante': necesario - disponible,
+            })
+    return faltantes
 
 
 def _crear_orden(request):
@@ -133,6 +173,17 @@ def _crear_orden(request):
         'empleado': empleado_pk,
     })
     if not ok:
+        # El trigger t_alerta_stock_insuficiente ya rechazó la orden (o
+        # cualquier otro error de BD que CreateOrdenAPIView haya limpiado).
+        # Si fue por stock, identificamos aquí la pieza exacta solo para
+        # mostrarla bonita — el trigger es quien realmente bloqueó la orden.
+        if 'stock insuficiente' in str(resp).lower():
+            faltantes = _piezas_insuficientes(proceso_pk, tipo_oblea)
+            if faltantes:
+                request.session['stock_insuficiente'] = faltantes
+                nombres = ', '.join(f['nombre'] for f in faltantes)
+                messages.error(request, f'No hay stock suficiente de: {nombres}.')
+                return
         messages.error(request, f'Error: {resp}')
         return
 
@@ -268,6 +319,21 @@ def _lote_liberar(request, pk):
         messages.error(request, f'Error: {resp}')
 
 
+def _orden_liberar(request, pk):
+    """Libera una orden que el trigger t_scrap_excedente_del_permitido puso
+    en hold automáticamente porque el yield global de alguno de sus lotes
+    cayó por debajo del 95%."""
+    orden_data = _get(f'/v1/detail/Orden/{pk}/') or {}
+    if str(orden_data.get('estado', '')).lower() != 'enhol':
+        messages.error(request, 'Esta orden no está en hold.')
+        return
+    ok, resp = _patch(f'/v1/update/Orden/{pk}/', {'estado': 'proce'})
+    if ok:
+        messages.success(request, 'Orden liberada del hold.')
+    else:
+        messages.error(request, f'Error: {resp}')
+
+
 def _lote_scrap(request, pk):
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
     edo = str(ob.get('estado', '')).lower()
@@ -310,13 +376,26 @@ def _etapa_completar(request, pk):
         messages.error(request, 'Este lote fue rechazado o ya está terminado y no puede continuar con más etapas.')
         return
 
+    orden_data = _get(f"/v1/detail/Orden/{ob.get('orden')}/") or {}
+    if str(orden_data.get('estado', '')).lower() == 'enhol':
+        messages.error(request, 'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')
+        return
+
     if resultado == 'rechazado':
-        dies_iniciales = ob.get('diesGenerados', 0)
-        pasos_realizados_bd = _get('/v1/list/PasoRealizado/', [])
-        dies_activos, _scrap_previo, _yield_pct = _calcular_yield(pk, pasos_realizados_bd, dies_iniciales)
-        umbral = dies_activos * 0.10
-        if dies_activos <= 0 or unidades_defecto <= umbral:
-            messages.error(request, f'Solo se puede rechazar una etapa si las unidades con defecto superan el 10% de los dies activos ({int(umbral)}).')
+        # Rechazar una etapa es una decisión sobre el YIELD GLOBAL del lote,
+        # no sobre el scrap de esta etapa sola: solo se permite si, al aplicar
+        # este scrap, el yield del lote completo (dies activos tras este paso
+        # / cantidadDies fijo del Tipo_Oblea) cae por debajo del 95% — el
+        # mismo umbral que usa el trigger t_scrap_excedente_del_permitido
+        # para poner la orden en hold.
+        dies_activos = ob.get('diesGenerados', 0)
+        orden_data = _get(f"/v1/detail/Orden/{ob.get('orden')}/") or {}
+        tipo_data = _get(f"/v1/detail/TipoOblea/{orden_data.get('tipoOblea')}/") if orden_data.get('tipoOblea') else {}
+        dies_iniciales = (tipo_data or {}).get('cantidadDies', 0)
+        dies_activos_despues = dies_activos - unidades_defecto
+        yield_pct_despues = (dies_activos_despues / dies_iniciales * 100) if dies_iniciales > 0 else 0
+        if yield_pct_despues >= 95:
+            messages.error(request, 'Solo se puede rechazar una etapa si el scrap hace que el yield global del lote caiga por debajo del 95%.')
             return
 
     estado_map = {'aprobado': 'compl', 'rechazado': 'nocom'}
@@ -405,33 +484,88 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
 def _generar_reporte_orden(orden_num):
     obleas_bd, pasos_realizados_bd = _get_many('/v1/list/Oblea/', '/v1/list/PasoRealizado/')
     obleas_de_orden = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
-    dies_iniciales = sum(int(o.get('diesGenerados', 0) or 0) for o in obleas_de_orden)
+
+    # dies_finales viene directo de diesGenerados, que el trigger
+    # t_actualizar_dies_por_paso ya mantiene al día restando el scrap de cada
+    # paso registrado — no se le resta el scrap otra vez aquí.
+    dies_finales = sum(int(o.get('diesGenerados', 0) or 0) for o in obleas_de_orden)
+
     obleas_pks = {str(o.get('numero')) for o in obleas_de_orden}
     scrap_total = sum(
         int(pr.get('scrap', 0) or 0)
         for pr in pasos_realizados_bd
         if str(pr.get('oblea', '')) in obleas_pks
     )
-    dies_finales = max(0, dies_iniciales - scrap_total)
     _post('/v1/create/reportes/', {
         'unidades_apro': dies_finales,
         'unidaes_defect': scrap_total,
         'comentarios': 'Generado automáticamente al cerrar la orden.',
         'orden': orden_num,
     })
-    
-    
+
+
+def _generar_reporte_manual(request, orden_num, oblea_num=None, reportes_url_name='admin_reportes'):
+    """Botón "generar reporte" desde el detalle de una orden (oblea_num=None,
+    reporte de toda la orden) o de un lote específico (oblea_num=pk) — mismo
+    cálculo que _generar_reporte_orden, pero puede acotarse a un solo lote y
+    siempre queda marcado como generado manualmente por quien lo pidió."""
+    obleas_bd, pasos_realizados_bd = _get_many('/v1/list/Oblea/', '/v1/list/PasoRealizado/')
+    if oblea_num:
+        obleas_incluidas = [o for o in obleas_bd if str(o.get('numero')) == str(oblea_num)]
+    else:
+        obleas_incluidas = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
+
+    dies_finales = sum(int(o.get('diesGenerados', 0) or 0) for o in obleas_incluidas)
+    obleas_pks = {str(o.get('numero')) for o in obleas_incluidas}
+    scrap_total = sum(
+        int(pr.get('scrap', 0) or 0)
+        for pr in pasos_realizados_bd
+        if str(pr.get('oblea', '')) in obleas_pks
+    )
+    ok, resp = _post('/v1/create/reportes/', {
+        'unidades_apro': dies_finales,
+        'unidaes_defect': scrap_total,
+        'comentarios': 'Generado manualmente desde producción.',
+        'orden': orden_num,
+        'oblea': oblea_num,
+        'tipo_generacion': 'manual',
+        'generado_por': request.session.get('user_id'),
+    })
+    if ok:
+        ver_url = f"{reverse(reportes_url_name)}?tab=produccion"
+        messages.success(request, 'Reporte generado correctamente.', extra_tags=ver_url)
+    else:
+        messages.error(request, f'Error al generar el reporte: {resp}')
+
+
 # ── Cálculo de etapas de un lote (mismo criterio que usa la app móvil) ───────
 
-def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea):
+def _maquinas_por_paso():
+    """codigo_paso -> 'nombre1, nombre2' de las máquinas del catálogo
+    (MaquinaPaso) que pueden correr ese paso. Es dato de catálogo (qué
+    máquina está pensada para ese paso), no de esta ejecución en particular
+    — el proyecto no rastrea qué máquina física corrió cada Paso_Realizado."""
+    maquina_paso_bd, maquinas_bd = _get_many('/v1/list/MaquinaPaso/', '/v1/list/maquinaria/')
+    nombres_map = {str(m.get('numSerie')): m.get('nombre', '') for m in maquinas_bd}
+    agrupado = {}
+    for mp in maquina_paso_bd:
+        nombre = nombres_map.get(str(mp.get('maquina')))
+        if nombre:
+            agrupado.setdefault(str(mp.get('paso', '')), []).append(nombre)
+    return {codigo: ', '.join(nombres) for codigo, nombres in agrupado.items()}
+
+
+def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea, maquinas_por_paso=None):
     """
     pasos_de_proceso: lista de PasoProceso (dicts) ya ordenados por 'orden'.
     pasos_realizados_de_oblea: dict {codigo_paso: paso_realizado} SOLO de esta oblea.
+    maquinas_por_paso: dict {codigo_paso: 'nombre de máquina(s)'} de _maquinas_por_paso().
     Marca completado cada paso con Paso_Realizado propio; el primer paso pendiente
     queda en_curso. No avanza si el paso fue rechazado ('nocom'): se queda visible
     como completado igual (el registro ya existe), consistente con el criterio
     que ya usa el endpoint de la app móvil.
     """
+    maquinas_por_paso = maquinas_por_paso or {}
     etapas = []
     for p in pasos_de_proceso:
         codigo = str(p.get('paso', ''))
@@ -445,9 +579,11 @@ def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea)
         etapas.append({
             'codigo':              codigo,
             'nombre':              cat.get('nombre', codigo),
+            'descripcion':         cat.get('descripcion', ''),
             'estado':              estado,
             'meta':                realizado.get('observaciones') if realizado else None,
-            'detalle':             None,
+            'scrap':               int(realizado.get('scrap', 0) or 0) if realizado else None,
+            'maquina_nombre':      maquinas_por_paso.get(codigo) or None,
             'tiempo_estimado_seg': cat.get('tiempoEstimado', 0),
             'hora_inicio_iso':     str(realizado.get('hora', '') or '') if realizado else '',
         })
@@ -461,14 +597,17 @@ def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea)
     return etapas
 
 
-def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales):
-    """Dies activos = dies iniciales - scrap acumulado de cada etapa completada de este lote."""
+def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales, dies_activos_actual):
+    """dies_iniciales = Tipo_Oblea.cantidadDies (fijo, no cambia con el tiempo).
+    dies_activos_actual = oblea.diesGenerados: el trigger t_actualizar_dies_por_paso
+    ya le resta el scrap de cada paso registrado directo en la BD, así que aquí
+    no se le vuelve a restar nada (restarlo otra vez lo contaba dos veces)."""
     scrap_total = sum(
         int(pr.get('scrap', 0) or 0)
         for pr in pasos_realizados_bd
         if str(pr.get('oblea', '')) == str(oblea_num)
     )
-    dies_activos = max(0, dies_iniciales - 0)
+    dies_activos = max(0, dies_activos_actual)
     yield_pct = round(dies_activos / dies_iniciales * 100, 1) if dies_iniciales > 0 else 0
     return dies_activos, scrap_total, yield_pct
 
@@ -478,9 +617,11 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     Determina el estado visual de una orden y cuántos de sus lotes ya quedaron
     resueltos (terminados o rechazados). Único punto de esta lógica — admin y
     supervisor la comparten para no divergir entre sí.
-    Catálogo real: Estado_Orden abier/proce/cerra. Una orden 'cerra' se muestra
-    como 'rechazado' solo si TODOS sus lotes terminaron rechazados; si al menos
-    uno se completó, se considera 'aprobado'.
+    Catálogo real: Estado_Orden abier/proce/cerra/enhol. 'enhol' lo pone
+    automáticamente el trigger t_scrap_excedente_del_permitido cuando el yield
+    global de algún lote de la orden cae por debajo del 95%. Una orden 'cerra'
+    se muestra como 'rechazado' solo si TODOS sus lotes terminaron rechazados;
+    si al menos uno se completó, se considera 'aprobado'.
     """
     total      = len(lotes_de_orden)
     rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
@@ -488,7 +629,9 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     pct        = round(resueltos / total * 100) if total > 0 else 0
 
     edo = str(edo_orden or '').lower()
-    if edo == 'cerra':
+    if edo == 'enhol':
+        edo_str = 'hold'
+    elif edo == 'cerra':
         edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'aprobado'
     elif edo == 'proce':
         edo_str = 'en_proceso'
@@ -502,7 +645,7 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
 
 def _build_ordenes_lotes():
     (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
-     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd) = _get_many(
+     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd, linea_proceso_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -512,9 +655,13 @@ def _build_ordenes_lotes():
         '/v1/list/pasos/',
         '/v1/list/PasoRealizado/',
         '/v1/list/alertas/',
+        '/v1/list/LineaProceso/',
     )
     catalogo_map = {str(p.get('codigo', '')): p for p in pasos_catalogo}
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
+    # Linea.proceso (campo directo del modelo) no se usa realmente — la
+    # relación línea↔proceso real vive en la tabla puente LineaProceso.
+    proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
     lineas_map   = {str(l.get('codigo', '')): l for l in lineas_bd}
     tipos_map    = {str(t.get('codigo', '')): t for t in tipos_oblea_bd}
 
@@ -549,6 +696,8 @@ def _build_ordenes_lotes():
             'tiene_hold': any(str(ob.get('estado', '')).lower() == 'enhol' for ob in obs),
         })
 
+    maquinas_por_paso = _maquinas_por_paso()
+
     lotes = []
     for ob in obleas_bd:
         num       = ob.get('numero')
@@ -568,11 +717,14 @@ def _build_ordenes_lotes():
             for pr in pasos_realizados_bd
             if str(pr.get('oblea', '')) == str(num)
         }
-        etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea)
+        etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea, maquinas_por_paso)
         pasos_completados = sum(1 for e in etapas if e['estado'] in ('aprobado', 'rechazado'))
 
-        dies_iniciales = ob.get('diesGenerados', 0)
-        dies_activos, scrap_total, yield_pct = _calcular_yield(num, pasos_realizados_bd, dies_iniciales)
+        tipo_pk_lote  = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
+        dies_iniciales = tipos_map.get(tipo_pk_lote, {}).get('cantidadDies') or ob.get('diesGenerados', 0)
+        dies_activos, scrap_total, yield_pct = _calcular_yield(
+            num, pasos_realizados_bd, dies_iniciales, ob.get('diesGenerados', 0)
+        )
 
         lotes.append({
             'pk': num,
@@ -584,6 +736,7 @@ def _build_ordenes_lotes():
             'total_pasos': len(etapas),
             'pasos_completados': pasos_completados,
             'estado': edo_str,
+            'orden_en_hold': str(orden_data.get('estado', '')).lower() == 'enhol',
             'dies_iniciales': dies_iniciales,
             'dies_activos': dies_activos,
             'scrap': scrap_total,
@@ -596,10 +749,11 @@ def _build_ordenes_lotes():
         for p in procesos_bd
     ]
     lineas_activas = [
-        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''), 'proceso_pk': l.get('proceso'),
-        'proceso_nombre': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre', '')}
+        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''),
+        'proceso_pk': proceso_por_linea.get(str(l.get('codigo', ''))),
+        'proceso_nombre': procesos_map.get(proceso_por_linea.get(str(l.get('codigo', '')), ''), {}).get('nombre', '')}
         for l in lineas_bd
-        if l.get('proceso')
+        if proceso_por_linea.get(str(l.get('codigo', '')))
     ]
     tipos_oblea_activos = [
         {'pk': t.get('codigo'), 'nombre': t.get('descripcion', '')}
@@ -652,6 +806,7 @@ def admin_produccion(request):
         'maquinas_disponibles': [],
         'empleados':            [],
         'backend_url':          BACKEND_URL,
+        'stock_insuficiente':   request.session.pop('stock_insuficiente', None),
         'breadcrumbs': [
             {'label': 'Dashboard',  'url': '/admin-dash/'},
             {'label': 'Producción', 'url': '/admin/produccion/'},
@@ -709,6 +864,25 @@ def admin_lote_liberar(request, pk):
     return _admin_produccion_redirect(orden_pk=orden_pk, lote_pk=pk)
 
 
+def admin_orden_liberar(request, pk):
+    if request.method == 'POST':
+        _orden_liberar(request, pk)
+    return _admin_produccion_redirect(orden_pk=pk)
+
+
+def admin_orden_generar_reporte(request, pk):
+    if request.method == 'POST':
+        _generar_reporte_manual(request, pk, reportes_url_name='admin_reportes')
+    return _admin_produccion_redirect(orden_pk=pk)
+
+
+def admin_lote_generar_reporte(request, pk):
+    orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
+    if request.method == 'POST':
+        _generar_reporte_manual(request, orden_pk, oblea_num=pk, reportes_url_name='admin_reportes')
+    return _admin_produccion_redirect(orden_pk=orden_pk, lote_pk=pk)
+
+
 def admin_etapa_completar(request, pk):
     orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
     if request.method == 'POST':
@@ -722,7 +896,7 @@ def admin_etapa_completar(request, pk):
 
 def admin_organizacion(request):
     (procesos_bd, tipos_oblea, lineas_bd, alertas_bd,
-     pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd) = _get_many(
+     pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd, linea_proceso_bd) = _get_many(
         '/v1/list/Proceso/',
         '/v1/list/TipoOblea/',
         '/v1/list/Linea/',
@@ -731,7 +905,9 @@ def admin_organizacion(request):
         '/v1/list/PasoProceso/',
         '/v1/list/ProcesoPieza/',
         '/v1/list/piezas/',
+        '/v1/list/LineaProceso/',
     )
+    proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
         'user_role': 'Administrador',
@@ -797,8 +973,8 @@ def admin_organizacion(request):
         {
             'pk':               l.get('codigo'),
             'nombre':           l.get('nombre', ''),
-            'proceso_pk':       l.get('proceso'),
-            'proceso_asignado': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre') if l.get('proceso') else None,
+            'proceso_pk':       proceso_por_linea.get(str(l.get('codigo', ''))),
+            'proceso_asignado': procesos_map.get(proceso_por_linea.get(str(l.get('codigo', '')), ''), {}).get('nombre'),
         }
         for l in lineas_bd
     ]
@@ -1389,14 +1565,16 @@ def admin_organizacion_paso_editar(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_ordenes(request):
-    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, alertas_bd = _get_many(
+    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, alertas_bd, linea_proceso_bd = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
         '/v1/list/Linea/',
         '/v1/list/TipoOblea/',
         '/v1/list/alertas/',
+        '/v1/list/LineaProceso/',
     )
+    proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
         'user_role': 'Supervisor',
@@ -1456,10 +1634,11 @@ def supervisor_ordenes(request):
         })
 
     lineas_activas = [
-        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''), 'proceso_pk': l.get('proceso'),
-         'proceso_nombre': procesos_map.get(str(l.get('proceso', '')), {}).get('nombre', '')}
+        {'pk': l.get('codigo'), 'nombre': l.get('nombre', ''),
+         'proceso_pk': proceso_por_linea.get(str(l.get('codigo', ''))),
+         'proceso_nombre': procesos_map.get(proceso_por_linea.get(str(l.get('codigo', '')), ''), {}).get('nombre', '')}
         for l in lineas_bd
-        if l.get('proceso')
+        if proceso_por_linea.get(str(l.get('codigo', '')))
     ]
     tipos_oblea_activos = [
         {'pk': t.get('codigo'), 'nombre': t.get('descripcion', '')}
@@ -1485,6 +1664,7 @@ def supervisor_ordenes(request):
         'ordenes_json_data': ordenes_json_data,
         'lineas':            lineas_activas,
         'tipos_oblea':       tipos_oblea_activos,
+        'stock_insuficiente': request.session.pop('stock_insuficiente', None),
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Órdenes',   'url': '/supervisor/ordenes/'},
@@ -1527,6 +1707,25 @@ def supervisor_lote_hold(request, pk):
 def supervisor_lote_liberar(request, pk):
     if request.method == 'POST':
         _lote_liberar(request, pk)
+    return redirect('supervisor_lote_detalle', pk=pk)
+
+
+def supervisor_orden_liberar(request, pk):
+    if request.method == 'POST':
+        _orden_liberar(request, pk)
+    return redirect('supervisor_orden_detalle', pk=pk)
+
+
+def supervisor_orden_generar_reporte(request, pk):
+    if request.method == 'POST':
+        _generar_reporte_manual(request, pk, reportes_url_name='supervisor_reportes')
+    return redirect('supervisor_orden_detalle', pk=pk)
+
+
+def supervisor_lote_generar_reporte(request, pk):
+    orden_pk = request.POST.get('orden_id', '') if request.method == 'POST' else None
+    if request.method == 'POST':
+        _generar_reporte_manual(request, orden_pk, oblea_num=pk, reportes_url_name='supervisor_reportes')
     return redirect('supervisor_lote_detalle', pk=pk)
 
 
@@ -1620,8 +1819,10 @@ def supervisor_orden_detalle(request, pk):
         etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea)
         etapa_en_curso = next((e for e in etapas if e['estado'] == 'en_curso'), None)
         etapa_nombre = etapa_en_curso['nombre'] if etapa_en_curso else ('Completado' if etapas else '—')
-        dies_iniciales = ob.get('diesGenerados', 0)
-        dies_activos, scrap_total, yield_pct = _calcular_yield(ob_num, pasos_realizados_bd, dies_iniciales)
+        dies_iniciales = tipo_data.get('cantidadDies') or ob.get('diesGenerados', 0)
+        dies_activos, scrap_total, yield_pct = _calcular_yield(
+            ob_num, pasos_realizados_bd, dies_iniciales, ob.get('diesGenerados', 0)
+        )
         lotes.append({
             'pk':            ob_num,
             'folio':         f'LOT-{ob_num:04d}' if isinstance(ob_num, int) else str(ob_num),
@@ -1648,7 +1849,7 @@ def supervisor_orden_detalle(request, pk):
 
 def supervisor_lote_detalle(request, pk):
     (obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados,
-     defectos_bd, paso_defecto_bd, alertas_bd) = _get_many(
+     defectos_bd, paso_defecto_bd, alertas_bd, tipos_oblea_bd) = _get_many(
         '/v1/list/Oblea/',
         '/v1/list/Orden/',
         '/v1/list/PasoProceso/',
@@ -1657,6 +1858,7 @@ def supervisor_lote_detalle(request, pk):
         '/v1/list/Defecto/',
         '/v1/list/PasoDefecto/',
         '/v1/list/alertas/',
+        '/v1/list/TipoOblea/',
     )
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     ctx = {
@@ -1698,27 +1900,21 @@ def supervisor_lote_detalle(request, pk):
         if str(pr.get('oblea', '')) == str(num)
     }
 
-    etapas_raw = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_map)
+    etapas_raw = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_map, _maquinas_por_paso())
 
     etapas = []
     etapa_activa = None
     for e in etapas_raw:
-        catalogo = catalogo_map.get(e['codigo'], {})
         etapa = _FakeObj(
             codigo=e['codigo'],
             nombre=e['nombre'],
-            descripcion=catalogo.get('descripcion', ''),
+            descripcion=e['descripcion'],
             completado=e['estado'] in ('aprobado', 'rechazado'),
             rechazado=e['estado'] == 'rechazado',
             activo=e['estado'] == 'en_curso',
-            operador_nombre='—',
-            maquina='—',
-            iniciado_en=None,
-            completado_en=None,
-            scrap=int((realizados_map.get(e['codigo'], {}) or {}).get('scrap', 0) or 0),
-            yield_pct=0,
+            maquina=e['maquina_nombre'] or 'Sin máquina asignada',
+            scrap=e['scrap'],
             notas=e['meta'] or '',
-            tipo_maquina='—',
             tiempo_estimado_seg=e['tiempo_estimado_seg'],
             hora_inicio_iso=e['hora_inicio_iso'],
         )
@@ -1729,8 +1925,12 @@ def supervisor_lote_detalle(request, pk):
     edo    = str(ob.get('estado', '')).lower()
     edo_str = ESTADOS_OBLEA_LABEL.get(edo, edo.capitalize())
 
-    dies_iniciales = ob.get('diesGenerados', 0)
-    dies_activos, scrap_total, yield_pct = _calcular_yield(num, pasos_realizados, dies_iniciales)
+    tipo_pk   = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
+    tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == tipo_pk), {})
+    dies_iniciales = tipo_data.get('cantidadDies') or ob.get('diesGenerados', 0)
+    dies_activos, scrap_total, yield_pct = _calcular_yield(
+        num, pasos_realizados, dies_iniciales, ob.get('diesGenerados', 0)
+    )
 
     lote = {
         'pk':             num,
@@ -1740,6 +1940,7 @@ def supervisor_lote_detalle(request, pk):
                               numero=f'ORD-{orden_num:04d}' if isinstance(orden_num, int) else str(orden_num)
                           ) if orden_data else None,
         'estado':         _FakeObj(nombre=edo_str),
+        'orden_en_hold':  str(orden_data.get('estado', '')).lower() == 'enhol',
         'dies_iniciales': dies_iniciales,
         'dies_activos':   dies_activos,
         'scrap_total':    scrap_total,

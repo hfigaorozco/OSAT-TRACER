@@ -553,6 +553,23 @@ select.form-control {
 .notif-item.unread { background: #F0FBF6; }
 .notif-item.unread .notif-title { font-weight: 600; color: #1A202C; }
 
+/* ── Notificación flotante de reporte generado (misma familia visual que .notif-item) ── */
+.report-notif-stack {
+  position: fixed; top: 76px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 10px; width: 340px;
+}
+.report-notif {
+  background: #FFFFFF; border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg, 10px); box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start;
+  animation: reportNotifIn .2s ease-out;
+}
+@keyframes reportNotifIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.report-notif-ver {
+  display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600;
+  color: #fff; background: #16A85E; padding: 5px 14px; border-radius: 6px; text-decoration: none;
+}
+
 /* ══════════════════════════════════════
    SECTION BLOCKS — sobre fondo oscuro
 ══════════════════════════════════════ */
