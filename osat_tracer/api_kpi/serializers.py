@@ -119,6 +119,7 @@ class ListAlertaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Alerta
         fields = [
+            'numero',
             'descripcion',
             'estadoAlerta'
         ]
@@ -160,6 +161,7 @@ class ListRegistroKpiSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Registro_Kpi
         fields = [
+            'numero',
             'fecha',
             'hora',
             'valor',

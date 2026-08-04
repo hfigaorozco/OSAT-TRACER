@@ -2,49 +2,154 @@ import re
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils.dateparse import parse_datetime
+from django.urls import reverse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
 
+# ── Catálogo de colores/íconos por tipo de alerta ─────────────────────────────
 
-def _build_alertas(historiales):
-    _color_map = {
-        'activo':   {'bg': '#FFF8E1', 'borde': '#F5A623', 'icon': '#F5A623',
-                     'badge': 'Activa',   'badge_color': '#856404'},
-        'resuelto': {'bg': '#E8F5EE', 'borde': '#16A85E', 'icon': '#16A85E',
-                     'badge': 'Resuelta', 'badge_color': '#155724'},
-    }
+_COLOR_MAP = {
+    'stock': {
+        'bg': '#FFF8E1', 'borde': '#F5A623', 'icon': '#F5A623',
+    },
+    'produccion': {
+        'bg': '#FFEBEE', 'borde': '#EF5350', 'icon': '#EF5350',
+    },
+    'kpi': {
+        'bg': '#F3E8FD', 'borde': '#8E44AD', 'icon': '#8E44AD',
+    },
+}
+
+_KEYWORDS_STOCK = ('stock', 'insuficiente', 'pieza', 'inventario', 'reabastec')
+
+_ACCION_LABEL = {
+    'stock':      'Ver inventario',
+    'produccion': 'Ver producción',
+    'kpi':        'Ver reporte',
+}
+
+
+# ── Helpers de clasificación y estado ─────────────────────────────────────────
+
+def _clasificar_tipo(descripcion, es_kpi):
+    """Deriva el tipo de alerta sin necesidad de un campo 'tipo' en el modelo."""
+    if es_kpi:
+        return 'kpi'
+    desc = str(descripcion or '').lower()
+    if any(k in desc for k in _KEYWORDS_STOCK):
+        return 'stock'
+    return 'produccion'
+
+
+def _estados_alerta_info():
+    """
+    Regresa:
+      - estados_map:      {codigo: descripcion} de todo el catálogo Estado_Alerta
+      - codigo_resuelto:   el primer codigo cuya descripcion NO contenga "activ"
+                            (se usa para marcar una alerta como leída/resuelta)
+    Si tu catálogo Estado_Alerta todavía no tiene una fila tipo
+    ('resue', 'Resuelta'), codigo_resuelto viene en None y no se podrá
+    marcar nada como leído hasta que la agregues (es dato, no modelo).
+    """
+    estados_bd = _get('/v1/list/estados_alerta/', [])
+    estados_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_bd}
+    codigo_resuelto = None
+    for e in estados_bd:
+        if 'activ' not in str(e.get('descripcion', '')).lower():
+            codigo_resuelto = e.get('codigo')
+            break
+    return estados_map, codigo_resuelto
+
+
+def _accion_url(role, tipo):
+    if role == 'Administrador':
+        mapa = {'stock': 'admin_inventario', 'produccion': 'admin_produccion', 'kpi': 'admin_reportes'}
+    else:
+        mapa = {'stock': 'supervisor_inventario', 'produccion': 'supervisor_ordenes', 'kpi': 'supervisor_reportes'}
+    try:
+        return reverse(mapa.get(tipo, mapa['produccion']))
+    except Exception:
+        return '#'
+
+
+def _marcar_leida_url(role, pk):
+    nombre = 'admin_alerta_marcar_leida' if role == 'Administrador' else 'supervisor_alerta_marcar_leida'
+    try:
+        return reverse(nombre, args=[pk])
+    except Exception:
+        return '#'
+
+
+# ── Construcción de la lista de alertas (usada por admin y supervisor) ───────
+
+def _build_alertas(role):
+    alertas_bd, historiales_bd, registros_kpi_bd, kpis_bd = _get_many(
+        '/v1/list/alertas/',
+        '/v1/list/historiales_alertas/',
+        '/v1/list/registros_kpi/',
+        '/v1/list/kpis/',
+    )
+    estados_map, _codigo_resuelto = _estados_alerta_info()
+    kpis_map = {str(k.get('clave')): k for k in kpis_bd}
+    registros_map = {str(r.get('numero')): r for r in registros_kpi_bd}
+
+    historial_por_alerta = {}
+    for h in historiales_bd:
+        historial_por_alerta.setdefault(str(h.get('alerta')), []).append(h)
+
     alertas = []
-    for i, h in enumerate(historiales, 1):
-        alerta = h.get('alerta', {})
-        if isinstance(alerta, dict):
-            desc = alerta.get('descripcion', '')
-            num  = alerta.get('numero', '—')
-        else:
-            desc = str(alerta)
-            num  = str(alerta)
+    for a in alertas_bd:
+        num = a.get('numero')
+        historiales_de_esta = historial_por_alerta.get(str(num), [])
+        es_kpi = len(historiales_de_esta) > 0
+        tipo = _clasificar_tipo(a.get('descripcion', ''), es_kpi)
 
-        edo_raw = str(h.get('estadoAlerta', 'activo')).lower()
-        edo_key = 'activo' if 'activ' in edo_raw else 'resuelto'
-        c       = _color_map[edo_key]
+        edo_codigo = str(a.get('estadoAlerta', ''))
+        edo_desc = estados_map.get(edo_codigo, edo_codigo)
+        leida = 'act' not in edo_desc.lower()
 
+        tiempo = ''
+        ref_label = 'Alerta'
+        ref_valor = str(num)
+        cuerpo = a.get('descripcion', '')
+
+        if es_kpi:
+            # Nos quedamos con el historial más reciente si hay varios
+            h = sorted(
+                historiales_de_esta,
+                key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))
+            )[-1]
+            tiempo = f"{h.get('fecha', '—')} {str(h.get('hora', ''))[:5]}"
+            reg = registros_map.get(str(h.get('registroKPI')), {})
+            kpi_data = kpis_map.get(str(reg.get('kpi')), {})
+            ref_label = 'Oblea'
+            ref_valor = str(reg.get('oblea', '—'))
+            if kpi_data:
+                cuerpo = f"{cuerpo} (KPI: {kpi_data.get('nombre', '—')}, valor registrado: {reg.get('valor', '—')})"
+
+        colores = _COLOR_MAP.get(tipo, _COLOR_MAP['produccion'])
         alertas.append({
-            'pk':           i,
-            'tipo':         'hold' if edo_key == 'activo' else 'liberado',
-            'leida':        edo_key != 'activo',
-            'titulo':       desc,
-            'cuerpo':       desc,
-            'tiempo':       f"{h.get('fecha', '—')} {str(h.get('hora', ''))[:5]}",
-            'color_bg':     c['bg'],
-            'color_borde':  c['borde'],
-            'color_icon':   c['icon'],
-            'badge_label':  c['badge'],
-            'badge_color':  c['badge_color'],
-            'ref_label':    'Alerta',
-            'ref_valor':    str(num),
-            'accion_label': 'Ver detalle',
-            'accion_url':   '/admin/reportes/',
+            'pk': num,
+            'tipo': tipo,
+            'leida': leida,
+            'titulo': a.get('descripcion', ''),
+            'cuerpo': cuerpo,
+            'tiempo': tiempo,
+            'color_bg': colores['bg'],
+            'color_borde': colores['borde'],
+            'color_icon': colores['icon'],
+            'badge_label': 'Resuelta' if leida else 'No leída',
+            'badge_color': '#155724' if leida else '#B71C1C',
+            'ref_label': ref_label,
+            'ref_valor': ref_valor,
+            'accion_label': _ACCION_LABEL.get(tipo, 'Ver detalle'),
+            'accion_url': _accion_url(role, tipo),
+            'marcar_url': _marcar_leida_url(role, num),
         })
+
+    # No leídas primero
+    alertas.sort(key=lambda x: x['leida'])
     return alertas
 
 
@@ -53,28 +158,11 @@ def _build_alertas(historiales):
 # ════════════════════════════════════════════════════════════════
 
 def admin_notificaciones(request):
-    historiales, alertas_bd = _get_many(
-        '/v1/list/historiales_alertas/',
-        '/v1/list/alertas/',
-    )
-    unread_bd = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {
-        'user_role': 'Administrador',
-        'unread_count': unread_bd,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
-        'breadcrumbs': [],
-    }
-    alertas = _build_alertas(historiales)
+    ctx = _base_ctx('Administrador')
+    alertas = _build_alertas('Administrador')
     unread  = sum(1 for a in alertas if not a['leida'])
     ctx.update({
-        'alertas':      alertas,
+        'alertas': alertas,
         'total_count':  len(alertas),
         'unread_count': unread,
         'breadcrumbs': [
@@ -85,41 +173,98 @@ def admin_notificaciones(request):
     return render(request, 'admin/alertas.html', ctx)
 
 
+def admin_alerta_marcar_leida(request, pk):
+    if request.method == 'POST':
+        _estados_map, codigo_resuelto = _estados_alerta_info()
+        if not codigo_resuelto:
+            messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
+        else:
+            ok, resp = _patch(f'/v1/update/alerta/{pk}/', {'estadoAlerta': codigo_resuelto})
+            if ok:
+                messages.success(request, 'Alerta marcada como resuelta.')
+            else:
+                messages.error(request, f'Error: {resp}')
+    return redirect('admin_notificaciones')
+
+
+def admin_alertas_marcar_todas_leidas(request):
+    if request.method == 'POST':
+        estados_map, codigo_resuelto = _estados_alerta_info()
+        if not codigo_resuelto:
+            messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
+        else:
+            alertas_bd = _get('/v1/list/alertas/', [])
+            marcadas, errores = 0, []
+            for a in alertas_bd:
+                edo_desc = estados_map.get(str(a.get('estadoAlerta', '')), '')
+                if 'activ' in edo_desc.lower():
+                    ok, resp = _patch(f"/v1/update/alerta/{a.get('numero')}/", {'estadoAlerta': codigo_resuelto})
+                    if ok:
+                        marcadas += 1
+                    else:
+                        errores.append(str(resp))
+            if errores:
+                messages.error(request, f'Se marcaron {marcadas}, pero hubo errores en algunas.')
+            else:
+                messages.success(request, f'{marcadas} alerta(s) marcada(s) como resueltas.')
+    return redirect('admin_notificaciones')
+
+
 # ════════════════════════════════════════════════════════════════
 # SUPERVISOR — ALERTAS
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_notificaciones(request):
-    historiales, alertas_bd = _get_many(
-        '/v1/list/historiales_alertas/',
-        '/v1/list/alertas/',
-    )
-    unread_bd = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {
-        'user_role': 'Supervisor',
-        'unread_count': unread_bd,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
-        'breadcrumbs': [],
-    }
-    alertas = _build_alertas(historiales)
-    unread  = sum(1 for a in alertas if not a['leida'])
+    ctx = _base_ctx('Supervisor')
+    alertas = _build_alertas('Supervisor')
+    unread = sum(1 for a in alertas if not a['leida'])
     ctx.update({
-        'alertas':      alertas,
-        'total_count':  len(alertas),
+        'alertas': alertas,
+        'total_count': len(alertas),
         'unread_count': unread,
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
-            {'label': 'Alertas',   'url': '/supervisor/notificaciones/'},
+            {'label': 'Alertas', 'url': '/supervisor/notificaciones/'},
         ],
     })
     return render(request, 'supervisor/alertas.html', ctx)
+
+
+def supervisor_alerta_marcar_leida(request, pk):
+    if request.method == 'POST':
+        _estados_map, codigo_resuelto = _estados_alerta_info()
+        if not codigo_resuelto:
+            messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
+        else:
+            ok, resp = _patch(f'/v1/update/alerta/{pk}/', {'estadoAlerta': codigo_resuelto})
+            if ok:
+                messages.success(request, 'Alerta marcada como resuelta.')
+            else:
+                messages.error(request, f'Error: {resp}')
+    return redirect('supervisor_notificaciones')
+
+
+def supervisor_alertas_marcar_todas_leidas(request):
+    if request.method == 'POST':
+        estados_map, codigo_resuelto = _estados_alerta_info()
+        if not codigo_resuelto:
+            messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
+        else:
+            alertas_bd = _get('/v1/list/alertas/', [])
+            marcadas, errores = 0, []
+            for a in alertas_bd:
+                edo_desc = estados_map.get(str(a.get('estadoAlerta', '')), '')
+                if 'activ' in edo_desc.lower():
+                    ok, resp = _patch(f"/v1/update/alerta/{a.get('numero')}/", {'estadoAlerta': codigo_resuelto})
+                    if ok:
+                        marcadas += 1
+                    else:
+                        errores.append(str(resp))
+            if errores:
+                messages.error(request, f'Se marcaron {marcadas}, pero hubo errores en algunas.')
+            else:
+                messages.success(request, f'{marcadas} alerta(s) marcada(s) como resueltas.')
+    return redirect('supervisor_notificaciones')
 
 
 # ════════════════════════════════════════════════════════════════
