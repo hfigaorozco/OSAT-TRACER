@@ -5,6 +5,16 @@ urlpatterns = [
     # Alertas
     path('admin/notificaciones/', views.admin_notificaciones, name='admin_notificaciones'),
     path('supervisor/notificaciones/', views.supervisor_notificaciones, name='supervisor_notificaciones'),
+    
+     # Admin Alertas
+    path('admin/notificaciones/', views.admin_notificaciones, name='admin_notificaciones'),
+    path('admin/notificaciones/<int:pk>/marcar-leida/', views.admin_alerta_marcar_leida, name='admin_alerta_marcar_leida'),
+    path('admin/notificaciones/marcar-todas-leidas/', views.admin_alertas_marcar_todas_leidas, name='admin_alertas_marcar_todas_leidas'),
+
+    # Supervisor Alertas
+    path('supervisor/notificaciones/', views.supervisor_notificaciones, name='supervisor_notificaciones'),
+    path('supervisor/notificaciones/<int:pk>/marcar-leida/', views.supervisor_alerta_marcar_leida, name='supervisor_alerta_marcar_leida'),
+    path('supervisor/notificaciones/marcar-todas-leidas/', views.supervisor_alertas_marcar_todas_leidas, name='supervisor_alertas_marcar_todas_leidas'),
 
     # Configuración KPI y catálogos
     path('admin/configuracion/', views.admin_configuracion, name='admin_configuracion'),

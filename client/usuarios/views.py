@@ -6,12 +6,42 @@ from django.contrib import messages
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError as DjangoValidationError
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
+from produccion.views import _estado_orden_display
 from django.core.paginator import Paginator
 
 PAGE_SIZE_PERSONAL = 9
 
 _RFC_RE = re.compile(r'^[A-Z0-9]{13}$')
 _USERNAME_RE = re.compile(r'^[a-z0-9._-]+$')
+
+
+def _ordenes_activas_reales(ordenes_bd, obleas_bd, procesos_map, limit=5):
+    """Órdenes activas reales para el widget de dashboard (admin y
+    supervisor comparten este criterio para no divergir de lo que se ve
+    al entrar a Producción/Órdenes). Reusa _estado_orden_display —el mismo
+    cálculo de estado/progreso que ya usa esa página— en vez de tener una
+    segunda fórmula que se pueda desalinear con el tiempo.
+    'Activa' = la orden todavía no quedó cerrada (aprobada o rechazada).
+    """
+    activas = []
+    for o in ordenes_bd:
+        num = o.get('numero')
+        obs = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
+        edo_str, comp, pct = _estado_orden_display(o.get('estado'), obs)
+        if edo_str in ('aprobado', 'rechazado'):
+            continue
+        proceso_codigo = str(o.get('proceso', ''))
+        activas.append({
+            'pk': num,
+            'numero': f'ORD-{num:04d}' if isinstance(num, int) else str(num),
+            'proceso': procesos_map.get(proceso_codigo, {}).get('nombre') or proceso_codigo or '—',
+            'completados': comp,
+            'total': len(obs),
+            'pct': pct,
+            'estado': edo_str,
+        })
+    activas.sort(key=lambda x: x['pk'] if isinstance(x['pk'], int) else 0, reverse=True)
+    return activas[:limit]
 
 
 def _kpi_produccion_reales(obleas_bd, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd):
@@ -55,14 +85,13 @@ def _kpi_produccion_reales(obleas_bd, ordenes_bd, tipos_oblea_bd, pasos_realizad
 
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
-    empleados, maquinas, obleas, ordenes_bd, alertas_bd = _get_many(
+    empleados, maquinas, obleas, ordenes_bd, alertas_bd, procesos_bd = _get_many(
         '/v1/list/empleados/', '/v1/list/maquinaria/',
-        '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/',
+        '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/', '/v1/list/Proceso/',
     )
+    procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    ordenes_activas = [{'numero': f"ORD-{o['numero']:04d}" if isinstance(o.get('numero'), int) else str(o.get('numero', '')),
-        'proceso': str(o.get('proceso', '—')), 'completados': 0, 'total': 1, 'pct': 0, 'estado': 'en_proceso'}
-        for o in ordenes_bd[:5]]
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
     alertas_activas = [{'tipo': 'advertencia', 'descripcion': a.get('descripcion', ''),
         'referencia': f"#{a.get('numero', '—')}", 'tiempo': '—'}
         for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')][:5]
@@ -369,18 +398,17 @@ def admin_cuentas_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_dashboard(request):
-    obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd, alertas_bd = _get_many(
+    obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd, alertas_bd, procesos_bd = _get_many(
         '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/TipoOblea/',
-        '/v1/list/PasoRealizado/', '/v1/list/alertas/',
+        '/v1/list/PasoRealizado/', '/v1/list/alertas/', '/v1/list/Proceso/',
     )
+    procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
     unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
     kpi_prod = _kpi_produccion_reales(obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd)
     # Mismo criterio que admin_dashboard para que ambos tengan la misma
     # función real (antes estas dos listas venían hardcodeadas vacías aquí).
-    ordenes_activas = [{'numero': f"ORD-{o['numero']:04d}" if isinstance(o.get('numero'), int) else str(o.get('numero', '')),
-        'proceso': str(o.get('proceso', '—')), 'completados': 0, 'total': 1, 'pct': 0, 'estado': 'en_proceso'}
-        for o in ordenes_bd[:5]]
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
     alertas_activas = [{'tipo': 'advertencia', 'descripcion': a.get('descripcion', ''),
         'referencia': f"#{a.get('numero', '—')}", 'tiempo': '—'}
         for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')][:5]
