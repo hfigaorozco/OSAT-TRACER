@@ -97,7 +97,7 @@
       </thead>
       <tbody>
         {% for orden in ordenes_activas %}
-        <tr style="border-bottom:1px solid #EDF2F7;">
+        <tr style="border-bottom:1px solid #EDF2F7;cursor:pointer;" onclick="location.href='{% url 'supervisor_orden_detalle' orden.pk %}'">
           <td style="padding:10px 14px;font-family:monospace;font-weight:600;color:#009EAF;font-size:13px;">{{ orden.numero }}</td>
           <td style="padding:10px 14px;color:#2D3748;">{{ orden.proceso }}</td>
           <td style="padding:10px 14px;">
@@ -109,13 +109,16 @@
             </div>
           </td>
           <td style="padding:10px 14px;">
-            {% if orden.estado == 'en_proceso' %}
-              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">En proceso</span>
-            {% else %}
-              <span style="background:#E9ECEF;color:#495057;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">Pendiente</span>
+            {% if orden.estado == 'hold' %}<span class="badge badge-hold">En Hold</span>
+            {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En proceso</span>
+            {% elif orden.estado == 'aprobado' %}<span class="badge badge-aprobado">Aprobada</span>
+            {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
+            {% else %}<span class="badge badge-pendiente">Pendiente</span>
             {% endif %}
           </td>
         </tr>
+        {% empty %}
+        <tr><td colspan="4" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay órdenes activas.</td></tr>
         {% endfor %}
       </tbody>
     </table>
