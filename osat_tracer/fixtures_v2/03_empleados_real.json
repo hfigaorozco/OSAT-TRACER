@@ -10,7 +10,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
@@ -37,7 +37,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
@@ -64,7 +64,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
@@ -72,8 +72,8 @@
     "pk": 3,
     "fields": {
       "nombre": "Arturo Javier",
-      "primerApell": "Jimenez",
-      "seguApell": "de Lara Rizo",
+      "primerApell": "Jimenez de Lara",
+      "seguApell": "Rizo",
       "rfc": "JIRA920807MT9",
       "estado": "act",
       "rol": "admin",
@@ -91,7 +91,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
@@ -118,7 +118,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
@@ -138,26 +138,26 @@
     "model": "auth.user",
     "pk": 6,
     "fields": {
-      "username": "jhdez",
-      "first_name": "Juan Manuel",
-      "last_name": "Hernandez Medina",
-      "email": "jhdezmedina@osat.mx",
-      "is_active": true,
+      "username": "asantaolaya",
+      "first_name": "Alan",
+      "last_name": "Santaolaya Gaxiola",
+      "email": "asantaolaya@osat.mx",
+      "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
     "model": "api_usuarios.empleado",
     "pk": 6,
     "fields": {
-      "nombre": "Juan Manuel",
-      "primerApell": "Hernandez",
-      "seguApell": "Medina",
-      "rfc": "HEMJ891210VC5",
-      "estado": "act",
-      "rol": "opera",
+      "nombre": "Alan",
+      "primerApell": "Santaolaya",
+      "seguApell": "Gaxiola",
+      "rfc": "SGAF180418HJ3",
+      "estado": "ina",
+      "rol": "super",
       "usuario": 6
     }
   },
@@ -165,26 +165,26 @@
     "model": "auth.user",
     "pk": 7,
     "fields": {
-      "username": "bmaryn",
-      "first_name": "Brayan Jaciel",
-      "last_name": "Marin Loyo",
-      "email": "bmaryn@osat.mx",
+      "username": "zmedina",
+      "first_name": "Zury Andrea",
+      "last_name": "Medina Serrano",
+      "email": "zmedina@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
     "model": "api_usuarios.empleado",
     "pk": 7,
     "fields": {
-      "nombre": "Brayan Jaciel",
-      "primerApell": "Marin",
-      "seguApell": "Loyo",
-      "rfc": "MALB970731RW1",
+      "nombre": "Zury Andrea",
+      "primerApell": "Medina",
+      "seguApell": "Serrano",
+      "rfc": "MSZA210426UJ7",
       "estado": "act",
-      "rol": "opera",
+      "rol": "super",
       "usuario": 7
     }
   },
@@ -192,24 +192,24 @@
     "model": "auth.user",
     "pk": 8,
     "fields": {
-      "username": "kcoriap",
-      "first_name": "Karen Sherlyn",
-      "last_name": "Coria Peña",
-      "email": "karencoriap@osat.mx",
+      "username": "jhdez",
+      "first_name": "Juan Manuel",
+      "last_name": "Hernandez Medina",
+      "email": "jhdezmedina@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
     "model": "api_usuarios.empleado",
     "pk": 8,
     "fields": {
-      "nombre": "Karen Sherlyn",
-      "primerApell": "Coria",
-      "seguApell": "Peña",
-      "rfc": "COPK940214HF6",
+      "nombre": "Juan Manuel",
+      "primerApell": "Hernandez",
+      "seguApell": "Medina",
+      "rfc": "HEMJ891210VC5",
       "estado": "act",
       "rol": "opera",
       "usuario": 8
@@ -219,24 +219,24 @@
     "model": "auth.user",
     "pk": 9,
     "fields": {
-      "username": "lgallardo",
-      "first_name": "Luis David",
-      "last_name": "Gallardo Ramirez",
-      "email": "luisdgallardo@osat.mx",
+      "username": "bmaryn",
+      "first_name": "Brayan Jaciel",
+      "last_name": "Marin Loyo",
+      "email": "bmaryn@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
     "model": "api_usuarios.empleado",
     "pk": 9,
     "fields": {
-      "nombre": "Luis David",
-      "primerApell": "Gallardo",
-      "seguApell": "Ramirez",
-      "rfc": "GARL910603ZT3",
+      "nombre": "Brayan Jaciel",
+      "primerApell": "Marin",
+      "seguApell": "Loyo",
+      "rfc": "MALB970731RW1",
       "estado": "act",
       "rol": "opera",
       "usuario": 9
@@ -246,6 +246,60 @@
     "model": "auth.user",
     "pk": 10,
     "fields": {
+      "username": "kcoriap",
+      "first_name": "Karen Sherlyn",
+      "last_name": "Coria PeÃ±a",
+      "email": "karencoriap@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 10,
+    "fields": {
+      "nombre": "Karen Sherlyn",
+      "primerApell": "Coria",
+      "seguApell": "PeÃ±a",
+      "rfc": "COPK940214HF6",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 10
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 11,
+    "fields": {
+      "username": "lgallardo",
+      "first_name": "Luis David",
+      "last_name": "Gallardo Ramirez",
+      "email": "luisdgallardo@osat.mx",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
+    }
+  },
+  {
+    "model": "api_usuarios.empleado",
+    "pk": 11,
+    "fields": {
+      "nombre": "Luis David",
+      "primerApell": "Gallardo",
+      "seguApell": "Ramirez",
+      "rfc": "GARL910603ZT3",
+      "estado": "act",
+      "rol": "opera",
+      "usuario": 11
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 12,
+    "fields": {
       "username": "rmendivil",
       "first_name": "Jesus Rafael",
       "last_name": "Mendivil Perez",
@@ -253,12 +307,12 @@
       "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$7Vmw0DWjWVvZKVfu4DvfCu$XtOt8heCzZPT1OxMGQ8JK8Np+Km8k/2+6GZfY1YTyTI="
+      "password": "pbkdf2_sha256$1200000$iC3sHZZajmkAfOyd8m9cSD$j/YtaDyXOM/IlBzJzI6eDPBtKWk+pusG21rTL/4O/1I="
     }
   },
   {
     "model": "api_usuarios.empleado",
-    "pk": 10,
+    "pk": 12,
     "fields": {
       "nombre": "Jesus Rafael",
       "primerApell": "Mendivil",
@@ -266,7 +320,7 @@
       "rfc": "MEPJ880925BX0",
       "estado": "ina",
       "rol": "opera",
-      "usuario": 10
+      "usuario": 12
     }
   }
 ]

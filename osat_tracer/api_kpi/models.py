@@ -43,6 +43,8 @@ class Kpi(models.Model):
 class Alerta(models.Model):
     numero = models.AutoField(primary_key=True)
     descripcion = models.CharField(unique=False, max_length=255)
+    fecha = models.DateField(auto_now=False, auto_now_add=True)
+    hora = models.TimeField(auto_now=False, auto_now_add=True)
     estadoAlerta = models.ForeignKey(EstadoAlerta, on_delete=models.RESTRICT, related_name='alerta')
     
     class Meta:
@@ -60,28 +62,10 @@ class Registro_Kpi(models.Model):
     oblea = models.ForeignKey("api_produccion.Oblea", on_delete=models.RESTRICT, related_name='registro_kpi')
     kpi = models.ForeignKey(Kpi, on_delete=models.RESTRICT, related_name='registro_kpi')
     semaforo = models.ForeignKey(Semaforo, on_delete=models.RESTRICT, related_name='registro_kpi')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='registro_kpi')
     
     class Meta:
         db_table = 'registro_kpi'
         
     def __str__(self):
         return str(self.numero)
-
-
-class Historial_Alertas(models.Model):
-    registroKPI = models.ForeignKey(Registro_Kpi, on_delete=models.RESTRICT, related_name='historial_alertas')
-    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='historial_alertas')
-    fecha = models.DateField(auto_now=True, auto_now_add=False)
-    hora = models.TimeField(auto_now=True, auto_now_add=False)
-    
-    class Meta:
-        db_table = 'historial_alertas'
-        constraints = [
-            models.UniqueConstraint(
-                fields = ['registroKPI', 'alerta'],
-                name='uk_historial_alertas'
-            )
-        ]
-        
-    def __str__(self):
-        return f"{str(self.registroKPI)} - {str(self.alerta)}"
