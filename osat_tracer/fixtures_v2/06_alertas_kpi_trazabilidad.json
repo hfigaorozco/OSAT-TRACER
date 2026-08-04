@@ -1,14 +1,32 @@
 [
   {"model": "api_kpi.alerta", "pk": 1, "fields": {
-  "descripcion": "Scrap alto en wire bonding",
-  "estadoAlerta": "sinre"
+    "descripcion": "Scrap por encima del umbral en wire bonding",
+    "fecha": "2026-08-03",
+    "hora": "08:30:00",
+    "estadoAlerta": "sinre"
   }},
   {"model": "api_kpi.alerta", "pk": 2, "fields": {
-    "descripcion": "Defectos superan limite",
+    "descripcion": "Defectos acumulados superan el límite del lote",
+    "fecha": "2026-08-03",
+    "hora": "17:30:00",
     "estadoAlerta": "resue"
   }},
   {"model": "api_kpi.alerta", "pk": 3, "fields": {
-    "descripcion": "Tiempo excedido en encapsulado",
+    "descripcion": "Tiempo de proceso excede el estimado en encapsulado",
+    "fecha": "2026-08-03",
+    "hora": "08:42:00",
+    "estadoAlerta": "sinre"
+  }},
+  {"model": "api_kpi.alerta", "pk": 4, "fields": {
+    "descripcion": "Verificación de Yield satisfactoria en oblea 1",
+    "fecha": "2026-08-03",
+    "hora": "16:00:00",
+    "estadoAlerta": "resue"
+  }},
+  {"model": "api_kpi.alerta", "pk": 5, "fields": {
+    "descripcion": "OEE en advertencia en línea 2 (BGA)",
+    "fecha": "2026-08-03",
+    "hora": "17:00:00",
     "estadoAlerta": "sinre"
   }},
   {"model": "api_produccion.paso_realizado", "pk": 1, "fields": {"paso": "bgr", "estado": "compl", "oblea": 1, "alerta": 2, "hora": "08:00:00", "fecha": "2026-08-03", "observaciones": ""}},
@@ -54,7 +72,8 @@
       "valor": 96,
       "oblea": 1,
       "kpi": "yie",
-      "semaforo": "ver"
+      "semaforo": "ver",
+      "alerta": 4
     }
   },
   {
@@ -66,7 +85,8 @@
       "valor": 65,
       "oblea": 1,
       "kpi": "thr",
-      "semaforo": "roj"
+      "semaforo": "roj",
+      "alerta": 1
     }
   },
   {
@@ -78,7 +98,8 @@
       "valor": 72,
       "oblea": 2,
       "kpi": "yie",
-      "semaforo": "roj"
+      "semaforo": "roj",
+      "alerta": 3
     }
   },
   {
@@ -90,27 +111,8 @@
       "valor": 88,
       "oblea": 3,
       "kpi": "oee",
-      "semaforo": "ama"
-    }
-  },
-  {
-    "model": "api_kpi.historial_alertas",
-    "pk": 1,
-    "fields": {
-      "registroKPI": 2,
-      "alerta": 1,
-      "fecha": "2026-08-03",
-      "hora": "08:00:00"
-    }
-  },
-  {
-    "model": "api_kpi.historial_alertas",
-    "pk": 2,
-    "fields": {
-      "registroKPI": 3,
-      "alerta": 3,
-      "fecha": "2026-08-03",
-      "hora": "08:00:00"
+      "semaforo": "ama",
+      "alerta": 5
     }
   },
   {

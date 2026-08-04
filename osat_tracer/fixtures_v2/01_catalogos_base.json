@@ -1,6 +1,6 @@
 [
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "Activo"}},
-  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "Inactivo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "act", "descripcion": "activo"}},
+  {"model": "api_usuarios.estado_empleado", "fields": {"codigo": "ina", "descripcion": "inactivo"}},
 
   {"model": "api_usuarios.rol", "fields": {"codigo": "admin", "descripcion": "Administrador"}},
   {"model": "api_usuarios.rol", "fields": {"codigo": "super", "descripcion": "Supervisor"}},
@@ -25,7 +25,7 @@
 
   {"model": "api_kpi.kpi", "fields": {
     "clave": "yie", "nombre": "Yield",
-    "descripcion": "Dies buenos sobre dies generados",
+    "descripcion": "Dies buenos sobre el total de dies generados",
     "unidad": "%",
     "umbralVerde": 90, "umbralAmarillo": 80, "umbralRojo": 70
   }},
@@ -36,20 +36,19 @@
     "umbralVerde": 500, "umbralAmarillo": 300, "umbralRojo": 150
   }},
   {"model": "api_kpi.kpi", "fields": {
-    "clave": "oee", "nombre": "OEE",
-    "descripcion": "Eficiencia global",
+    "clave": "oee", "nombre": "Overall Equipment Effectiveness",
+    "descripcion": "Eficiencia global (disponibilidad x rendimiento x calidad)*100",
     "unidad": "%",
     "umbralVerde": 85, "umbralAmarillo": 70, "umbralRojo": 55
   }},
 
   {"model": "api_produccion.estado_paso", "fields": {"codigo": "compl", "descripcion": "Completado"}},
-  {"model": "api_produccion.estado_paso", "fields": {"codigo": "pendi", "descripcion": "Pendiente"}},
+  {"model": "api_produccion.estado_paso", "fields": {"codigo": "encur", "descripcion": "En Curso"}},
   {"model": "api_produccion.estado_paso", "fields": {"codigo": "nocom", "descripcion": "No Completado"}},
 
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "abier", "descripcion": "Abierta"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "proce", "descripcion": "En proceso"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "cerra", "descripcion": "Cerrada"}},
-  {"model": "api_produccion.estado_orden", "fields": {"codigo": "enhol", "descripcion": "En Hold"}},
 
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "proce", "descripcion": "En Proceso"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "termi", "descripcion": "Terminada"}},

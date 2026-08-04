@@ -34,6 +34,8 @@ class AlertaAdmin(admin.ModelAdmin):
     list_display = [
         "numero",
         "descripcion",
+        "fecha",
+        "hora",
         "estadoAlerta"
     ]
     
@@ -44,17 +46,8 @@ class RegistroKpiAdmin(admin.ModelAdmin):
         "fecha", 
         "hora", 
         "valor",
+        "alerta",
         "oblea", 
         "kpi", 
         "semaforo" 
-    ]
-    
-    
-@admin.register(models.Historial_Alertas)
-class HistorialAlertasAdmin(admin.ModelAdmin):
-    list_display = [
-        "registroKPI",
-        "alerta",
-        "fecha",
-        "hora"
     ]

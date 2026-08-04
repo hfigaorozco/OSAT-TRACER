@@ -120,26 +120,6 @@ class DetailRegistroKpiAPIView(generics.RetrieveAPIView):
     lookup_field = 'pk'
 
 
-### CRUD HISTORIAL_ALERTAS SERVICES
-## Create Historial_alerta
-class CreateHistorialAlertasAPIView(generics.CreateAPIView):
-    serializer_class = serializers.CreateHistorialAlertasSerializer
-
-## List Historial_alerta
-class ListHistorialAlertasAPIView(APIView):
-    
-    def get(self, request):
-        historiales = models.Historial_Alertas.objects.all()
-        data = serializers.ListHistorialAlertasSerializer(historiales, many=True).data
-        return Response(data)
-
-## Detail Historial_alerta
-class DetailHistorialAlertaAPIView(generics.RetrieveAPIView):
-    serializer_class = serializers.DetailHistorialAlertasSerializer
-
-    def get_object(self):
-        return get_object_or_404(models.Historial_Alertas, registroKPI_id=self.kwargs['registroKPI'], alerta_id=self.kwargs['alerta'])
-
 
 ### KPI POR LINEA (semáforo real, usado por el dashboard y por el reporte de KPI)
 class KpiPorLineaAPIView(APIView):
