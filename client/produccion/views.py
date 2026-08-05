@@ -712,11 +712,11 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     si al menos uno se completó, se considera 'cerrada' (una orden cerrada ya
     no admite más cambios — ni sobre ella ni sobre sus lotes).
     """
-    total      = len(lotes_de_orden)
+    total = len(lotes_de_orden)
     rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
-    resueltos  = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() in ('termi', 'recha'))
-    pct        = round(resueltos / total * 100) if total > 0 else 0
-
+    resueltos = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() in ('termi', 'recha'))
+    pct = round(resueltos / total * 100) if total > 0 else 0
+        
     edo = str(edo_orden or '').lower()
     if edo == 'enhol':
         edo_str = 'hold'
@@ -724,8 +724,10 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
         edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'cerrada'
     elif edo == 'proce':
         edo_str = 'en_proceso'
+    elif edo == 'abier':
+        edo_str = 'abierta'
     else:
-        edo_str = 'pendiente'
+        edo_str = 'desconocido' 
 
     return edo_str, resueltos, pct
 

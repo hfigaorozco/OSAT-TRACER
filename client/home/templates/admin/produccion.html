@@ -27,10 +27,11 @@
       <select id="filter-estado-orden" onchange="filterOrdenes()"
         style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:180px;outline:none;appearance:none;">
         <option value="">Todos</option>
+        <option value="abierta">Abierta</option>
         <option value="en_proceso">En proceso</option>
+        <option value="hold">En Hold</option>
         <option value="cerrada">Cerrada</option>
         <option value="rechazado">Rechazado</option>
-        <option value="pendiente">Pendiente</option>
       </select>
     </div>
   </div>
@@ -72,11 +73,12 @@
             </div>
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if orden.estado == 'hold' %}<span style="background:#FEF3C7;color:#92400E;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:700;">⏸ En Hold</span>
-            {% elif orden.estado == 'en_proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">En proceso</span>
-            {% elif orden.estado == 'cerrada' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Cerrada</span>
-            {% elif orden.estado == 'rechazado' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Rechazado</span>
-            {% else %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
+            {% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>
+            {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>
+            {% elif orden.estado == 'abierta' %}<span class="badge badge-abierta">Abierta</span>
+            {% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>
+            {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
+            {% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
             <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.hora_inicio_display }}', '{{ orden.hora_fin_display }}', '{{ orden.estado }}')"
@@ -158,7 +160,6 @@
   </div>
 </div>
 
-<!-- ═══ VISTA: DETALLE LOTE ═══ -->
 <!-- ═══ VISTA: DETALLE LOTE ═══ -->
 <div id="vista-detalle-lote" style="display:none;">
   <button onclick="volverAOrden()" title="Regresar a la orden"
