@@ -405,9 +405,10 @@ class ListLineaProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.LineaProceso
         fields = [
+           "id",
            "linea",
-           "proceso",  
-        ] 
+           "proceso",
+        ]
 #DETAIL
 #UPDATE
 

@@ -73,6 +73,58 @@ def _get_linea_proceso(linea_pk):
     return rel.get('proceso') if rel else None
 
 
+def _asignar_proceso_a_linea(linea_pk, proceso_pk):
+    """Asigna (o desasigna, si proceso_pk viene vacío) un proceso a una
+    línea a través de la tabla puente LineaProceso real — nunca del campo
+    muerto Linea.proceso. Antes de asignar valida que el proceso tenga al
+    menos un paso y una pieza configurados, para que no se pueda apuntar
+    una línea a un proceso a medio armar (eso rompía la creación de
+    Órdenes más adelante sin ningún aviso claro de por qué).
+    Devuelve (ok, error_o_None, proceso_nombre_o_None).
+    """
+    relaciones = _get('/v1/list/LineaProceso/', [])
+    existente = next((r for r in relaciones if str(r.get('linea')) == str(linea_pk)), None)
+
+    if not proceso_pk:
+        if existente:
+            ok, resp = _delete(f"/v1/delete/LineaProceso/{existente['id']}/")
+            if not ok:
+                return False, f'Error al quitar el proceso asignado: {resp}', None
+        return True, None, None
+
+    if existente and str(existente.get('proceso')) == str(proceso_pk):
+        procesos_bd = _get('/v1/list/Proceso/', [])
+        proceso = next((p for p in procesos_bd if str(p.get('codigo')) == str(proceso_pk)), {})
+        return True, None, proceso.get('nombre', proceso_pk)
+
+    procesos_bd = _get('/v1/list/Proceso/', [])
+    proceso = next((p for p in procesos_bd if str(p.get('codigo')) == str(proceso_pk)), None)
+    proceso_nombre = proceso.get('nombre', proceso_pk) if proceso else proceso_pk
+
+    pasos_proceso = [p for p in _get('/v1/list/PasoProceso/', []) if str(p.get('proceso')) == str(proceso_pk)]
+    piezas_proceso = [p for p in _get('/v1/list/ProcesoPieza/', []) if str(p.get('proceso')) == str(proceso_pk)]
+    faltantes = []
+    if not pasos_proceso:
+        faltantes.append('pasos')
+    if not piezas_proceso:
+        faltantes.append('piezas')
+    if faltantes:
+        return False, (
+            f'El proceso "{proceso_nombre}" no tiene {" ni ".join(faltantes)} configurado(s) — '
+            f'complétalo en Organización antes de asignarlo a una línea.'
+        ), None
+
+    if existente:
+        ok, resp = _delete(f"/v1/delete/LineaProceso/{existente['id']}/")
+        if not ok:
+            return False, f'Error al reasignar el proceso: {resp}', None
+
+    ok, resp = _post('/v1/create/LineaProceso/', {'linea': linea_pk, 'proceso': proceso_pk})
+    if not ok:
+        return False, f'Error al asignar el proceso: {resp}', None
+    return True, None, proceso_nombre
+
+
 def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
     """Crea `cantidad` lotes/obleas para una orden. diesGenerados se hereda de TipoOblea.cantidadDies."""
     if cantidad <= 0:
@@ -1212,8 +1264,8 @@ def admin_organizacion_plantilla_paso_asignar(request, pk):
                 errores.append('La descripción del nuevo paso es obligatoria.')
             elif len(nuevo_desc) > 80:
                 errores.append('La descripción del nuevo paso no puede tener más de 80 caracteres.')
-            if minutos and not minutos.isdigit():
-                errores.append('El tiempo estimado debe ser un número.')
+            if not minutos or not minutos.isdigit() or int(minutos) < 1:
+                errores.append('El tiempo estimado es obligatorio y debe ser un número mayor a 0.')
 
             if not errores:
                 pasos_bd = _get('/v1/list/pasos/', [])
@@ -1229,7 +1281,7 @@ def admin_organizacion_plantilla_paso_asignar(request, pk):
                 'codigo':         nuevo_codigo,
                 'nombre':         nuevo_nombre,
                 'descripcion':    nuevo_desc,
-                'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
+                'tiempoEstimado': _duracion_str(int(minutos) * 60),
             })
             if not ok_p:
                 messages.error(request, f'Error al crear el paso: {resp_p}')
@@ -1424,12 +1476,18 @@ def admin_organizacion_linea_crear(request):
         ok, resp = _post('/v1/create/Linea/', {
             'codigo':  codigo,
             'nombre':  nombre,
-            'proceso': proceso or None,
         })
-        if ok:
-            messages.success(request, 'Línea creada.')
-        else:
+        if not ok:
             messages.error(request, f'Error: {resp}')
+            return _organizacion_redirect('lineas')
+
+        ok, error, proceso_nombre = _asignar_proceso_a_linea(codigo, proceso)
+        if not ok:
+            messages.error(request, error)
+        elif proceso_nombre:
+            messages.success(request, f'Línea "{nombre}" creada — proceso "{proceso_nombre}" asignado.')
+        else:
+            messages.success(request, f'Línea "{nombre}" creada.')
     return _organizacion_redirect('lineas')
 
 
@@ -1455,13 +1513,19 @@ def admin_organizacion_linea_editar(request, pk):
             return _organizacion_redirect('lineas')
 
         ok, resp = _patch(f'/v1/update/Linea/{pk}/', {
-            'nombre':  nombre,
-            'proceso': proceso or None,
+            'nombre': nombre,
         })
-        if ok:
-            messages.success(request, 'Línea actualizada.')
-        else:
+        if not ok:
             messages.error(request, f'Error: {resp}')
+            return _organizacion_redirect('lineas')
+
+        ok, error, proceso_nombre = _asignar_proceso_a_linea(pk, proceso)
+        if not ok:
+            messages.error(request, error)
+        elif proceso_nombre:
+            messages.success(request, f'Línea "{nombre}" actualizada — proceso "{proceso_nombre}" asignado.')
+        else:
+            messages.success(request, f'Línea "{nombre}" actualizada — sin proceso asignado.')
     return _organizacion_redirect('lineas')
 
 
@@ -1490,8 +1554,8 @@ def admin_organizacion_paso_crear(request):
         elif len(descripcion) > 80:
             errores.append('La descripción no puede tener más de 80 caracteres.')
 
-        if minutos and not minutos.isdigit():
-            errores.append('El tiempo estimado debe ser un número.')
+        if not minutos or not minutos.isdigit() or int(minutos) < 1:
+            errores.append('El tiempo estimado es obligatorio y debe ser un número mayor a 0.')
 
         if not errores:
             pasos_bd = _get('/v1/list/pasos/', [])
@@ -1509,7 +1573,7 @@ def admin_organizacion_paso_crear(request):
             'codigo':         codigo,
             'nombre':         nombre,
             'descripcion':    descripcion,
-            'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
+            'tiempoEstimado': _duracion_str(int(minutos) * 60),
         })
         if ok:
             messages.success(request, 'Paso creado.')
