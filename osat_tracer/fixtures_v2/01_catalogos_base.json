@@ -36,8 +36,8 @@
     "umbralVerde": 500, "umbralAmarillo": 300, "umbralRojo": 150
   }},
   {"model": "api_kpi.kpi", "fields": {
-    "clave": "oee", "nombre": "Overall Equipment Effectiveness",
-    "descripcion": "Eficiencia global (disponibilidad x rendimiento x calidad)*100",
+    "clave": "oee", "nombre": "OEE",
+    "descripcion": "Eficiencia global (disp. x rendim. x calidad)",
     "unidad": "%",
     "umbralVerde": 85, "umbralAmarillo": 70, "umbralRojo": 55
   }},
@@ -49,6 +49,7 @@
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "abier", "descripcion": "Abierta"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "proce", "descripcion": "En proceso"}},
   {"model": "api_produccion.estado_orden", "fields": {"codigo": "cerra", "descripcion": "Cerrada"}},
+  {"model": "api_produccion.estado_orden", "fields": {"codigo": "enhol", "descripcion": "En Hold"}},
 
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "proce", "descripcion": "En Proceso"}},
   {"model": "api_produccion.estado_oblea", "fields": {"codigo": "termi", "descripcion": "Terminada"}},

@@ -55,6 +55,23 @@ class EmpleadoListSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(source='usuario.date_joined', read_only=True)
     estado = serializers.StringRelatedField()
     rol = serializers.StringRelatedField()
+    # Un empleado no tiene un campo directo a Linea — se deriva de la
+    # máquina que tenga asignada (Maquina.empleado / Maquina.linea, ya
+    # existentes). Se expone así para que la app móvil pueda mostrar la
+    # línea del operador sin necesitar ninguna migración nueva.
+    linea_codigo = serializers.SerializerMethodField()
+    linea_nombre = serializers.SerializerMethodField()
+
+    def _maquina_asignada(self, obj):
+        return obj.maquina.select_related('linea').first()
+
+    def get_linea_codigo(self, obj):
+        maquina = self._maquina_asignada(obj)
+        return maquina.linea.codigo if maquina and maquina.linea else None
+
+    def get_linea_nombre(self, obj):
+        maquina = self._maquina_asignada(obj)
+        return maquina.linea.nombre if maquina and maquina.linea else None
 
     class Meta:
         model = models.Empleado
@@ -69,7 +86,9 @@ class EmpleadoListSerializer(serializers.ModelSerializer):
             'last_login',
             'date_joined',
             'estado',
-            'rol'
+            'rol',
+            'linea_codigo',
+            'linea_nombre',
         ]
 
 

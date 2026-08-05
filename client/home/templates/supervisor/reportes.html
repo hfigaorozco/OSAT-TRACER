@@ -20,12 +20,16 @@
 </div>
 
 <div id="tab-produccion">
-  <div style="display:flex;justify-content:flex-start;margin-bottom:10px;">
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
     <select class="form-control" style="width:auto;" onchange="location.href='?tab=produccion&alcance_prod='+this.value">
       <option value="todos" {% if alcance_prod == 'todos' %}selected{% endif %}>Todos</option>
       <option value="orden" {% if alcance_prod == 'orden' %}selected{% endif %}>Solo órdenes</option>
       <option value="lote" {% if alcance_prod == 'lote' %}selected{% endif %}>Solo lotes</option>
     </select>
+    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-prod')" title="Generar reporte de producción">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      Generar reporte
+    </button>
   </div>
   <div class="card-table">
     <div class="table-wrap">
@@ -60,6 +64,12 @@
 </div>
 
 <div id="tab-inventario" style="display:none;">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      Generar reporte
+    </button>
+  </div>
   <div class="card-table">
     <div class="table-wrap">
       <table class="data-table">
@@ -90,6 +100,12 @@
 </div>
 
 <div id="tab-kpi" style="display:none;">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-kpi')" title="Generar reporte de KPI">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      Generar reporte
+    </button>
+  </div>
   <div class="card-table">
     <div class="table-wrap">
       <table class="data-table">
@@ -118,7 +134,102 @@
   {% include "components/pagination.html" with page_obj=reportes_kpi_page page_param="page_kpi" extra_params="tab=kpi&" %}
 </div>
 
+<!-- Modal generar reporte de producción -->
+<div class="modal-overlay" id="modal-generar-reporte-prod" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-prod')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de producción</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-prod')">&times;</button></div>
+    <form method="post" action="{% url 'supervisor_reportes_generar_produccion' %}" onsubmit="return prepararReporteProduccion(this)">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Orden o lote <span class="required">*</span></label>
+          <select id="reporte-prod-alcance" class="form-control" required>
+            <option value="">Selecciona una orden o un lote...</option>
+            <optgroup label="Órdenes">
+              {% for o in ordenes_picker %}
+              <option value="orden:{{ o.numero }}:0">{{ o.folio }}</option>
+              {% endfor %}
+            </optgroup>
+            <optgroup label="Lotes">
+              {% for l in lotes_picker %}
+              <option value="lote:{{ l.orden_numero }}:{{ l.numero }}">{{ l.folio }} ({{ l.orden_folio }})</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+        </div>
+        <input type="hidden" name="orden_id" id="reporte-prod-orden-id">
+        <input type="hidden" name="oblea_id" id="reporte-prod-oblea-id">
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en esta misma página, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-prod')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal generar reporte de inventario -->
+<div class="modal-overlay" id="modal-generar-reporte-inv" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-inv')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de inventario</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-inv')">&times;</button></div>
+    <form method="post" action="{% url 'supervisor_reportes_generar' %}">{% csrf_token %}
+      <input type="hidden" name="tipo" value="inventario">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Fecha inicial <span class="required">*</span></label>
+          <input type="date" name="fecha_inicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha final <span class="required">*</span></label>
+          <input type="date" name="fecha_fin" class="form-control" required>
+        </div>
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en esta misma página, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-inv')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal generar reporte de KPI -->
+<div class="modal-overlay" id="modal-generar-reporte-kpi" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-kpi')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de KPI</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-kpi')">&times;</button></div>
+    <form method="post" action="{% url 'supervisor_reportes_generar' %}">{% csrf_token %}
+      <input type="hidden" name="tipo" value="kpi">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Fecha inicial <span class="required">*</span></label>
+          <input type="date" name="fecha_inicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha final</label>
+          <input type="date" name="fecha_fin" class="form-control">
+          <p style="font-size:12px;color:#718096;margin-top:4px;">Déjala vacía para incluir todas las lecturas desde la fecha inicial hasta ahora.</p>
+        </div>
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en esta misma página, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-kpi')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% block extra_js %}
+<script>
+function prepararReporteProduccion(form) {
+    var val = document.getElementById('reporte-prod-alcance').value;
+    if (!val) return false;
+    var partes = val.split(':');
+    document.getElementById('reporte-prod-orden-id').value = partes[1];
+    document.getElementById('reporte-prod-oblea-id').value = partes[0] === 'lote' ? partes[2] : '';
+    return true;
+}
+</script>
 <script>
 function switchReportTab(id, btn) {
     ['tab-produccion', 'tab-inventario', 'tab-kpi'].forEach(function (t) {

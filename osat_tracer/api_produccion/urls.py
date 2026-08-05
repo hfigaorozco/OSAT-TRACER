@@ -56,6 +56,7 @@ urlpatterns = [
     path('v1/list/LineaProceso/', views.ListLineaProcesoAPIView.as_view(), name='list_LineaProcesos'),
     path('v1/create/LineaProceso/', views.CreateLineaProcesoAPIView.as_view(), name='create_LineaProceso'),
     path('v1/detail/LineaProceso/<str:pk>/', views.DetailLineaProcesoAPIView.as_view(), name='detail_LineaProceso'),
+    path('v1/delete/LineaProceso/<int:pk>/', views.DeleteLineaProcesoAPIView.as_view(), name='delete_LineaProceso'),
     #PasoProceso
     path('v1/list/PasoProceso/', views.ListPasoProcesoAPIView.as_view(), name='list_PasoProcesos'),
     path('v1/create/PasoProceso/', views.CreatePasoProcesoAPIView.as_view(), name='create_PasoProceso'),
