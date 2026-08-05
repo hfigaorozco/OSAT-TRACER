@@ -13,7 +13,7 @@
       {% csrf_token %}
       <button type="submit" class="btn btn-outline btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Marcar todas leídas
+        Marcar todas resueltas
       </button>
     </form>
   </div>
@@ -26,7 +26,7 @@
     {% if total_count %}<span style="background:#E2E8F0;color:#4A5568;padding:0 7px;border-radius:999px;font-size:12px;margin-left:6px;">{{ total_count }}</span>{% endif %}
   </button>
   <button class="tab-btn" onclick="filterAlertas('no-leidas', this)">
-    No leídas
+    Sin resolver
     {% if unread_count %}<span style="background:#F8D7DA;color:#721C24;padding:0 7px;border-radius:999px;font-size:12px;margin-left:6px;">{{ unread_count }}</span>{% endif %}
   </button>
   <button class="tab-btn" onclick="filterAlertas('stock', this)">Stock</button>
@@ -110,7 +110,7 @@
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button id="det-btn-accion" class="btn btn-primary" onclick="accionDetalle()" style="min-width:120px;justify-content:center;"></button>
-        <button id="det-btn-leida" class="btn btn-outline" onclick="marcarLeidaActual()">Marcar como leída</button>
+        <button id="det-btn-leida" class="btn btn-outline" onclick="marcarLeidaActual()">Marcar como resuelta</button>
       </div>
     </div>
   </div>
