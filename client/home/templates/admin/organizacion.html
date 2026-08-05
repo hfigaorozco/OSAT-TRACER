@@ -333,8 +333,8 @@
         <textarea id="paso-apilado-descripcion" class="form-control" rows="2" required></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">Tiempo estimado (minutos)</label>
-        <input type="number" id="paso-apilado-tiempo" class="form-control" min="0">
+        <label class="form-label">Tiempo estimado (minutos) <span class="required">*</span></label>
+        <input type="number" id="paso-apilado-tiempo" class="form-control" min="1" required>
       </div>
     </div>
     <div class="modal-footer">
@@ -410,7 +410,7 @@
         <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="paso-codigo-input" class="form-control" maxlength="5" required></div>
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="paso-nombre-input" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Descripción <span class="required">*</span></label><textarea name="descripcion" id="paso-desc-input" class="form-control" rows="3" required></textarea></div>
-        <div class="form-group"><label class="form-label">Tiempo estimado (minutos)</label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="0"></div>
+        <div class="form-group"><label class="form-label">Tiempo estimado (minutos) <span class="required">*</span></label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="1" required></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-nuevo-paso')">Cancelar</button>
@@ -668,10 +668,14 @@ function guardarPasoApilado() {
   var codigo = document.getElementById('paso-apilado-codigo').value.trim();
   var nombre = document.getElementById('paso-apilado-nombre').value.trim();
   var descripcion = document.getElementById('paso-apilado-descripcion').value.trim();
-  var tiempo = document.getElementById('paso-apilado-tiempo').value || 0;
+  var tiempo = document.getElementById('paso-apilado-tiempo').value;
 
   if (!codigo || !nombre || !descripcion) {
     alert('Código, nombre y descripción del paso son obligatorios.');
+    return;
+  }
+  if (!tiempo || Number(tiempo) < 1) {
+    alert('El tiempo estimado es obligatorio y debe ser mayor a 0.');
     return;
   }
 
