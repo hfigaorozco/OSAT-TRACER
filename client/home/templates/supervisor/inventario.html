@@ -5,7 +5,7 @@
 <div class="page-header">
   <div><h1 class="page-title">Inventario de materiales</h1><p class="page-subtitle">Consulta de existencias y registro de entradas</p></div>
   <div class="page-actions">
-    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
+    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
@@ -69,7 +69,7 @@
       </td>
       <td class="table-actions">
         <button class="action-btn" title="Kardex" onclick="openDetalle('{{ pieza.codigo }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        <button class="action-btn" title="Entrada" onclick="document.getElementById('ent-sup-pieza').value='{{ pieza.pk }}';document.getElementById('ent-sup-nombre').value='{{ pieza.nombre }}';document.getElementById('ent-sup-stock').value='{{ pieza.stock }}';openModal('modal-entrada-sup')"><svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button>
+        <button class="action-btn" title="Entrada" onclick="document.getElementById('ent-sup-pieza').value='{{ pieza.pk }}';document.getElementById('ent-sup-nombre').value='{{ pieza.nombre }}';document.getElementById('ent-sup-stock').value='{{ pieza.stock }}';openModal('modal-entrada-sup')"><svg viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
       </td>
     </tr>
     {% empty %}
@@ -90,6 +90,21 @@
         <div class="form-group"><label class="form-label">Cantidad a ingresar <span class="required">*</span></label><input type="number" name="cantidad" class="form-control" min="1" required></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-entrada-sup')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar entrada</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-salida-sup" style="display:none;" onclick="if(event.target===this)closeModal('modal-salida-sup')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Registrar salida</h2><button class="modal-close" onclick="closeModal('modal-salida-sup')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_inventario_salida' %}">{% csrf_token %}
+      <input type="hidden" name="pieza_id" id="sal-sup-pieza">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Material</label><input type="text" id="sal-sup-nombre" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
+        <div class="form-group"><label class="form-label">Stock actual</label><input type="text" id="sal-sup-stock" class="form-control" readonly style="background:#F4F6F9;color:#718096;"></div>
+        <div class="form-group"><label class="form-label">Cantidad a retirar <span class="required">*</span></label><input type="number" name="cantidad" id="sal-sup-cantidad" class="form-control" min="1" required></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-salida-sup')">Cancelar</button><button type="submit" class="btn btn-primary" style="background:#EF5350;border-color:#EF5350;">Registrar salida</button></div>
     </form>
   </div>
 </div>
@@ -131,6 +146,11 @@
                   style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#16A85E;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             Registrar entrada
+          </button>
+          <button onclick="openFromDetalle('salida')"
+                  style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#fff;color:#EF5350;border:1.5px solid #EF5350;border-radius:7px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            Registrar salida
           </button>
         </div>
       </div>
@@ -190,6 +210,12 @@ function openFromDetalle(tipo) {
     document.getElementById('ent-sup-nombre').value = _piezaSup.nombre;
     document.getElementById('ent-sup-stock').value = _piezaSup.stock;
     openModal('modal-entrada-sup');
+  } else if (tipo === 'salida') {
+    document.getElementById('sal-sup-pieza').value = _piezaSup.pk;
+    document.getElementById('sal-sup-nombre').value = _piezaSup.nombre;
+    document.getElementById('sal-sup-stock').value = _piezaSup.stock;
+    document.getElementById('sal-sup-cantidad').max = _piezaSup.stock;
+    openModal('modal-salida-sup');
   }
 }
 

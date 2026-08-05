@@ -101,7 +101,12 @@ def admin_dashboard(request):
             'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre')} for a in alertas_bd[:5]],
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}]}
     semaforo_kpi, semaforo_columnas = _build_semaforo()
-    ctx.update({'kpi': {'cuentas': len(empleados), 'empleados': len(empleados), 'maquinas': len(maquinas),
+    # "Cuentas activas"/"Máquinas activas" son justo eso — filtradas por su
+    # estado real, no el total (antes mostraban el mismo total sin filtrar
+    # bajo una etiqueta de "activas" que no correspondía).
+    empleados_activos = sum(1 for e in empleados if str(e.get('estado', '')).lower() == 'activo')
+    maquinas_activas = sum(1 for m in maquinas if str(m.get('estado', '')).lower() == 'act')
+    ctx.update({'kpi': {'cuentas': empleados_activos, 'empleados': len(empleados), 'maquinas': maquinas_activas,
         'lotes_hold': lotes_hold, 'lotes_hold_delta': ''},
         'semaforo_kpi': semaforo_kpi, 'semaforo_columnas': semaforo_columnas,
         'ordenes_activas': ordenes_activas,
