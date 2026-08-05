@@ -87,7 +87,7 @@
           {% endif %}
         </div>
         <div style="padding:8px;border-top:1px solid #2E3D52;display:flex;justify-content:flex-end;">
-          <a href="#" style="font-size:13px;color:#16A85E;">Ver todas →</a>
+          <a href="{% if 'admin' in request.session.user_rol %}{% url 'admin_notificaciones' %}{% else %}{% url 'supervisor_notificaciones' %}{% endif %}" style="font-size:13px;color:#16A85E;">Ver todas →</a>
         </div>
       </div>
     </div>
@@ -104,4 +104,41 @@ document.addEventListener('click', function(e) {
   var dd = document.getElementById('notif-dropdown');
   if (dd && !dd.contains(e.target) && !e.target.closest('.topbar-bell')) dd.style.display = 'none';
 });
+
+// Aviso (toast) de alertas nuevas: cada 25s pregunta al backend si hay
+// alertas con numero mayor al último que ya se mostró (guardado en
+// localStorage, sobrevive la navegación entre páginas de esta app de
+// varias páginas). No repite un toast ya mostrado ni al recargar.
+(function () {
+  var STORAGE_KEY = 'osat_ultima_alerta_vista';
+
+  function mostrarToast(mensaje) {
+    if (typeof showToast === 'function') {
+      showToast(mensaje, 'warning', 6000);
+    }
+  }
+
+  function revisarAlertasNuevas(primeraVez) {
+    var ultimaVista = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    fetch('/notificaciones/recientes/?desde=' + ultimaVista)
+      .then(function (r) { return r.ok ? r.json() : { alertas: [] }; })
+      .then(function (data) {
+        var alertas = data.alertas || [];
+        if (!alertas.length) return;
+        var maxNumero = ultimaVista;
+        alertas.forEach(function (a) {
+          if (a.numero > maxNumero) maxNumero = a.numero;
+          // En la primera revisión de la sesión del navegador solo se
+          // establece la base — no se avisa de todo lo histórico de golpe.
+          if (!primeraVez) mostrarToast('Nueva alerta: ' + a.titulo);
+        });
+        localStorage.setItem(STORAGE_KEY, String(maxNumero));
+      })
+      .catch(function () {});
+  }
+
+  var yaHayBase = localStorage.getItem(STORAGE_KEY) !== null;
+  revisarAlertasNuevas(!yaHayBase);
+  setInterval(function () { revisarAlertasNuevas(false); }, 25000);
+})();
 </script>

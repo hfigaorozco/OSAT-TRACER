@@ -156,10 +156,7 @@ def _build_empleados(empleados_bd):
 
 
 def admin_personal(request):
-    empleados_bd, alertas_bd = _get_many(
-        '/v1/list/empleados/',
-        '/v1/list/alertas/',
-    )
+    empleados_bd = _get('/v1/list/empleados/', [])
 
     # pk = código corto — es lo que espera el API al crear/editar un
     # empleado (Empleado.rol es FK a Rol, cuya PK es el código corto).
@@ -212,11 +209,10 @@ def admin_personal(request):
         filtros_activos['estado'] = estado_filtro
     personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
 
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Personal',  'url': '/admin/personal/'},
@@ -417,7 +413,6 @@ def supervisor_dashboard(request):
     estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
 
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER)
     kpi_prod = _kpi_produccion_reales(obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd)
     ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
 
@@ -429,11 +424,11 @@ def supervisor_dashboard(request):
         'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
     } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:5]
 
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     semaforo_kpi, semaforo_columnas = _build_semaforo()
     ctx = {
-        'user_role': 'Supervisor', 'unread_count': unread,
-        'recent_notifications': [{'titulo': a.get('descripcion', ''), 'tipo': 'alerta',
-            'leida': str(a.get('estadoAlerta', '')) != _CODIGO_SIN_RESOLVER} for a in alertas_bd[:5]],
+        'user_role': 'Supervisor',
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/supervisor/'}],
         'kpi': {'yield_pct': kpi_prod['yield_pct'], 'yield_delta': '',
                 'throughput': kpi_prod['throughput'], 'throughput_delta': '',

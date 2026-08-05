@@ -129,21 +129,11 @@ class _FakeObj:
 # ── Contexto base ─────────────────────────────────────────────────────────────
 
 def _base_ctx(role='Administrador'):
-    alertas = _get('/v1/list/alertas/', [])
-    unread  = sum(1 for a in alertas
-                  if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app —
+    # ya no hace falta que cada vista los arme por su cuenta.
     return {
-        'user_role':            role,
-        'unread_count':         unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo':   'alerta',
-                'leida':  str(a.get('estadoAlerta', '')).lower()
-                          not in ('activo', 'sinre'),
-            }
-            for a in alertas[:5]
-        ],
+        'user_role':   role,
         'breadcrumbs': [],
     }
 
@@ -266,6 +256,39 @@ def logout_view(request):
     response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
 
     return response_redirect
+
+
+def api_alertas_recientes(request):
+    """Polling ligero para el toast de notificaciones nuevas del topbar:
+    devuelve las alertas sin resolver con numero > ?desde=, más recientes
+    primero. El topbar (topbar.html) lo consulta cada cierto tiempo y
+    guarda en localStorage el numero más alto que ya mostró, para no
+    repetir el toast en cada poll ni al navegar entre páginas."""
+    from django.http import JsonResponse
+
+    if not request.session.get('user_id'):
+        return JsonResponse({'alertas': []}, status=401)
+
+    try:
+        desde = int(request.GET.get('desde', 0))
+    except (TypeError, ValueError):
+        desde = 0
+
+    alertas = _get('/v1/list/alertas/', [])
+    nuevas = sorted(
+        (
+            a for a in alertas
+            if (a.get('numero') or 0) > desde
+            and str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')
+        ),
+        key=lambda a: a.get('numero') or 0,
+    )
+    return JsonResponse({
+        'alertas': [
+            {'numero': a.get('numero'), 'titulo': a.get('descripcion', '')}
+            for a in nuevas
+        ],
+    })
 
 
 def errorview404(request, exception = None):
