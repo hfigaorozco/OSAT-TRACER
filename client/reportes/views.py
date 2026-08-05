@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from django.views import View
 from home.views import _get, _get_many, _post, BACKEND_URL
+from produccion.views import _generar_reporte_manual
 
 PAGE_SIZE_REPORTES = 9
 
@@ -60,11 +61,30 @@ class BaseReportesView(View):
         anio_anterior, mes_anterior = _mes_anterior()
         _generar_mensual_si_no_existe(anio_anterior, mes_anterior, 'auto', None)
 
-        empleados_bd, alertas_bd, reportes_prod, reportes_inv, reportes_kpi = _get_many(
+        (empleados_bd, alertas_bd, reportes_prod, reportes_inv, reportes_kpi,
+         ordenes_bd, obleas_bd) = _get_many(
             '/v1/list/empleados/', '/v1/list/alertas/',
             '/v1/list/reportes/', '/v1/list/reportes_inventario/', '/v1/list/reportes_kpi/',
+            '/v1/list/Orden/', '/v1/list/Oblea/',
         )
         empleados_map = _empleados_map(empleados_bd)
+
+        # Para el picker del modal "Generar reporte" de la pestaña
+        # Producción — deja elegir cualquier orden o lote sin tener que
+        # ir primero a Producción a abrirlo.
+        ordenes_picker = sorted(
+            [{'numero': o.get('numero'), 'folio': f"ORD-{o.get('numero', 0):04d}"} for o in ordenes_bd],
+            key=lambda x: x['numero'], reverse=True,
+        )
+        lotes_picker = sorted(
+            [{
+                'numero': l.get('numero'),
+                'folio': f"LOT-{l.get('numero', 0):04d}",
+                'orden_numero': l.get('orden'),
+                'orden_folio': f"ORD-{l.get('orden', 0):04d}",
+            } for l in obleas_bd],
+            key=lambda x: x['numero'], reverse=True,
+        )
 
         reportes_prod = sorted(reportes_prod, key=lambda r: (r.get('fecha', ''), r.get('hora', '')), reverse=True)
         reportes_inv = sorted(reportes_inv, key=lambda r: r.get('fecha_generado', ''), reverse=True)
@@ -137,6 +157,8 @@ class BaseReportesView(View):
             'reportes_kpi_page': page_kpi,
             'alcance_prod': alcance_prod,
             'extra_params_prod': f"tab=produccion&alcance_prod={alcance_prod}&",
+            'ordenes_picker': ordenes_picker,
+            'lotes_picker': lotes_picker,
             'breadcrumbs': [
                 {'label': 'Dashboard', 'url': self.dashboard_url},
                 {'label': 'Reportes', 'url': ''},
@@ -207,6 +229,34 @@ class AdminReportesGenerarView(BaseReportesGenerarView):
 
 
 class SupervisorReportesGenerarView(BaseReportesGenerarView):
+    redirect_url_name = 'supervisor_reportes'
+
+
+class BaseReportesGenerarProduccionView(View):
+    """POST para generar un reporte de producción (de una orden completa o
+    de un lote específico, elegido en el picker de la pestaña Producción
+    de Reportes) sin tener que ir primero a Producción a abrirlo. Reusa
+    el mismo cálculo que el botón "Generar reporte" de la orden/lote."""
+    redirect_url_name = None
+
+    def post(self, request):
+        orden_id = request.POST.get('orden_id', '').strip()
+        oblea_id = request.POST.get('oblea_id', '').strip()
+        if not orden_id:
+            messages.error(request, 'Selecciona una orden o un lote.')
+        else:
+            _generar_reporte_manual(
+                request, orden_id, oblea_num=oblea_id or None,
+                reportes_url_name=self.redirect_url_name,
+            )
+        return redirect(f"{reverse(self.redirect_url_name)}?tab=produccion")
+
+
+class AdminReportesGenerarProduccionView(BaseReportesGenerarProduccionView):
+    redirect_url_name = 'admin_reportes'
+
+
+class SupervisorReportesGenerarProduccionView(BaseReportesGenerarProduccionView):
     redirect_url_name = 'supervisor_reportes'
 
 

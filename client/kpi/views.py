@@ -84,44 +84,42 @@ def _marcar_leida_url(role, pk):
 # ── Construcción de la lista de alertas (usada por admin y supervisor) ───────
 
 def _build_alertas(role):
-    alertas_bd, historiales_bd, registros_kpi_bd, kpis_bd = _get_many(
+    # Historial_Alertas ya no existe — Registro_Kpi.alerta es ahora un FK
+    # directo a Alerta, y Alerta trae su propia fecha/hora (auto_now_add).
+    alertas_bd, registros_kpi_bd, kpis_bd = _get_many(
         '/v1/list/alertas/',
-        '/v1/list/historiales_alertas/',
         '/v1/list/registros_kpi/',
         '/v1/list/kpis/',
     )
     estados_map, _codigo_resuelto = _estados_alerta_info()
     kpis_map = {str(k.get('clave')): k for k in kpis_bd}
-    registros_map = {str(r.get('numero')): r for r in registros_kpi_bd}
 
-    historial_por_alerta = {}
-    for h in historiales_bd:
-        historial_por_alerta.setdefault(str(h.get('alerta')), []).append(h)
+    registros_por_alerta = {}
+    for r in registros_kpi_bd:
+        registros_por_alerta.setdefault(str(r.get('alerta')), []).append(r)
 
     alertas = []
     for a in alertas_bd:
         num = a.get('numero')
-        historiales_de_esta = historial_por_alerta.get(str(num), [])
-        es_kpi = len(historiales_de_esta) > 0
+        registros_de_esta = registros_por_alerta.get(str(num), [])
+        es_kpi = len(registros_de_esta) > 0
         tipo = _clasificar_tipo(a.get('descripcion', ''), es_kpi)
 
         edo_codigo = str(a.get('estadoAlerta', ''))
         edo_desc = estados_map.get(edo_codigo, edo_codigo)
         leida = 'act' not in edo_desc.lower()
 
-        tiempo = ''
+        tiempo = f"{a.get('fecha', '—')} {str(a.get('hora', ''))[:5]}"
         ref_label = 'Alerta'
         ref_valor = str(num)
         cuerpo = a.get('descripcion', '')
 
         if es_kpi:
-            # Nos quedamos con el historial más reciente si hay varios
-            h = sorted(
-                historiales_de_esta,
+            # Nos quedamos con el registro más reciente si hay varios
+            reg = sorted(
+                registros_de_esta,
                 key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))
             )[-1]
-            tiempo = f"{h.get('fecha', '—')} {str(h.get('hora', ''))[:5]}"
-            reg = registros_map.get(str(h.get('registroKPI')), {})
             kpi_data = kpis_map.get(str(reg.get('kpi')), {})
             ref_label = 'Oblea'
             ref_valor = str(reg.get('oblea', '—'))
