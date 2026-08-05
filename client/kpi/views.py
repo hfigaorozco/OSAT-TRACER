@@ -5,8 +5,6 @@ from django.utils.dateparse import parse_datetime
 from django.urls import reverse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
 
-_CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
-
 # ── Catálogo de colores/íconos por tipo de alerta ─────────────────────────────
 
 _COLOR_MAP = {
@@ -21,44 +19,29 @@ _COLOR_MAP = {
     },
 }
 
-_KEYWORDS_STOCK = ('stock', 'insuficiente', 'pieza', 'inventario', 'reabastec')
-
 _ACCION_LABEL = {
     'stock':      'Ver inventario',
     'produccion': 'Ver producción',
     'kpi':        'Ver reporte',
 }
 
+# Códigos fijos del catálogo Estado_Alerta (ver models.EstadoAlerta)
+_CODIGO_SIN_RESOLVER = 'sinre'
+_CODIGO_RESUELTO = 'resue'
 
-# ── Helpers de clasificación y estado ─────────────────────────────────────────
 
-def _clasificar_tipo(descripcion, es_kpi):
-    """Deriva el tipo de alerta sin necesidad de un campo 'tipo' en el modelo."""
-    if es_kpi:
-        return 'kpi'
-    desc = str(descripcion or '').lower()
-    if any(k in desc for k in _KEYWORDS_STOCK):
-        return 'stock'
-    return 'produccion'
-
+# ── Helpers de estado ──────────────────────────────────────────────────────────
 
 def _estados_alerta_info():
     """
     Regresa:
       - estados_map:      {codigo: descripcion} de todo el catálogo Estado_Alerta
-      - codigo_resuelto:   el primer codigo cuya descripcion NO contenga "activ"
+      - codigo_resuelto:   'resue' si existe en el catálogo, si no None
                             (se usa para marcar una alerta como leída/resuelta)
-    Si tu catálogo Estado_Alerta todavía no tiene una fila tipo
-    ('resue', 'Resuelta'), codigo_resuelto viene en None y no se podrá
-    marcar nada como leído hasta que la agregues (es dato, no modelo).
     """
     estados_bd = _get('/v1/list/estados_alerta/', [])
     estados_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_bd}
-    codigo_resuelto = None
-    for e in estados_bd:
-        if 'activ' not in str(e.get('descripcion', '')).lower():
-            codigo_resuelto = e.get('codigo')
-            break
+    codigo_resuelto = _CODIGO_RESUELTO if _CODIGO_RESUELTO in estados_map else None
     return estados_map, codigo_resuelto
 
 
@@ -84,11 +67,14 @@ def _marcar_leida_url(role, pk):
 # ── Construcción de la lista de alertas (usada por admin y supervisor) ───────
 
 def _build_alertas(role):
-    # Historial_Alertas ya no existe — Registro_Kpi.alerta es ahora un FK
-    # directo a Alerta, y Alerta trae su propia fecha/hora (auto_now_add).
-    alertas_bd, registros_kpi_bd, kpis_bd = _get_many(
+    # El tipo de una alerta se deriva de en qué tabla quedó registrada (ver MR):
+    #   - Registro_Kpi.alerta   -> tipo "kpi"
+    #   - Paso_Realizado.alerta -> tipo "produccion"
+    #   - en ninguna de las dos -> tipo "stock" (inventario)
+    alertas_bd, registros_kpi_bd, pasos_realizados_bd, kpis_bd = _get_many(
         '/v1/list/alertas/',
         '/v1/list/registros_kpi/',
+        '/v1/list/PasoRealizado/',
         '/v1/list/kpis/',
     )
     estados_map, _codigo_resuelto = _estados_alerta_info()
@@ -98,23 +84,32 @@ def _build_alertas(role):
     for r in registros_kpi_bd:
         registros_por_alerta.setdefault(str(r.get('alerta')), []).append(r)
 
+    pasos_por_alerta = {}
+    for p in pasos_realizados_bd:
+        pasos_por_alerta.setdefault(str(p.get('alerta')), []).append(p)
+
     alertas = []
     for a in alertas_bd:
         num = a.get('numero')
         registros_de_esta = registros_por_alerta.get(str(num), [])
-        es_kpi = len(registros_de_esta) > 0
-        tipo = _clasificar_tipo(a.get('descripcion', ''), es_kpi)
+        pasos_de_esta = pasos_por_alerta.get(str(num), [])
+
+        if registros_de_esta:
+            tipo = 'kpi'
+        elif pasos_de_esta:
+            tipo = 'produccion'
+        else:
+            tipo = 'stock'
 
         edo_codigo = str(a.get('estadoAlerta', ''))
-        edo_desc = estados_map.get(edo_codigo, edo_codigo)
-        leida = 'act' not in edo_desc.lower()
+        leida = edo_codigo == _CODIGO_RESUELTO
 
         tiempo = f"{a.get('fecha', '—')} {str(a.get('hora', ''))[:5]}"
         ref_label = 'Alerta'
         ref_valor = str(num)
         cuerpo = a.get('descripcion', '')
 
-        if es_kpi:
+        if tipo == 'kpi':
             # Nos quedamos con el registro más reciente si hay varios
             reg = sorted(
                 registros_de_esta,
@@ -126,7 +121,16 @@ def _build_alertas(role):
             if kpi_data:
                 cuerpo = f"{cuerpo} (KPI: {kpi_data.get('nombre', '—')}, valor registrado: {reg.get('valor', '—')})"
 
-        colores = _COLOR_MAP.get(tipo, _COLOR_MAP['produccion'])
+        elif tipo == 'produccion':
+            paso_reg = sorted(
+                pasos_de_esta,
+                key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))
+            )[-1]
+            ref_label = 'Oblea'
+            ref_valor = str(paso_reg.get('oblea', '—'))
+            cuerpo = f"{cuerpo} (Paso: {paso_reg.get('paso', '—')}, scrap: {paso_reg.get('scrap', 0)})"
+
+        colores = _COLOR_MAP.get(tipo, _COLOR_MAP['stock'])
         alertas.append({
             'pk': num,
             'tipo': tipo,
@@ -187,15 +191,15 @@ def admin_alerta_marcar_leida(request, pk):
 
 def admin_alertas_marcar_todas_leidas(request):
     if request.method == 'POST':
-        estados_map, codigo_resuelto = _estados_alerta_info()
+        _estados_map, codigo_resuelto = _estados_alerta_info()
         if not codigo_resuelto:
             messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
         else:
             alertas_bd = _get('/v1/list/alertas/', [])
             marcadas, errores = 0, []
             for a in alertas_bd:
-                edo_desc = estados_map.get(str(a.get('estadoAlerta', '')), '')
-                if 'activ' in edo_desc.lower():
+                edo_codigo = str(a.get('estadoAlerta', ''))
+                if edo_codigo == _CODIGO_SIN_RESOLVER:
                     ok, resp = _patch(f"/v1/update/alerta/{a.get('numero')}/", {'estadoAlerta': codigo_resuelto})
                     if ok:
                         marcadas += 1
@@ -209,7 +213,7 @@ def admin_alertas_marcar_todas_leidas(request):
 
 
 # ════════════════════════════════════════════════════════════════
-# SUPERVISOR — ALERTAS
+# SUPERVISOR — ALERTAS (sin tocar la UI todavía, pero ya clasifica bien)
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_notificaciones(request):
@@ -244,15 +248,15 @@ def supervisor_alerta_marcar_leida(request, pk):
 
 def supervisor_alertas_marcar_todas_leidas(request):
     if request.method == 'POST':
-        estados_map, codigo_resuelto = _estados_alerta_info()
+        _estados_map, codigo_resuelto = _estados_alerta_info()
         if not codigo_resuelto:
             messages.error(request, 'No hay un estado "resuelto" configurado en el catálogo Estado_Alerta.')
         else:
             alertas_bd = _get('/v1/list/alertas/', [])
             marcadas, errores = 0, []
             for a in alertas_bd:
-                edo_desc = estados_map.get(str(a.get('estadoAlerta', '')), '')
-                if 'activ' in edo_desc.lower():
+                edo_codigo = str(a.get('estadoAlerta', ''))
+                if edo_codigo == _CODIGO_SIN_RESOLVER:
                     ok, resp = _patch(f"/v1/update/alerta/{a.get('numero')}/", {'estadoAlerta': codigo_resuelto})
                     if ok:
                         marcadas += 1
@@ -263,7 +267,6 @@ def supervisor_alertas_marcar_todas_leidas(request):
             else:
                 messages.success(request, f'{marcadas} alerta(s) marcada(s) como resueltas.')
     return redirect('supervisor_notificaciones')
-
 
 # ════════════════════════════════════════════════════════════════
 # ADMIN — CONFIGURACIÓN (KPI y catálogos) — SOLO ADMIN
@@ -297,7 +300,7 @@ def admin_configuracion(request):
         {
             'nombre':         k.get('nombre', ''),
             'key':            k.get('clave', ''),
-            'unidad':         '%',
+            'unidad':         k.get('unidad', '%'),
             'verde':          k.get('umbralVerde', 0),
             'amarillo':       k.get('umbralAmarillo', 0),
             'rojo':           k.get('umbralRojo', 0),
@@ -381,6 +384,11 @@ def admin_config_kpi_save(request):
             return redirect('admin_configuracion')
 
         kpis_bd = _get('/v1/list/kpis/', [])
+        kpi_actual = next((k for k in kpis_bd if str(k.get('clave')) == clave), None)
+        if kpi_actual and kpi_actual.get('unidad') == '%' and max(verde, amarillo, rojo) > 100:
+            messages.error(request, 'Un umbral en porcentaje no puede ser mayor a 100%.')
+            return redirect('admin_configuracion')
+
         otros_kpis = [k for k in kpis_bd if str(k.get('clave')) != clave]
         if any(k.get('umbralVerde') == verde for k in otros_kpis):
             errores.append(f'Ya existe otro KPI con umbral verde {verde}.')

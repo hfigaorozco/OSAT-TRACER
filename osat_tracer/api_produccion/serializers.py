@@ -168,8 +168,7 @@ class CreateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #LIST
 class ListLineaSerializer(serializers.ModelSerializer):
@@ -177,8 +176,7 @@ class ListLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #DETAIL
 class DetailLineaSerializer(serializers.ModelSerializer):
@@ -186,8 +184,7 @@ class DetailLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #UPDATE
 class UpdateLineaSerializer(serializers.ModelSerializer):
@@ -195,7 +192,6 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             'nombre',
-            'proceso',
         ]
 
 

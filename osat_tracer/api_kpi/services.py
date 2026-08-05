@@ -20,7 +20,7 @@ def calcular_kpi_por_linea(fecha_inicio=None, fecha_fin=None):
         registros = registros.filter(fecha__lte=fecha_fin)
 
     kpis = list(models.Kpi.objects.all())
-    lineas = list(Linea.objects.all())
+    lineas = list(Linea.objects.all().order_by('codigo'))
 
     # Un solo paso por los registros: acumula suma/conteo por (kpi, linea) y
     # por (kpi, None) para el bucket Global, evitando repetir la consulta.

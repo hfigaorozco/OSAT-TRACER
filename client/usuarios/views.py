@@ -83,25 +83,35 @@ def _kpi_produccion_reales(obleas_bd, ordenes_bd, tipos_oblea_bd, pasos_realizad
     return {'yield_pct': yield_pct, 'throughput': throughput, 'oee_pct': oee_pct}
 
 
+_CODIGO_SIN_RESOLVER = 'sinre'  # mismo valor que en home/alertas.py
+
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
-    empleados, maquinas, obleas, ordenes_bd, alertas_bd, procesos_bd = _get_many(
+    empleados, maquinas, obleas, ordenes_bd, alertas_bd, procesos_bd, estados_alerta_bd = _get_many(
         '/v1/list/empleados/', '/v1/list/maquinaria/',
         '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/', '/v1/list/Proceso/',
+        '/v1/list/estados_alerta/',
     )
     procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
+    estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
+
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
     ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
-    alertas_activas = [{'tipo': 'advertencia', 'descripcion': a.get('descripcion', ''),
-        'referencia': f"#{a.get('numero', '—')}", 'tiempo': '—'}
-        for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')][:5]
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {'user_role': 'Administrador', 'unread_count': unread,
-        'recent_notifications': [{'titulo': a.get('descripcion', ''), 'tipo': 'alerta',
-            'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre')} for a in alertas_bd[:5]],
-        'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}]}
+
+    alertas_activas = [{
+        'numero': a.get('numero', '—'),
+        'descripcion': a.get('descripcion', ''),
+        'fecha': a.get('fecha', '—'),
+        'hora': str(a.get('hora', ''))[:5],
+        'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:5]
+
+    ctx.update({'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}]})
+
     semaforo_kpi, semaforo_columnas = _build_semaforo()
-    ctx.update({'kpi': {'cuentas': len(empleados), 'empleados': len(empleados), 'maquinas': len(maquinas),
+    empleados_activos = sum(1 for e in empleados if str(e.get('estado', '')).lower() == 'activo')
+    maquinas_activas = sum(1 for m in maquinas if str(m.get('estado', '')).lower() == 'act')
+    ctx.update({'kpi': {'cuentas': empleados_activos, 'empleados': len(empleados), 'maquinas': maquinas_activas,
         'lotes_hold': lotes_hold, 'lotes_hold_delta': ''},
         'semaforo_kpi': semaforo_kpi, 'semaforo_columnas': semaforo_columnas,
         'ordenes_activas': ordenes_activas,
@@ -398,25 +408,32 @@ def admin_cuentas_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_dashboard(request):
-    obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd, alertas_bd, procesos_bd = _get_many(
+    obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd, alertas_bd, procesos_bd, estados_alerta_bd = _get_many(
         '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/TipoOblea/',
         '/v1/list/PasoRealizado/', '/v1/list/alertas/', '/v1/list/Proceso/',
+        '/v1/list/estados_alerta/',
     )
     procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
+    estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
+
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER)
     kpi_prod = _kpi_produccion_reales(obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd)
-    # Mismo criterio que admin_dashboard para que ambos tengan la misma
-    # función real (antes estas dos listas venían hardcodeadas vacías aquí).
     ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
-    alertas_activas = [{'tipo': 'advertencia', 'descripcion': a.get('descripcion', ''),
-        'referencia': f"#{a.get('numero', '—')}", 'tiempo': '—'}
-        for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')][:5]
+
+    alertas_activas = [{
+        'numero': a.get('numero', '—'),
+        'descripcion': a.get('descripcion', ''),
+        'fecha': a.get('fecha', '—'),
+        'hora': str(a.get('hora', ''))[:5],
+        'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:5]
+
     semaforo_kpi, semaforo_columnas = _build_semaforo()
     ctx = {
         'user_role': 'Supervisor', 'unread_count': unread,
         'recent_notifications': [{'titulo': a.get('descripcion', ''), 'tipo': 'alerta',
-            'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre')} for a in alertas_bd[:5]],
+            'leida': str(a.get('estadoAlerta', '')) != _CODIGO_SIN_RESOLVER} for a in alertas_bd[:5]],
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/supervisor/'}],
         'kpi': {'yield_pct': kpi_prod['yield_pct'], 'yield_delta': '',
                 'throughput': kpi_prod['throughput'], 'throughput_delta': '',

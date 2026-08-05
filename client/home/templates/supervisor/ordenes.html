@@ -7,12 +7,25 @@
   <div class="page-actions"><button class="btn btn-primary" onclick="openNuevaOrden()">+ Nueva orden</button></div>
 </div>
 <div class="card-table">
-  <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div style="padding:25px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <h3 style="font-weight:600;font-size:15px;margin:0;">Todas las órdenes</h3>
-    <div style="position:relative;">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Buscar orden por código..." id="search-ordenes" oninput="filterOrdenes(this.value)"
-        class="form-control" style="height:38px;padding-left:32px;width:220px;">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="position:relative;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar por número" id="search-ordenes" oninput="filterOrdenes(this.value)"
+          class="form-control" style="height:38px;padding-left:32px;width:220px;">
+      </div>
+      <div style="position:relative;">
+        <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
+        <select id="filter-estado-orden" onchange="filterOrdenes()" class="form-control" style="height:38px;width:170px;">
+          <option value="">Todos</option>
+          <option value="abierta">Abierta</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="hold">En Hold</option>
+          <option value="cerrada">Cerrada</option>
+          <option value="rechazado">Rechazado</option>
+        </select>
+      </div>
     </div>
   </div>
   <div class="table-wrap">
@@ -20,7 +33,7 @@
       <thead><tr><th>Número</th><th>Proceso</th><th>Línea</th><th>Tipo de oblea</th><th>Fecha inicio</th><th>Fecha fin</th><th>Lotes</th><th>Progreso</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for orden in ordenes %}
-        <tr class="orden-row" data-numero="{{ orden.numero|lower }}">
+        <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}">
           <td>{% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}<a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ orden.numero }}</a></td>
           <td>{{ orden.proceso.nombre|default:"—" }}</td>
           <td>{{ orden.linea_nombre }}</td>
@@ -36,7 +49,7 @@
             </div>
             {% endwith %}
           </td>
-          <td>{% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'aprobado' %}<span class="badge badge-aprobado">Aprobada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</td>
+          <td>{% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'abierta' %}<span class="badge badge-abierta">Abierta</span>{% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</td>
           <td class="table-actions">
             <a href="{% url 'supervisor_orden_detalle' orden.pk %}" class="action-btn" title="Ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
             <button class="action-btn" title="Editar" onclick="openEditarOrden('{{ orden.pk }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -77,8 +90,8 @@
           </select>
         </div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Fecha de inicio <span class="required">*</span></label><input type="date" name="fecha_inicio" id="orden-fecha-inicio-input" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Fecha estimada de fin <span class="required">*</span></label><input type="date" name="fecha_fin" id="orden-fecha-fin-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora de inicio <span class="required">*</span></label><input type="time" step="1" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Hora estimada de fin <span class="required">*</span></label><input type="time" step="1" name="hora_fin" id="orden-hora-fin-input" class="form-control" required></div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
@@ -141,10 +154,14 @@
 var ORDENES_DATA = JSON.parse(document.getElementById('ordenes-data').textContent);
 var URL_ORDEN_EDITAR = "{% url 'supervisor_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 
+// ── Filtros ──
 function filterOrdenes(q) {
   q = (q || '').toLowerCase();
-  document.querySelectorAll('.orden-row').forEach(function (row) {
-    row.style.display = !q || (row.dataset.numero || '').includes(q) ? '' : 'none';
+  var estado = document.getElementById('filter-estado-orden').value;
+  document.querySelectorAll('.orden-row').forEach(function(row) {
+    var matchQ = !q || (row.dataset.numero || '').includes(q);
+    var matchE = !estado || row.dataset.estado === estado;
+    row.style.display = matchQ && matchE ? '' : 'none';
   });
 }
 
@@ -159,8 +176,8 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  document.getElementById('orden-fecha-inicio-input').value = '';
-  document.getElementById('orden-fecha-fin-input').value = '';
+  document.getElementById('orden-hora-inicio-input').value = '';
+  document.getElementById('orden-hora-fin-input').value = '';
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
@@ -182,8 +199,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  document.getElementById('orden-fecha-inicio-input').value = o.fecha_inicio;
-  document.getElementById('orden-fecha-fin-input').value = o.fecha_fin;
+  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio;
+  document.getElementById('orden-hora-fin-input').value = o.hora_fin;
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';

@@ -24,4 +24,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(crear_estado_enhol, borrar_estado_enhol),
+
+        migrations.RemoveField(
+            model_name='linea',
+            name='proceso',
+        ),
     ]
