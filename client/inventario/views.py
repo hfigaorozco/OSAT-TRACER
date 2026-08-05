@@ -123,6 +123,7 @@ def admin_inventario_movimiento(request):
             if not cantidad_minima_raw.isdigit():
                 errores.append('El nuevo stock mínimo debe ser un número mayor o igual a 0.')
 
+        pieza = None
         if tipo == 'salida' and not errores:
             piezas_bd = _get('/v1/list/piezas/', [])
             pieza = next((p for p in piezas_bd if str(p.get('codigo')) == pieza_id), None)
@@ -147,6 +148,13 @@ def admin_inventario_movimiento(request):
 
         if ok:
             messages.success(request, 'Movimiento registrado')
+            if tipo == 'salida' and pieza:
+                restante = int(pieza.get('stockActual', 0)) - int(cantidad_raw)
+                minimo = int(pieza.get('stockMinimo', 0))
+                if restante < minimo:
+                    messages.warning(request,
+                        f'"{pieza.get("nombre", pieza_id)}" quedará con {restante} unidades — '
+                        f'por debajo del mínimo ({minimo}), queda en estado crítico.')
         else:
             messages.error(request, f'Error: {resp}')
 
@@ -224,6 +232,49 @@ def supervisor_inventario_entrada(request):
         })
         if ok:
             messages.success(request, 'Entrada registrada')
+        else:
+            messages.error(request, f'Error: {resp}')
+    return redirect('supervisor_inventario')
+
+
+def supervisor_inventario_salida(request):
+    if request.method == 'POST':
+        pieza_id = request.POST.get('pieza_id', '').strip()
+        cantidad_raw = request.POST.get('cantidad', '').strip()
+
+        errores = []
+        if not pieza_id:
+            errores.append('Selecciona una pieza.')
+        if not cantidad_raw.isdigit() or int(cantidad_raw) < 1:
+            errores.append('La cantidad debe ser un número mayor a 0.')
+
+        pieza = None
+        if not errores:
+            piezas_bd = _get('/v1/list/piezas/', [])
+            pieza = next((p for p in piezas_bd if str(p.get('codigo')) == pieza_id), None)
+            if pieza and int(cantidad_raw) > int(pieza.get('stockActual', 0)):
+                errores.append(f'No hay suficiente stock: disponible {pieza.get("stockActual", 0)}.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('supervisor_inventario')
+
+        ok, resp = _post('/v1/create/movimiento_inventario/', {
+            'pieza': pieza_id,
+            'tipo': 'salida',
+            'cantidad': int(cantidad_raw),
+            'usuario': request.session.get('user_name', ''),
+        })
+        if ok:
+            messages.success(request, 'Salida registrada')
+            if pieza:
+                restante = int(pieza.get('stockActual', 0)) - int(cantidad_raw)
+                minimo = int(pieza.get('stockMinimo', 0))
+                if restante < minimo:
+                    messages.warning(request,
+                        f'"{pieza.get("nombre", pieza_id)}" quedará con {restante} unidades — '
+                        f'por debajo del mínimo ({minimo}), queda en estado crítico.')
         else:
             messages.error(request, f'Error: {resp}')
     return redirect('supervisor_inventario')

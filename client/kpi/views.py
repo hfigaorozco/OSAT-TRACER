@@ -300,7 +300,7 @@ def admin_configuracion(request):
         {
             'nombre':         k.get('nombre', ''),
             'key':            k.get('clave', ''),
-            'unidad':         '%',
+            'unidad':         k.get('unidad', '%'),
             'verde':          k.get('umbralVerde', 0),
             'amarillo':       k.get('umbralAmarillo', 0),
             'rojo':           k.get('umbralRojo', 0),
@@ -384,6 +384,11 @@ def admin_config_kpi_save(request):
             return redirect('admin_configuracion')
 
         kpis_bd = _get('/v1/list/kpis/', [])
+        kpi_actual = next((k for k in kpis_bd if str(k.get('clave')) == clave), None)
+        if kpi_actual and kpi_actual.get('unidad') == '%' and max(verde, amarillo, rojo) > 100:
+            messages.error(request, 'Un umbral en porcentaje no puede ser mayor a 100%.')
+            return redirect('admin_configuracion')
+
         otros_kpis = [k for k in kpis_bd if str(k.get('clave')) != clave]
         if any(k.get('umbralVerde') == verde for k in otros_kpis):
             errores.append(f'Ya existe otro KPI con umbral verde {verde}.')
