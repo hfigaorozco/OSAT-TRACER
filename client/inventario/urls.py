@@ -10,4 +10,5 @@ urlpatterns = [
 
     path('supervisor/inventario/', views.supervisor_inventario, name='supervisor_inventario'),
     path('supervisor/inventario/entrada/', views.supervisor_inventario_entrada, name='supervisor_inventario_entrada'),
+    path('supervisor/inventario/salida/', views.supervisor_inventario_salida, name='supervisor_inventario_salida'),
 ]

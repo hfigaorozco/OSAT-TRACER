@@ -27,10 +27,11 @@
       <select id="filter-estado-orden" onchange="filterOrdenes()"
         style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:180px;outline:none;appearance:none;">
         <option value="">Todos</option>
+        <option value="abierta">Abierta</option>
         <option value="en_proceso">En proceso</option>
-        <option value="aprobado">Aprobado</option>
+        <option value="hold">En Hold</option>
+        <option value="cerrada">Cerrada</option>
         <option value="rechazado">Rechazado</option>
-        <option value="pendiente">Pendiente</option>
       </select>
     </div>
   </div>
@@ -72,11 +73,12 @@
             </div>
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-            {% if orden.estado == 'hold' %}<span style="background:#FEF3C7;color:#92400E;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:700;">⏸ En Hold</span>
-            {% elif orden.estado == 'en_proceso' %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">En proceso</span>
-            {% elif orden.estado == 'aprobado' %}<span style="background:#D4EDDA;color:#155724;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Aprobado</span>
-            {% elif orden.estado == 'rechazado' %}<span style="background:#F8D7DA;color:#721C24;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Rechazado</span>
-            {% else %}<span style="background:#FFF3CD;color:#856404;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;">Pendiente</span>{% endif %}
+            {% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>
+            {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>
+            {% elif orden.estado == 'abierta' %}<span class="badge badge-abierta">Abierta</span>
+            {% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>
+            {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
+            {% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}
           </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
             <button onclick="abrirOrden({{ orden.pk }}, '{{ orden.numero }}', '{{ orden.proceso_nombre|escapejs }}', '{{ orden.hora_inicio_display }}', '{{ orden.hora_fin_display }}', '{{ orden.estado }}')"
@@ -121,7 +123,7 @@
     </div>
     <div style="display:flex;gap:10px;">
       <button id="btn-liberar-orden" class="btn btn-outline" style="display:none;border-color:#EF5350;color:#EF5350;" onclick="liberarOrdenActual()">⏸ Liberar orden</button>
-      <button class="btn btn-outline" title="Generar reporte de esta orden" onclick="generarReporteOrden()">
+      <button class="btn btn-primary" title="Generar reporte de esta orden" onclick="generarReporteOrden()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
         Generar reporte
       </button>
@@ -158,7 +160,6 @@
   </div>
 </div>
 
-<!-- ═══ VISTA: DETALLE LOTE ═══ -->
 <!-- ═══ VISTA: DETALLE LOTE ═══ -->
 <div id="vista-detalle-lote" style="display:none;">
   <button onclick="volverAOrden()" title="Regresar a la orden"
@@ -429,7 +430,7 @@
       <div class="form-group">
         <label class="form-label">Defectos detectados</label>
         <div id="defectos-comp-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-        <button type="button" onclick="agregarDefectoComp()" style="background:none;border:1px dashed #CBD5E0;color:#718096;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
+        <button type="button" onclick="agregarDefectoComp()" style="background:none;border:1px dashed #CBD5E0;color:#2D3748;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Agregar defecto
         </button>
       </div>
@@ -457,6 +458,8 @@ var _compResultado = 'aprobado';
 var _defCompCount  = 0;
 // Defectos posibles por paso (solo se muestran los ligados al paso que se está completando)
 var _defectosPorPaso = {{ defectos_por_paso_json|safe }};
+// Bandeja global — respaldo cuando el paso no tiene defectos propios ligados
+var _defectosCatalogo = {{ defectos_catalogo_json|safe }};
 var _compPasoCodigo = null;
 
 var URL_LOTE_HOLD        = "{% url 'admin_lote_hold' pk=0 %}".replace('/0/', '/__PK__/');
@@ -586,7 +589,7 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   var badgeMap = {
     hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
     en_proceso: ['#FFF3CD','#856404','En proceso'],
-    aprobado:   ['#D4EDDA','#155724','Aprobado'],
+    cerrada:    ['#D4EDDA','#155724','Cerrada'],
     rechazado:  ['#F8D7DA','#721C24','Rechazado'],
     pendiente:  ['#E9ECEF','#856404','Pendiente'],
   };
@@ -959,8 +962,10 @@ function calcularYieldPreviewComp() {
 function agregarDefectoComp() {
   var catalogo = _defectosPorPaso[_compPasoCodigo] || [];
   if (catalogo.length === 0) {
-    showToast('Este paso no tiene defectos configurados. Ligalos desde Configuración.', 'warning');
-    return;
+    catalogo = _defectosCatalogo;
+    if (_defCompCount === 0) {
+      showToast('Este paso no tiene defectos configurados — mostrando el catálogo completo.', 'info');
+    }
   }
   _defCompCount++;
   var list = document.getElementById('defectos-comp-list');

@@ -57,10 +57,9 @@ function showToast(message, type, duration) {
     stack.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;';
     document.body.appendChild(stack);
   }
-  var colors = {success:'#16A85E',error:'#EF5350',warning:'#F5A623',info:'#009EAF'};
   var toast = document.createElement('div');
-  toast.style.cssText = 'display:flex;align-items:center;gap:12px;padding:0 16px;height:48px;min-width:320px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:13.5px;font-weight:500;background:#243040;border-left:3px solid '+(colors[type]||colors.success)+';color:#C4C5D0;';
-  toast.innerHTML = '<span style="color:'+(colors[type]||colors.success)+';">●</span><span style="flex:1;">'+message+'</span><button onclick="this.closest(\'div\').remove()" style="color:#718096;font-size:16px;background:none;border:none;cursor:pointer;">✕</button>';
+  toast.style.cssText = 'display:flex;align-items:center;gap:12px;padding:0 16px;height:48px;min-width:320px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:13.5px;font-weight:500;background:#243040;color:#C4C5D0;';
+  toast.innerHTML = '<span style="flex:1;">'+message+'</span><button onclick="this.closest(\'div\').remove()" style="color:#718096;font-size:16px;background:none;border:none;cursor:pointer;">✕</button>';
   stack.appendChild(toast);
   if (duration > 0) setTimeout(function(){ toast.remove(); }, duration);
 }

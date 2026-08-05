@@ -111,7 +111,7 @@
           <td style="padding:10px 14px;">
             {% if orden.estado == 'hold' %}<span class="badge badge-hold">En Hold</span>
             {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En proceso</span>
-            {% elif orden.estado == 'aprobado' %}<span class="badge badge-aprobado">Aprobada</span>
+            {% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>
             {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
             {% else %}<span class="badge badge-pendiente">Pendiente</span>
             {% endif %}
@@ -133,28 +133,26 @@
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
-          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Tipo</th>
+          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Número</th>
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Descripción</th>
-          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Ref.</th>
-          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Tiempo</th>
+          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Fecha</th>
+          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Hora</th>
+          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Estado</th>
         </tr>
       </thead>
       <tbody>
         {% for alerta in alertas_activas %}
         <tr style="border-bottom:1px solid #EDF2F7;">
-          <td style="padding:10px 14px;">
-            {% if alerta.tipo == 'critico' %}
-              <span style="background:#F8D7DA;color:#721C24;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">Crítico</span>
-            {% elif alerta.tipo == 'hold' %}
-              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">Hold</span>
-            {% else %}
-              <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">Aviso</span>
-            {% endif %}
-          </td>
+          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">#{{ alerta.numero }}</td>
           <td style="padding:10px 14px;color:#2D3748;font-size:13px;">{{ alerta.descripcion }}</td>
-          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:12px;">{{ alerta.referencia }}</td>
-          <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.tiempo }}</td>
+          <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.fecha }}</td>
+          <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.hora }}</td>
+          <td style="padding:10px 14px;">
+            <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">{{ alerta.estado }}</span>
+          </td>
         </tr>
+        {% empty %}
+        <tr><td colspan="5" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay alertas activas.</td></tr>
         {% endfor %}
       </tbody>
     </table>
