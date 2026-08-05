@@ -10,7 +10,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -37,7 +37,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -64,7 +64,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -91,7 +91,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -118,7 +118,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -145,7 +145,7 @@
       "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -172,7 +172,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -199,7 +199,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -226,7 +226,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -248,12 +248,12 @@
     "fields": {
       "username": "kcoriap",
       "first_name": "Karen Sherlyn",
-      "last_name": "Coria Peña",
+      "last_name": "Coria PeÃ±a",
       "email": "karencoriap@osat.mx",
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -262,7 +262,7 @@
     "fields": {
       "nombre": "Karen Sherlyn",
       "primerApell": "Coria",
-      "seguApell": "Peña",
+      "seguApell": "PeÃ±a",
       "rfc": "COPK940214HF6",
       "estado": "act",
       "rol": "opera",
@@ -280,7 +280,7 @@
       "is_active": true,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {
@@ -307,7 +307,7 @@
       "is_active": false,
       "is_staff": false,
       "is_superuser": false,
-      "password": "pbkdf2_sha256$1200000$brkvtc0AXohXpqy3YtfmUP$LCZJsZpgZ8o+kon1C2tjQbOVOb6H5DBya9GKJ0WqGKk="
+      "password": "pbkdf2_sha256$1200000$toC1oE2s5q3caeiTTA2K8M$ZsXsJpOx9d7esU7QRv7ETQgy1QSIS+4N1ZErzz2xR24="
     }
   },
   {

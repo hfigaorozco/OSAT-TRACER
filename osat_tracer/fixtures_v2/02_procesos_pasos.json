@@ -3,16 +3,14 @@
     "model": "api_produccion.linea",
     "fields": {
       "codigo": "lin1",
-      "nombre": "Línea Ensamblado QFN",
-      "proceso_id": "ens-1"
+      "nombre": "Línea Ensamblado QFN"
     }
   },
   {
     "model": "api_produccion.linea",
     "fields": {
       "codigo": "lin2",
-      "nombre": "Línea Ensamblado BGA",
-      "proceso_id": "ens-2"
+      "nombre": "Línea Ensamblado BGA"
     }
   },
   {

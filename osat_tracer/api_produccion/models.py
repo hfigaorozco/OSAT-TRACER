@@ -74,7 +74,6 @@ class Proceso(models.Model):
 class Linea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
     nombre = models.CharField(unique=True, max_length=20)
-    proceso = models.ForeignKey(Proceso, null=True, blank=True, on_delete=models.SET_NULL, related_name='lineas')
 
     class Meta:
         db_table = 'linea'
