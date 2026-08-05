@@ -73,13 +73,11 @@ class Proceso(models.Model):
 
 class Linea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
-    nombre = models.CharField(unique=True, max_length=20)
+    nombre = models.CharField(max_length=50)
 
     class Meta:
         db_table = 'linea'
-
-    def __str__(self):
-        return self.nombre
+        ordering = ['codigo']   # ← agregar esto
 
 
 class Paso(models.Model):

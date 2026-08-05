@@ -11,7 +11,7 @@
     "nombre": "Wire Bonder", "fechaReg": "2026-06-20",
     "tipoMaquina": "mont", "estado": "act", "empleado": 8, "linea": "lin1"
   }},
-  {"model": "api_maquinaria.maquina", "pk": "ma004", "fields": {
+  {"model": "api_maquinaria.maquina", "pk": "mq004", "fields": {
     "nombre": "Encapsuladora", "fechaReg": "2026-06-20",
     "tipoMaquina": "prot", "estado": "act", "empleado": 9, "linea": "lin2"
   }}
