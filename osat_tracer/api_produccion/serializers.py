@@ -502,9 +502,10 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.MaquinaPaso
         fields = [
+            "id",
             "maquina",
-            "paso",   
-        ] 
+            "paso",
+        ]
 #DETAIL
 #UPDATE
 

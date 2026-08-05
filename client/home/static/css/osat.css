@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@400;500;600&display=swap');
-
 :root {
   --bg-app:          #1C2433;
   --bg-topbar:       #243040;
@@ -38,10 +36,10 @@
   --topbar-h:        72px;
 
   --font-main:  'Montserrat', sans-serif;
-  --font-nav:   'Poppins', sans-serif;
-  --radius:     7px;
-  --radius-lg:  10px;
-  --radius-xl:  12px;
+  --font-nav:   'Montserrat', sans-serif;
+  --radius:     14px;
+  --radius-lg:  20px;
+  --radius-xl:  24px;
 }
 
 /* ── Reset ── */
@@ -242,11 +240,20 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    CARDS — BLANCAS con texto oscuro
 ══════════════════════════════════════ */
 .card {
+  position: relative;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 20px;
   color: #1A202C;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 6px 16px rgba(16,24,40,.06);
+}
+.card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+  pointer-events: none;
 }
 
 /* Todos los textos dentro de .card son oscuros por defecto */
@@ -313,11 +320,20 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Card que contiene tabla — sin padding para que la tabla llegue a los bordes */
 .card-table {
+  position: relative;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 0;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 6px 16px rgba(16,24,40,.06);
+}
+.card-table::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 40px;
+  background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0));
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ══════════════════════════════════════
@@ -351,20 +367,22 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    BADGES — visibles sobre fondo blanco
 ══════════════════════════════════════ */
 .badge {
-  display: inline-flex; align-items: center;
-  padding: 3px 11px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 96px; text-align: center;
+  padding: 3px 11px; border-radius: 4px;
   font-size: 12.5px; font-weight: 600;
 }
-.badge-activo    { background: #D4EDDA; color: #155724; }
-.badge-inactivo  { background: #E9ECEF; color: #495057; }
-.badge-aprobado  { background: #D4EDDA; color: #155724; }
-.badge-rechazado { background: #F8D7DA; color: #721C24; }
-.badge-en-proceso{ background: #FFF3CD; color: #856404; }
-.badge-pendiente { background: #E9ECEF; color: #856404; }
-.badge-hold      { background: #FFF3CD; color: #856404; }
-.badge-ok        { background: #D4EDDA; color: #155724; }
-.badge-bajo      { background: #FFF3CD; color: #856404; }
-.badge-critico   { background: #F8D7DA; color: #721C24; }
+.badge-activo    { background: #16A85E; color: #FFFFFF; }
+.badge-inactivo  { background: #4A5568; color: #FFFFFF; }
+.badge-aprobado  { background: #16A85E; color: #FFFFFF; }
+.badge-rechazado { background: #EF5350; color: #FFFFFF; }
+.badge-en-proceso{ background: #FFCA28; color: #1A202C; }
+.badge-pendiente { background: #FFCA28; color: #1A202C; }
+.badge-abierta   { background: #FFCA28; color: #1A202C; }
+.badge-hold      { background: #EF5350; color: #FFFFFF; }
+.badge-ok        { background: #16A85E; color: #FFFFFF; }
+.badge-bajo      { background: #FFCA28; color: #1A202C; }
+.badge-critico   { background: #EF5350; color: #FFFFFF; }
 
 /* ══════════════════════════════════════
    FORMULARIOS — dentro de cards/modales blancos

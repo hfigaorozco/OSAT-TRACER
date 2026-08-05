@@ -36,7 +36,7 @@
     </div>
   </div>
 
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;" id="tabla-ordenes">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -49,7 +49,7 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Lotes</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Completados</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;"></th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -117,7 +117,7 @@
     <div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
         <h1 id="det-orden-titulo" class="page-title" style="margin:0;"></h1>
-        <span id="det-orden-badge" style="padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;"></span>
+        <span id="det-orden-badge" style="padding:2px 12px;border-radius:4px;font-size:13px;font-weight:600;"></span>
       </div>
       <p id="det-orden-meta" style="font-size:14px;color:var(--text-muted);"></p>
     </div>
@@ -130,10 +130,10 @@
       <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
     </div>
   </div>
-  <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:14px;font-weight:600;border:1px solid #EF5350;">
+  <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:14px;font-weight:600;">
     ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla.
   </div>
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <h3 style="font-weight:600;font-size:15px;margin:0;color:#1A202C;">Lotes de esta orden</h3>
       <div style="position:relative;">
@@ -152,7 +152,7 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Pasos</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Progreso</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;"></th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
       </thead>
       <tbody id="tbody-lotes-orden"></tbody>
@@ -386,7 +386,7 @@
     <div style="padding:20px 24px;">
       <p style="font-size:14px;color:#4A5568;margin:0 0 16px;">No se pudo crear la orden porque no alcanza el stock de estas piezas:</p>
       {% for p in stock_insuficiente %}
-      <div style="display:flex;align-items:center;gap:14px;padding:12px;border:1px solid #F8D7DA;background:#FDEDEE;border-radius:10px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:14px;padding:12px;border:1px solid #F8D7DA;background:#FDEDEE;border-radius:14px;margin-bottom:10px;">
         {% if p.imagen %}
         <img src="{{ backend_url|cut:'/api' }}{{ p.imagen }}" alt="{{ p.nombre }}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #E2E8F0;flex-shrink:0;">
         {% else %}
@@ -417,7 +417,7 @@
       <div class="form-group" style="margin-bottom:20px;">
         <label class="form-label">Resultado <span class="required">*</span></label>
         <div style="display:flex;gap:10px;margin-top:6px;">
-          <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#D4EDDA;color:#155724;font-weight:600;font-size:14px;cursor:pointer;">✓ Aprobado</div>
+          <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#16A85E;color:#FFFFFF;font-weight:600;font-size:14px;cursor:pointer;">✓ Aprobado</div>
           <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#F7FAFC;color:#A0AEC0;font-weight:600;font-size:14px;cursor:not-allowed;">✕ Rechazado</div>
         </div>
         <div style="font-size:12px;color:#A0AEC0;margin-top:6px;">"Rechazado" se habilita cuando el yield global del lote caería por debajo del 95% (scrap mayor a <span id="comp-rechazo-umbral">0</span>).</div>
@@ -559,6 +559,13 @@ function abrirModalAgregarLote() {
 // ── Restaurar contexto de navegación tras un postback (?orden=&lote=) ──
 document.addEventListener('DOMContentLoaded', function () {
   var params = new URLSearchParams(window.location.search);
+
+  var estado = params.get('estado');
+  if (estado) {
+    var selEstado = document.getElementById('filter-estado-orden');
+    if (selEstado) { selEstado.value = estado; filterOrdenes(); }
+  }
+
   var ordenPk = params.get('orden');
   var lotePk  = params.get('lote');
   if (!ordenPk) return;
@@ -587,15 +594,15 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   document.getElementById('det-orden-meta').textContent = proceso + ' · ' + fi + ' → ' + ff;
 
   var badgeMap = {
-    hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
-    en_proceso: ['#FFF3CD','#856404','En proceso'],
-    cerrada:    ['#D4EDDA','#155724','Cerrada'],
-    rechazado:  ['#F8D7DA','#721C24','Rechazado'],
-    pendiente:  ['#E9ECEF','#856404','Pendiente'],
+    hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+    en_proceso: ['#FFCA28','#1A202C','En proceso'],
+    cerrada:    ['#16A85E','#FFFFFF','Cerrada'],
+    rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
+    pendiente:  ['#FFCA28','#1A202C','Pendiente'],
   };
   var b = badgeMap[estado] || badgeMap.pendiente;
   var badge = document.getElementById('det-orden-badge');
-  badge.style.cssText = 'background:'+b[0]+';color:'+b[1]+';padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;';
+  badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+b[0]+';color:'+b[1]+';padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;';
   badge.textContent = b[2];
 
   var enHold = estado === 'hold';
@@ -607,17 +614,17 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   tbody.innerHTML = lotesDeLaOrden.map(function(l) {
     var pct = l.total_pasos > 0 ? Math.round((l.pasos_completados/l.total_pasos)*100) : 0;
     var loteBadgeMap = {
-      en_proceso: ['#FFF3CD','#856404','En proceso'],
-      aprobado:   ['#D4EDDA','#155724','Terminado'],
-      rechazado:  ['#F8D7DA','#721C24','Rechazado'],
-      hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
-      pendiente:  ['#E9ECEF','#856404','Pendiente'],
+      en_proceso: ['#FFCA28','#1A202C','En proceso'],
+      aprobado:   ['#16A85E','#FFFFFF','Terminado'],
+      rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
+      hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+      pendiente:  ['#FFCA28','#1A202C','Pendiente'],
     };
     var lb = loteBadgeMap[l.estado] || loteBadgeMap.pendiente;
-    var badgeEdo = '<span style="background:'+lb[0]+';color:'+lb[1]+';padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">'+lb[2]+'</span>';
+    var badgeEdo = '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+lb[0]+';color:'+lb[1]+';padding:3px 11px;border-radius:4px;font-size:12px;font-weight:600;">'+lb[2]+'</span>';
     return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso+'</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso_nombre+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.hora_inicio+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.hora_fin+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">'+l.total_pasos+'</td>' +
@@ -651,17 +658,17 @@ function abrirLote(pk) {
   document.getElementById('lote-bread-orden').textContent = _ordenActual ? _ordenActual.numero : 'Orden';
   document.getElementById('lote-bread-lote').textContent  = lote.folio;
   document.getElementById('lote-titulo').textContent      = lote.folio;
-  document.getElementById('lote-meta').textContent        = lote.proceso;
+  document.getElementById('lote-meta').textContent        = lote.proceso_nombre;
   var loteEstadoBadgeMap = {
-    en_proceso: ['#E0F7FA','#856404','En proceso'],
-    aprobado:   ['#D4EDDA','#155724','Terminado'],
-    rechazado:  ['#F8D7DA','#721C24','Rechazado'],
-    hold:       ['#FEF3C7','#92400E','⏸ En Hold'],
-    pendiente:  ['#E9ECEF','#856404','Pendiente'],
+    en_proceso: ['#FFCA28','#1A202C','En proceso'],
+    aprobado:   ['#16A85E','#FFFFFF','Terminado'],
+    rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
+    hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+    pendiente:  ['#FFCA28','#1A202C','Pendiente'],
   };
   var leb = loteEstadoBadgeMap[lote.estado] || loteEstadoBadgeMap.pendiente;
   var loteEstadoBadgeEl = document.getElementById('lote-estado-badge');
-  loteEstadoBadgeEl.style.cssText = 'background:'+leb[0]+';color:'+leb[1]+';padding:2px 12px;border-radius:999px;font-size:13px;font-weight:700;' + (lote.estado === 'hold' ? 'border:1px solid #F5A623;' : '');
+  loteEstadoBadgeEl.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+leb[0]+';color:'+leb[1]+';padding:3px 11px;border-radius:4px;font-size:13px;font-weight:700;';
   loteEstadoBadgeEl.textContent = leb[2];
 
   var btnHold = document.getElementById('btn-hold-lote');
@@ -702,7 +709,7 @@ function renderTrazabilidad(lote) {
 
   var completadoBanner = '';
   if (lote.estado === 'aprobado') {
-    completadoBanner = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;background:#D4EDDA;color:#155724;font-size:14px;font-weight:600;margin-bottom:8px;">' +
+    completadoBanner = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:14px;background:#16A85E;color:#FFFFFF;font-size:14px;font-weight:600;margin-bottom:8px;">' +
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
       'Este lote ha completado todas sus etapas de trazabilidad.' +
       '</div>';
@@ -721,11 +728,11 @@ function renderTrazabilidad(lote) {
       : 'background:#E2E8F0;color:#718096;';
 
     var badgeHtml = isCompleted
-      ? '<span style="background:#D4EDDA;color:#155724;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;margin-left:8px;">Aprobado</span>'
+      ? '<span style="background:#16A85E;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">Aprobado</span>'
       : isRejected
-        ? '<span style="background:#F8D7DA;color:#721C24;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;margin-left:8px;">Rechazado</span>'
+        ? '<span style="background:#EF5350;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">Rechazado</span>'
         : isActive
-          ? '<span style="background:#E0F7FA;color:#006064;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;margin-left:8px;">En curso</span>'
+          ? '<span style="background:#009EAF;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">En curso</span>'
           : '';
 
     var metaHtml = etapa.meta
@@ -757,7 +764,7 @@ function renderTrazabilidad(lote) {
     // Hold por exceso de scrap, no se puede seguir avanzando.
     var completarBtn = '';
     if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado' || lote.orden_en_hold)) {
-      completarBtn = '<div style="margin-top:14px;padding:12px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:13px;text-align:center;font-weight:600;">'+
+      completarBtn = '<div style="margin-top:14px;padding:12px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:13px;text-align:center;font-weight:600;">'+
         (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' :
           lote.estado === 'rechazado' ? 'Este lote fue rechazado y ya no puede continuar con más etapas.' :
           'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')+
@@ -790,7 +797,7 @@ function renderTrazabilidad(lote) {
       ) : '')+
       '</div>';
 
-    return '<div class="etapa-row" style="border-radius:10px;padding:14px 16px;'+rowBg+rowOp+'cursor:pointer;" '+clickHandler+'>' +
+    return '<div class="etapa-row" style="border-radius:14px;padding:14px 16px;'+rowBg+rowOp+'cursor:pointer;" '+clickHandler+'>' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
         '<div style="display:flex;align-items:flex-start;gap:12px;flex:1;">' +
           '<div style="width:30px;height:30px;border-radius:50%;'+circleStyle+'display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">' +
@@ -927,8 +934,8 @@ function selectResultadoComp(val) {
   if (val === 'rechazado' && !_compRechazoHabilitado) return;
   _compResultado = val;
   var configs = {
-    aprobado:  {bg:'#D4EDDA', color:'#155724', border:'#16A85E'},
-    rechazado: {bg:'#F8D7DA', color:'#721C24', border:'#EF5350'},
+    aprobado:  {bg:'#16A85E', color:'#FFFFFF', border:'#16A85E'},
+    rechazado: {bg:'#EF5350', color:'#FFFFFF', border:'#EF5350'},
   };
   ['aprobado','rechazado'].forEach(function(o) {
     var btn = document.getElementById('btn-res-'+o);

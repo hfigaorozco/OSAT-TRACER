@@ -17,7 +17,7 @@
         <h3 style="font-size:19px;font-weight:700;color:#1A202C;margin:0;">{{ kpi_item.nombre }}</h3>
         <div style="display:flex;gap:6px;">
           <div style="width:16px;height:16px;border-radius:50%;background:#16A85E;"></div>
-          <div style="width:16px;height:16px;border-radius:50%;background:#F5A623;"></div>
+          <div style="width:16px;height:16px;border-radius:50%;background:#FFCA28;"></div>
           <div style="width:16px;height:16px;border-radius:50%;background:#EF5350;"></div>
         </div>
       </div>
@@ -36,7 +36,7 @@
         <div style="margin-bottom:18px;">
           <div style="font-size:14.5px;color:#718096;margin-bottom:8px;">Amarillo ({{ kpi_item.label_amarillo }})</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:12px;height:12px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:#FFCA28;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
               <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
               <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
@@ -136,7 +136,7 @@
     <form method="post" action="{% url 'admin_config_defecto_crear' %}">{% csrf_token %}
       <div class="modal-body">
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" class="form-control" placeholder="def01" maxlength="5" required></div>
+          <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" class="form-control" placeholder="Máx. 5 caracteres, ej: def01" maxlength="5" required></div>
           <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" class="form-control" placeholder="Nombre del defecto" required></div>
         </div>
         <div class="form-group">
