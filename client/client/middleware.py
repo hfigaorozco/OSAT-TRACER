@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 HORA_INICIO = time(7, 0) #7:00 am
-HORA_FIN = time(17, 0) #5:00 pm
+HORA_FIN = time(23, 0) #5:00 pm
 
 class AccesoPorRol:
     def __init__(self, get_response):
