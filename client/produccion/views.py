@@ -553,6 +553,11 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
         nuevo_estado_lote = 'recha' if hay_rechazo else 'termi'
         if str(ob.get('estado', '')).lower() not in ('termi', 'recha'):
             _patch(f'/v1/update/Oblea/{oblea_pk}/', {'estado': nuevo_estado_lote})
+            # KPI final del lote (Yield/Throughput/OEE) — se calcula una sola
+            # vez aquí, no después de cada paso, para que Throughput/OEE
+            # reflejen el proceso completo y no salgan "críticos" solo por
+            # faltar tiempo/pasos a medio camino.
+            _post(f'/v1/kpi/registrar_por_lote/{oblea_pk}/', {})
 
     edo_orden_actual = str(orden.get('estado', '')).lower()
     if edo_orden_actual == 'abier':
