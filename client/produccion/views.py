@@ -21,6 +21,18 @@ def _duracion_str(segundos):
         return '0:00:00'
 
 
+_MENSAJE_ORDEN_CERRADA = 'Esta orden ya está cerrada — no se pueden hacer más cambios sobre ella ni sus lotes.'
+
+
+def _orden_cerrada(orden_num):
+    """Una orden en estado 'cerra' ya no admite más cambios sobre ella ni
+    sobre sus lotes — se usa como guardia en todas las vistas mutadoras."""
+    if not orden_num:
+        return False
+    orden = _get(f'/v1/detail/Orden/{orden_num}/') or {}
+    return str(orden.get('estado', '')).lower() == 'cerra'
+
+
 def _organizacion_redirect(tab=None, editar=None):
     url = reverse('admin_organizacion')
     if tab:
@@ -254,6 +266,10 @@ def _editar_orden(request, pk):
     orden_antes = _get(f'/v1/detail/Orden/{pk}/') or {}
     estado_anterior = str(orden_antes.get('estado', '')).lower()
 
+    if estado_anterior == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
+
     linea_pk = request.POST.get('linea', '').strip()
     tipo_oblea = request.POST.get('tipo_oblea', '').strip()
     estado = request.POST.get('estado', '').strip()
@@ -328,6 +344,9 @@ def _agregar_lotes(request):
         return
     cantidad = int(cantidad_raw)
     orden = _get(f'/v1/detail/Orden/{orden_pk}/')
+    if str((orden or {}).get('estado', '')).lower() == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
     tipo_oblea = (orden or {}).get('tipoOblea')
     if not tipo_oblea:
         messages.error(request, 'No se pudo determinar el tipo de oblea de la orden.')
@@ -346,6 +365,9 @@ def _lote_hold(request, pk):
         return
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
     edo = str(ob.get('estado', '')).lower()
+    if _orden_cerrada(ob.get('orden')):
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
     if edo in ('termi', 'recha'):
         messages.error(request, 'No se puede poner en hold un lote que ya está finalizado.')
         return
@@ -361,6 +383,9 @@ def _lote_hold(request, pk):
 
 def _lote_liberar(request, pk):
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+    if _orden_cerrada(ob.get('orden')):
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
     if str(ob.get('estado', '')).lower() != 'enhol':
         messages.error(request, 'Este lote no está en hold.')
         return
@@ -376,7 +401,11 @@ def _orden_liberar(request, pk):
     en hold automáticamente porque el yield global de alguno de sus lotes
     cayó por debajo del 95%."""
     orden_data = _get(f'/v1/detail/Orden/{pk}/') or {}
-    if str(orden_data.get('estado', '')).lower() != 'enhol':
+    estado_orden = str(orden_data.get('estado', '')).lower()
+    if estado_orden == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
+    if estado_orden != 'enhol':
         messages.error(request, 'Esta orden no está en hold.')
         return
     ok, resp = _patch(f'/v1/update/Orden/{pk}/', {'estado': 'proce'})
@@ -389,6 +418,9 @@ def _orden_liberar(request, pk):
 def _lote_scrap(request, pk):
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
     edo = str(ob.get('estado', '')).lower()
+    if _orden_cerrada(ob.get('orden')):
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
     if edo == 'termi':
         messages.error(request, 'No se puede rechazar un lote que ya fue terminado exitosamente.')
         return
@@ -429,7 +461,11 @@ def _etapa_completar(request, pk):
         return
 
     orden_data = _get(f"/v1/detail/Orden/{ob.get('orden')}/") or {}
-    if str(orden_data.get('estado', '')).lower() == 'enhol':
+    estado_orden = str(orden_data.get('estado', '')).lower()
+    if estado_orden == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
+    if estado_orden == 'enhol':
         messages.error(request, 'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')
         return
 
@@ -673,7 +709,8 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     automáticamente el trigger t_scrap_excedente_del_permitido cuando el yield
     global de algún lote de la orden cae por debajo del 95%. Una orden 'cerra'
     se muestra como 'rechazado' solo si TODOS sus lotes terminaron rechazados;
-    si al menos uno se completó, se considera 'aprobado'.
+    si al menos uno se completó, se considera 'cerrada' (una orden cerrada ya
+    no admite más cambios — ni sobre ella ni sobre sus lotes).
     """
     total      = len(lotes_de_orden)
     rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
@@ -684,7 +721,7 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     if edo == 'enhol':
         edo_str = 'hold'
     elif edo == 'cerra':
-        edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'aprobado'
+        edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'cerrada'
     elif edo == 'proce':
         edo_str = 'en_proceso'
     else:
@@ -855,6 +892,12 @@ def admin_produccion(request):
         'ordenes_json':         json.dumps(ordenes),
         'lotes_json':           json.dumps(lotes),
         'defectos_por_paso_json': json.dumps(defectos_por_paso),
+        # Bandeja global de respaldo — si un paso no tiene defectos propios
+        # ligados en PasoDefecto, se ofrece el catálogo completo en vez de
+        # dejar al operador sin ninguna opción.
+        'defectos_catalogo_json': json.dumps(
+            [{'codigo': d.get('codigo'), 'descripcion': d.get('descripcion', '')} for d in defectos_map.values()]
+        ),
         'maquinas_disponibles': [],
         'empleados':            [],
         'backend_url':          BACKEND_URL,
@@ -1688,6 +1731,8 @@ def supervisor_ordenes(request):
             'fecha_fin':        str(o.get('horaFin', '—'))[:10],
             'fecha_inicio_display': _fecha_display(o.get('horaIni', '')),
             'fecha_fin_display':    _fecha_display(o.get('horaFin', '')),
+            'hora_inicio':      _hora_display(o.get('horaIni', '')),
+            'hora_fin':         _hora_display(o.get('horaFin', '')),
             'total_lotes':      total,
             'lotes_completados': comp,
             'lotes_en_proceso': en_proc,
@@ -2028,6 +2073,11 @@ def supervisor_lote_detalle(request, pk):
     ctx.update({
         'lote':          lote,
         'tipos_defecto': tipos_defecto,
+        # Bandeja global de respaldo — si el paso activo no tiene defectos
+        # propios ligados, se ofrece el catálogo completo en su lugar.
+        'defectos_catalogo_json': json.dumps(
+            [{'codigo': d.get('codigo'), 'descripcion': d.get('descripcion', '')} for d in defectos_map.values()]
+        ),
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Órdenes',   'url': '/supervisor/ordenes/'},

@@ -295,7 +295,7 @@
           <label style="font-size:14px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Defectos detectados</label>
           <div id="sup-defectos-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
           <button type="button" onclick="supAgregarDefecto()"
-                  style="background:none;border:1px dashed #CBD5E0;color:#718096;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
+                  style="background:none;border:1px dashed #CBD5E0;color:#2D3748;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:7px;width:100%;justify-content:center;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Agregar defecto
           </button>
@@ -389,6 +389,8 @@ var _supDefCount = 0;
 var _supCatalogo = [
   {% for d in tipos_defecto %}{codigo:'{{ d.codigo|escapejs }}', descripcion:'{{ d.descripcion|escapejs }}'}{% if not forloop.last %},{% endif %}{% endfor %}
 ];
+// Bandeja global — respaldo cuando el paso no tiene defectos propios ligados
+var _supCatalogoGlobal = {{ defectos_catalogo_json|safe }};
 var SUP_DIES_ACTIVOS = {{ lote.dies_activos|default:0 }};
 var SUP_DIES_INICIALES = {{ lote.dies_iniciales|default:0 }};
 
@@ -447,9 +449,12 @@ function supSelectRes(val) {
 }
 
 function supAgregarDefecto() {
-  if (_supCatalogo.length === 0) {
-    showToast('Este paso no tiene defectos configurados.', 'warning');
-    return;
+  var catalogo = _supCatalogo;
+  if (catalogo.length === 0) {
+    catalogo = _supCatalogoGlobal;
+    if (_supDefCount === 0) {
+      showToast('Este paso no tiene defectos configurados — mostrando el catálogo completo.', 'info');
+    }
   }
   _supDefCount++;
   var list = document.getElementById('sup-defectos-list');
@@ -459,7 +464,7 @@ function supAgregarDefecto() {
   row.innerHTML =
     '<select style="padding:8px 10px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14px;background:#fff;color:#1A202C;">' +
       '<option value="">Tipo de defecto…</option>' +
-      _supCatalogo.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
+      catalogo.map(function(d){ return '<option value="'+d.codigo+'">'+d.descripcion+'</option>'; }).join('') +
     '</select>' +
     '<button type="button" onclick="this.closest(\'.sup-defecto-row\').remove()" style="background:none;border:none;color:#EF5350;cursor:pointer;font-size:18px;">✕</button>';
   list.appendChild(row);

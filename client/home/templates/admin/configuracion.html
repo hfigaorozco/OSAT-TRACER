@@ -28,8 +28,8 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:12px;height:12px;border-radius:50%;background:#16A85E;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
@@ -38,8 +38,8 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:12px;height:12px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
@@ -48,8 +48,8 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:12px;height:12px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>

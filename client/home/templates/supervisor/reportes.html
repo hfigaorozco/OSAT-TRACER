@@ -9,7 +9,7 @@
     <p class="page-subtitle">Informes ya generados de producción, inventario y KPIs — listos para ver e imprimir</p>
   </div>
   <div class="page-actions">
-    <a href="{% url 'supervisor_reportes_mensual' %}" class="btn btn-outline">Mensual</a>
+    <a href="{% url 'supervisor_reportes_mensual' %}" class="btn btn-primary">Mensual</a>
   </div>
 </div>
 
@@ -26,7 +26,7 @@
       <option value="orden" {% if alcance_prod == 'orden' %}selected{% endif %}>Solo órdenes</option>
       <option value="lote" {% if alcance_prod == 'lote' %}selected{% endif %}>Solo lotes</option>
     </select>
-    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-prod')" title="Generar reporte de producción">
+    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-prod')" title="Generar reporte de producción">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
@@ -65,7 +65,7 @@
 
 <div id="tab-inventario" style="display:none;">
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
+    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
@@ -101,7 +101,7 @@
 
 <div id="tab-kpi" style="display:none;">
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-    <button class="btn btn-outline" onclick="openModal('modal-generar-reporte-kpi')" title="Generar reporte de KPI">
+    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-kpi')" title="Generar reporte de KPI">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
