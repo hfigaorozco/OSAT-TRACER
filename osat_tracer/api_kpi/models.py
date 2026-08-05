@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Now
 
 # Create your models here.
 
@@ -43,8 +44,14 @@ class Kpi(models.Model):
 class Alerta(models.Model):
     numero = models.AutoField(primary_key=True)
     descripcion = models.CharField(unique=False, max_length=255)
-    fecha = models.DateField(auto_now=False, auto_now_add=True)
-    hora = models.TimeField(auto_now=False, auto_now_add=True)
+    # auto_now_add cubre los INSERT hechos por el ORM de Django; db_default
+    # cubre los INSERT crudos que hacen los triggers de MySQL (ej.
+    # t_alerta_stock_critico, que inserta en esta tabla sin mandar fecha/hora)
+    # — sin el db_default, esos triggers truenan con "Field 'fecha' doesn't
+    # have a default value" (pasó una vez ya, migración 0011; la migración
+    # 0012 lo volvió a quitar sin querer al redefinir el campo).
+    fecha = models.DateField(auto_now=False, auto_now_add=True, db_default=Now())
+    hora = models.TimeField(auto_now=False, auto_now_add=True, db_default=Now())
     estadoAlerta = models.ForeignKey(EstadoAlerta, on_delete=models.RESTRICT, related_name='alerta')
     
     class Meta:

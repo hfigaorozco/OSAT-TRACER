@@ -859,19 +859,12 @@ def _build_ordenes_lotes():
 # ════════════════════════════════════════════════════════════════
 
 def admin_produccion(request):
-    ordenes, lotes, plantillas, lineas, tipos_oblea, alertas_bd = _build_ordenes_lotes()
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # alertas_bd sin usar aquí: recent_notifications/unread_count del topbar
+    # ahora los pone el context processor home.context_processors.notificaciones
+    # para toda la app, en vez de recalcularlos por separado en cada vista.
+    ordenes, lotes, plantillas, lineas, tipos_oblea, _alertas_bd = _build_ordenes_lotes()
     ctx = {
         'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
     }
 
@@ -992,7 +985,7 @@ def admin_etapa_completar(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def admin_organizacion(request):
-    (procesos_bd, tipos_oblea, lineas_bd, alertas_bd,
+    (procesos_bd, tipos_oblea, lineas_bd, _alertas_bd,
      pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd, linea_proceso_bd) = _get_many(
         '/v1/list/Proceso/',
         '/v1/list/TipoOblea/',
@@ -1005,18 +998,10 @@ def admin_organizacion(request):
         '/v1/list/LineaProceso/',
     )
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
     }
 
@@ -1674,7 +1659,7 @@ def admin_organizacion_paso_editar(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_ordenes(request):
-    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, alertas_bd, linea_proceso_bd = _get_many(
+    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, _alertas_bd, linea_proceso_bd = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -1684,18 +1669,10 @@ def supervisor_ordenes(request):
         '/v1/list/LineaProceso/',
     )
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Supervisor',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
         'backend_url': BACKEND_URL,
     }
@@ -1852,7 +1829,7 @@ def supervisor_lote_scrap(request, pk):
 
 def supervisor_orden_detalle(request, pk):
     (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
-     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd) = _get_many(
+     pasos_bd, pasos_catalogo, pasos_realizados_bd, _alertas_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -1863,18 +1840,10 @@ def supervisor_orden_detalle(request, pk):
         '/v1/list/PasoRealizado/',
         '/v1/list/alertas/',
     )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Supervisor',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
         'backend_url': BACKEND_URL,
     }
@@ -1960,7 +1929,7 @@ def supervisor_orden_detalle(request, pk):
 
 def supervisor_lote_detalle(request, pk):
     (obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados,
-     defectos_bd, paso_defecto_bd, alertas_bd, tipos_oblea_bd) = _get_many(
+     defectos_bd, paso_defecto_bd, _alertas_bd, tipos_oblea_bd) = _get_many(
         '/v1/list/Oblea/',
         '/v1/list/Orden/',
         '/v1/list/PasoProceso/',
@@ -1971,18 +1940,10 @@ def supervisor_lote_detalle(request, pk):
         '/v1/list/alertas/',
         '/v1/list/TipoOblea/',
     )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Supervisor',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
         'backend_url': BACKEND_URL,
     }

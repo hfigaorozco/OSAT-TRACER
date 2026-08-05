@@ -626,6 +626,16 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
             except models.Estado_Oblea.DoesNotExist:
                 pass
 
+        # Registrar el KPI en vivo de este paso (Yield/Throughput/OEE del
+        # lote). No debe tumbar la respuesta si algo falla aquí — completar
+        # la etapa ya se guardó y es lo importante.
+        if oblea:
+            try:
+                from api_kpi.services import registrar_kpis_por_paso
+                registrar_kpis_por_paso(paso_realizado)
+            except Exception:
+                pass
+
         return paso_realizado
 
 #LIST
