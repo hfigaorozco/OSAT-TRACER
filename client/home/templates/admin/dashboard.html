@@ -3,59 +3,50 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="page-title" style="margin-bottom:20px;">Dashboard</h1>
 
 <!-- KPI CARDS -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
-  <div class="card" style="padding:20px;">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+  <a class="card" href="{% url 'admin_cuentas' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
         <div style="font-size:13px;color:#718096;margin-bottom:6px;">Cuentas activas</div>
-        <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.cuentas }}</div>
+        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.cuentas }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
-      <div style="width:44px;height:44px;border-radius:10px;background:rgba(0,158,175,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2" style="flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
-  </div>
-  <div class="card" style="padding:20px;">
+  </a>
+  <a class="card" href="{% url 'admin_personal' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
         <div style="font-size:13px;color:#718096;margin-bottom:6px;">Empleados registrados</div>
-        <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.empleados }}</div>
+        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.empleados }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
-      <div style="width:44px;height:44px;border-radius:10px;background:rgba(0,158,175,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
-  </div>
-  <div class="card" style="padding:20px;">
+  </a>
+  <a class="card" href="{% url 'admin_maquinaria' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
         <div style="font-size:13px;color:#718096;margin-bottom:6px;">Máquinas activas</div>
-        <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.maquinas }}</div>
+        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.maquinas }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
-      <div style="width:44px;height:44px;border-radius:10px;background:rgba(245,166,35,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      </div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" stroke-width="2" style="flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
     </div>
-  </div>
-  <div class="card" style="padding:20px;">
+  </a>
+  <a class="card" href="{% url 'admin_produccion' %}?estado=hold" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
         <div style="font-size:13px;color:#718096;margin-bottom:4px;">LOTES EN HOLD</div>
         <div style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
-        <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.lotes_hold }}</div>
-        <div style="font-size:12.5px;color:#F5A623;margin-top:6px;">{{ kpi.lotes_hold_delta }}</div>
+        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.lotes_hold }}</div>
+        <div style="font-size:12.5px;color:#EF5350;margin-top:6px;">{{ kpi.lotes_hold_delta }}</div>
       </div>
-      <div style="width:44px;height:44px;border-radius:10px;background:rgba(239,83,80,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-      </div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2" style="flex-shrink:0;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
     </div>
-  </div>
+  </a>
 </div>
 
 <!-- SEMÁFORO KPI — ancho completo -->
@@ -71,6 +62,13 @@
                 style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:#718096;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
         </button>
+        <a href="{% url 'admin_configuracion' %}" title="Configurar umbrales"
+           style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:#718096;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </a>
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -150,7 +148,7 @@
   <div class="card" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:12px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Alertas activas</div>
-      {% if alertas_activas %}<span style="background:#F8D7DA;color:#721C24;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
+      {% if alertas_activas %}<span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
@@ -159,22 +157,23 @@
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Descripción</th>
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Fecha</th>
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Hora</th>
-          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Estado</th>
         </tr>
       </thead>
       <tbody>
         {% for alerta in alertas_activas %}
-        <tr style="border-bottom:1px solid #EDF2F7;">
-          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">#{{ alerta.numero }}</td>
+        <tr style="border-bottom:1px solid #EDF2F7;cursor:pointer;" onclick="location.href='{% url 'admin_notificaciones' %}?alerta={{ alerta.numero }}'">
+          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span>#{{ alerta.numero }}</span>
+              <span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;font-family:var(--font-main);">{{ alerta.estado }}</span>
+            </div>
+          </td>
           <td style="padding:10px 14px;color:#2D3748;font-size:13px;">{{ alerta.descripcion }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.fecha }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.hora }}</td>
-          <td style="padding:10px 14px;">
-            <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">{{ alerta.estado }}</span>
-          </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay alertas activas.</td></tr>
+        <tr><td colspan="4" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay alertas activas.</td></tr>
         {% endfor %}
       </tbody>
     </table>

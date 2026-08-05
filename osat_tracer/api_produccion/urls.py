@@ -72,6 +72,7 @@ urlpatterns = [
     #MaquinaPaso
     path('v1/list/MaquinaPaso/', views.ListMaquinaPasoAPIView.as_view(), name='list_MaquinaPasos'),
     path('v1/create/MaquinaPaso/', views.CreateMaquinaPasoAPIView.as_view(), name='create_MaquinaPaso'),
+    path('v1/delete/MaquinaPaso/<int:pk>/', views.DeleteMaquinaPasoAPIView.as_view(), name='delete_MaquinaPaso'),
     #PasoRealizado
     path('v1/list/PasoRealizado/', views.ListPasoRealizadoAPIView.as_view(), name='list_PasoRealizados'),
     path('v1/create/PasoRealizado/', views.CreatePasoRealizadoAPIView.as_view(), name='create_PasoRealizado'),

@@ -20,47 +20,79 @@
 </div>
 
 <div id="tab-produccion">
-  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-    <select class="form-control" style="width:auto;" onchange="location.href='?tab=produccion&alcance_prod='+this.value">
-      <option value="todos" {% if alcance_prod == 'todos' %}selected{% endif %}>Todos</option>
-      <option value="orden" {% if alcance_prod == 'orden' %}selected{% endif %}>Solo órdenes</option>
-      <option value="lote" {% if alcance_prod == 'lote' %}selected{% endif %}>Solo lotes</option>
-    </select>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+    <div class="tab-bar" style="margin-bottom:0;">
+      <button id="subbtn-prod-orden" class="tab-btn active" onclick="switchProdSubTab('orden', this)">Por orden</button>
+      <button id="subbtn-prod-lote" class="tab-btn" onclick="switchProdSubTab('lote', this)">Por lote</button>
+    </div>
     <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-prod')" title="Generar reporte de producción">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
   </div>
-  <div class="card-table">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr><th>Alcance</th><th>Fecha</th><th>Tipo</th><th>Generado por</th><th>Dies finales</th><th>Scrap</th><th>Acciones</th></tr></thead>
-        <tbody>
-          {% for r in reportes_produccion_page %}
-          <tr>
-            <td>
-              <div style="font-family:monospace;font-weight:600;color:#009EAF;">{{ r.alcance }}</div>
-              {% if r.padre_numero %}<div style="font-size:11px;color:#718096;margin-top:2px;">↳ Deriva del reporte #{{ r.padre_numero }} de {{ r.orden_ref }}</div>{% endif %}
-            </td>
-            <td>{{ r.fecha }}</td>
-            <td>{{ r.tipo }}</td>
-            <td>{{ r.generado_por }}</td>
-            <td>{{ r.dies_finales }}</td>
-            <td style="color:#EF5350;font-weight:600;">{{ r.scrap }}</td>
-            <td>
-              <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte/{{ r.numero }}/pdf/" target="_blank">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="7" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de producción generados. Genera uno desde el detalle de una orden o un lote.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+  <div id="subtab-prod-orden">
+    <div class="card-table">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Orden</th><th>Fecha</th><th>Tipo</th><th>Generado por</th><th>Dies finales</th><th>Scrap</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {% for r in reportes_produccion_orden_page %}
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#009EAF;">{{ r.alcance }}</td>
+              <td>{{ r.fecha }}</td>
+              <td>{{ r.tipo }}</td>
+              <td>{{ r.generado_por }}</td>
+              <td>{{ r.dies_finales }}</td>
+              <td style="color:#EF5350;font-weight:600;">{{ r.scrap }}</td>
+              <td>
+                <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte/{{ r.numero }}/pdf/" target="_blank">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de orden generados. Genera uno desde el detalle de una orden.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+    {% include "components/pagination.html" with page_obj=reportes_produccion_orden_page page_param="page_prod_orden" extra_params=extra_params_prod_orden %}
   </div>
-  {% include "components/pagination.html" with page_obj=reportes_produccion_page page_param="page_prod" extra_params=extra_params_prod %}
+
+  <div id="subtab-prod-lote" style="display:none;">
+    <div class="card-table">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Lote</th><th>Fecha</th><th>Tipo</th><th>Generado por</th><th>Dies finales</th><th>Scrap</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {% for r in reportes_produccion_lote_page %}
+            <tr>
+              <td>
+                <div style="font-family:monospace;font-weight:600;color:#009EAF;">{{ r.alcance }}</div>
+                {% if r.padre_numero %}<div style="font-size:11px;color:#718096;margin-top:2px;">↳ Deriva del reporte #{{ r.padre_numero }} de {{ r.orden_ref }}</div>{% endif %}
+              </td>
+              <td>{{ r.fecha }}</td>
+              <td>{{ r.tipo }}</td>
+              <td>{{ r.generado_por }}</td>
+              <td>{{ r.dies_finales }}</td>
+              <td style="color:#EF5350;font-weight:600;">{{ r.scrap }}</td>
+              <td>
+                <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte/{{ r.numero }}/pdf/" target="_blank">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes de lote generados. Genera uno desde el detalle de un lote.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% include "components/pagination.html" with page_obj=reportes_produccion_lote_page page_param="page_prod_lote" extra_params=extra_params_prod_lote %}
+  </div>
 </div>
 
 <div id="tab-inventario" style="display:none;">
@@ -248,6 +280,24 @@ function switchReportTab(id, btn) {
                  kpi: {tab: 'tab-kpi', btn: 'btn-kpi'}};
     const actual = map[tab];
     if (actual) switchReportTab(actual.tab, document.getElementById(actual.btn));
+})();
+
+function switchProdSubTab(id, btn) {
+    ['orden', 'lote'].forEach(function (t) {
+        document.getElementById('subtab-prod-' + t).style.display = t === id ? 'block' : 'none';
+    });
+    document.getElementById('subbtn-prod-orden').classList.toggle('active', id === 'orden');
+    document.getElementById('subbtn-prod-lote').classList.toggle('active', id === 'lote');
+    const params = new URLSearchParams(window.location.search);
+    params.set('subtab_prod', id);
+    params.set('tab', 'produccion');
+    history.replaceState(null, '', '?' + params.toString());
+}
+(function () {
+    const params = new URLSearchParams(window.location.search);
+    const sub = params.get('subtab_prod') || 'orden';
+    const btn = document.getElementById(sub === 'lote' ? 'subbtn-prod-lote' : 'subbtn-prod-orden');
+    if (btn) switchProdSubTab(sub === 'lote' ? 'lote' : 'orden', btn);
 })();
 </script>
 {% endblock %}
