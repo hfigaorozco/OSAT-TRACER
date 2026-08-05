@@ -17,7 +17,7 @@
     "horaIni": "2026-08-03T09:00:00Z",
     "horaFin": "2026-08-03T17:00:00Z",
     "fecha": "2026-08-03",
-    "linea": "lin2", "proceso": "ens-2", "estado": "cerra", "empleado": 5,
+    "linea": "lin2", "proceso": "ens-2", "estado": "abier", "empleado": 5,
     "tipoOblea": "alden"
   }},
   {"model": "api_produccion.oblea", "pk": 1, "fields": {
