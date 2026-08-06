@@ -37,9 +37,9 @@
 
   --font-main:  'Montserrat', sans-serif;
   --font-nav:   'Montserrat', sans-serif;
-  --radius:     18px;
-  --radius-lg:  22px;
-  --radius-xl:  28px;
+  --radius:     20px;
+  --radius-lg:  25px;
+  --radius-xl:  30px;
 }
 
 /* ── Reset ── */
@@ -93,7 +93,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   position: absolute; top: 3px; right: 3px;
   width: 16px; height: 16px;
   background: var(--red); color: #fff;
-  font-size: 9px; font-weight: 700;
+  font-size: 10px; font-weight: 800;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
@@ -110,23 +110,22 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
   transition: width .22s ease;
   overflow: hidden;
-  border-right: 1px solid #1a2838;
 }
 .sidebar.open { width: var(--sidebar-open); }
 
-/* Botón hamburguesa/flecha */
+/* Botón hamburguesa/flecha — mismo centrado que .nav-icon para que quede
+   alineado con los íconos del sidebar debajo */
 .sidebar-toggle-btn {
   width: 100%;
   height: var(--topbar-h);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 22px;
+  justify-content: center;
   color: #FEFDFD;
   flex-shrink: 0;
   transition: background .15s;
 }
-.sidebar-toggle-btn:hover { background: rgba(255,255,255,.06); }
+.sidebar.open .sidebar-toggle-btn { justify-content: flex-start; padding-left: 18px; }
 
 /* Íconos: CSS controla cuál se muestra */
 .icon-menu, .icon-arrow { width: 22px; height: 22px; }
@@ -144,6 +143,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
+  border-right: 1px solid #1a2838;
 }
 
 /* Items de nav */
@@ -188,6 +188,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Activo */
 .nav-item.active { background: var(--nav-item-active); color: #fff; }
+.sidebar-toggle-btn:hover,
 .nav-item:hover:not(.active) { background: transparent; color: #fff; }
 
 /* Badge */
@@ -205,6 +206,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .sidebar-footer {
   padding: 8px 6px;
   border-top: 1px solid rgba(255,255,255,.05);
+  border-right: 1px solid #1a2838;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -270,6 +272,25 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .kpi-card { padding: 20px; }
 .kpi-value { font-size: 30px; font-weight: 700; color: #1A202C; line-height: 1; margin-bottom: 4px; }
 .kpi-label { font-size: 13px; color: #718096; }
+
+/* KPI resumen sin card — solo texto sobre el fondo oscuro de la página,
+   alineado a la derecha para dejar espacio libre a la izquierda. */
+.kpi-plain {
+  display: block;
+  text-align: right;
+  text-decoration: none;
+}
+.kpi-plain-label {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-subtle);
+  margin-bottom: 2px;
+}
+.kpi-plain-value {
+  font-size: 28px; font-weight: 700;
+  color: var(--text-white);
+  line-height: 1.15;
+}
+.kpi-plain-delta { font-size: 12px; }
 
 /* ══════════════════════════════════════
    TABLAS — BLANCAS con texto oscuro
@@ -345,8 +366,9 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .card-table::before {
   content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 40px;
-  background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0));
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
   pointer-events: none;
   z-index: 1;
 }
@@ -427,6 +449,13 @@ select.form-control {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
   background-color: #FFFFFF; color: #1A202C;
+}
+/* Selects de filtro sobre fondo oscuro (.filter-bar vive directo sobre
+   --bg-app, no dentro de una card blanca) — mismo look que personal.html,
+   usando background-color (no el shorthand) para no tapar la flecha. */
+.filter-bar select.form-control {
+  background-color: var(--bg-app);
+  color: var(--text-subtle);
 }
 .form-hint { font-size: 11.5px; margin-top: 5px; color: #718096; }
 .form-hint.error { color: var(--red); }

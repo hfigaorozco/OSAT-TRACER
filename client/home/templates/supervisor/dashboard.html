@@ -4,33 +4,31 @@
 
 {% block content %}
 
-<!-- KPI CARDS — Yield, Throughput, OEE, Lotes en Hold -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+<!-- KPI SUMMARY — solo texto, alineado a la derecha -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;">
 
-  <div class="card" style="padding:14px 20px;">
-    <div style="font-size:13.5px;font-weight:700;color:#4A5568;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Yield Total</div>
-    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.yield_pct }}%</div>
-    <div style="font-size:13px;color:#16A85E;">{{ kpi.yield_delta }}</div>
+  <div class="kpi-plain">
+    <div class="kpi-plain-label">Yield Total</div>
+    <div class="kpi-plain-value">{{ kpi.yield_pct }}%</div>
+    <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.yield_delta }}</div>
   </div>
 
-  <div class="card" style="padding:14px 20px;">
-    <div style="font-size:13.5px;font-weight:700;color:#4A5568;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Throughput</div>
-    <div style="font-size:15px;font-weight:600;color:#718096;margin-bottom:4px;">UPH</div>
-    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.throughput }}</div>
-    <div style="font-size:13px;color:#EF5350;">{{ kpi.throughput_delta }}</div>
+  <div class="kpi-plain">
+    <div class="kpi-plain-label">Throughput</div>
+    <div class="kpi-plain-value">{{ kpi.throughput }}</div>
+    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.throughput_delta }}</div>
   </div>
 
-  <div class="card" style="padding:14px 20px;">
-    <div style="font-size:13.5px;font-weight:700;color:#4A5568;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">OEE</div>
-    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.oee_pct }}%</div>
-    <div style="font-size:13px;color:#16A85E;">{{ kpi.oee_delta }}</div>
+  <div class="kpi-plain">
+    <div class="kpi-plain-label">OEE</div>
+    <div class="kpi-plain-value">{{ kpi.oee_pct }}%</div>
+    <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.oee_delta }}</div>
   </div>
 
-  <a class="card" href="{% url 'supervisor_ordenes' %}?estado=hold" style="padding:14px 20px;display:block;transition:transform .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-    <div style="font-size:13.5px;font-weight:700;color:#4A5568;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Lotes en Hold</div>
-    <div style="font-size:15px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
-    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.lotes_hold }}</div>
-    <div style="font-size:13px;color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+  <a href="{% url 'supervisor_ordenes' %}?estado=hold" class="kpi-plain">
+    <div class="kpi-plain-label">Lotes en Hold</div>
+    <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
+    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
   </a>
 
 </div>
