@@ -4,31 +4,39 @@
 
 {% block content %}
 
-<!-- KPI SUMMARY — solo texto, alineado a la derecha -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;">
+<!-- KPI SUMMARY — solo texto, pegado a la derecha -->
+<div class="kpi-plain-row">
 
   <div class="kpi-plain">
-    <div class="kpi-plain-label">Yield Total</div>
-    <div class="kpi-plain-value">{{ kpi.yield_pct }}%</div>
-    <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.yield_delta }}</div>
+    <div>
+      <div class="kpi-plain-label">Yield Total</div>
+      <div class="kpi-plain-value">{{ kpi.yield_pct }}%</div>
+      <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.yield_delta }}</div>
+    </div>
   </div>
 
   <div class="kpi-plain">
-    <div class="kpi-plain-label">Throughput</div>
-    <div class="kpi-plain-value">{{ kpi.throughput }}</div>
-    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.throughput_delta }}</div>
+    <div>
+      <div class="kpi-plain-label">Throughput</div>
+      <div class="kpi-plain-value">{{ kpi.throughput }}</div>
+      <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.throughput_delta }}</div>
+    </div>
   </div>
 
   <div class="kpi-plain">
-    <div class="kpi-plain-label">OEE</div>
-    <div class="kpi-plain-value">{{ kpi.oee_pct }}%</div>
-    <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.oee_delta }}</div>
+    <div>
+      <div class="kpi-plain-label">OEE</div>
+      <div class="kpi-plain-value">{{ kpi.oee_pct }}%</div>
+      <div class="kpi-plain-delta" style="color:#16A85E;">{{ kpi.oee_delta }}</div>
+    </div>
   </div>
 
   <a href="{% url 'supervisor_ordenes' %}?estado=hold" class="kpi-plain">
-    <div class="kpi-plain-label">Lotes en Hold</div>
-    <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
-    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+    <div>
+      <div class="kpi-plain-label">Lotes en Hold</div>
+      <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
+      <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+    </div>
   </a>
 
 </div>
