@@ -186,7 +186,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 }
 
-/* Activo */
+/* Activo0 */
 .nav-item.active { background: var(--nav-item-active); color: #fff; }
 .sidebar-toggle-btn:hover,
 .nav-item:hover:not(.active) { background:  transparent; color: #fff,; }
