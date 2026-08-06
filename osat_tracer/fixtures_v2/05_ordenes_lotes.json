@@ -1,4 +1,4 @@
-[
+  [
   {"model": "api_produccion.orden", "pk": 1, "fields": {
     "horaIni": "2026-08-03T08:00:00Z",
     "horaFin": "2026-08-03T16:00:00Z",
@@ -30,6 +30,6 @@
     "diesGenerados": 95, "orden": 2, "estado": "proce"
   }},
   {"model": "api_produccion.oblea", "pk": 4, "fields": {
-    "diesGenerados": 48, "orden": 3, "estado": "recha"
+    "diesGenerados": 0, "orden": 3, "estado": "recha"
   }}
 ]
