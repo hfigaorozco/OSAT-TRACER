@@ -2,7 +2,7 @@
   --bg-app:          #1C2433;
   --bg-topbar:       #243040;
   --bg-sidebar:      #243040;
-  --nav-item-bg:     #2E3D52;
+/* --nav-item-bg:     #2E3D52;*/
   --nav-item-active: #16A85E;
 
   /* Cards y tablas — blancas */
@@ -37,9 +37,9 @@
 
   --font-main:  'Montserrat', sans-serif;
   --font-nav:   'Montserrat', sans-serif;
-  --radius:     14px;
-  --radius-lg:  20px;
-  --radius-xl:  24px;
+  --radius:     18px;
+  --radius-lg:  22px;
+  --radius-xl:  28px;
 }
 
 /* ── Reset ── */
@@ -124,7 +124,6 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   padding-left: 22px;
   color: #FEFDFD;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
   transition: background .15s;
 }
 .sidebar-toggle-btn:hover { background: rgba(255,255,255,.06); }
@@ -183,11 +182,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .sidebar.open .nav-label {
   opacity: 1;
   max-width: 180px;
+  font-weight: 100;
+
 }
 
 /* Activo */
 .nav-item.active { background: var(--nav-item-active); color: #fff; }
-.nav-item:hover:not(.active) { background: #374e67; color: #fff; }
+.nav-item:hover:not(.active) { background: transparent; color: #fff; }
 
 /* Badge */
 .nav-badge {
