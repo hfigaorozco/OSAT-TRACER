@@ -23,11 +23,11 @@
 <div class="tab-bar" style="margin-bottom:0;">
   <button class="tab-btn active" onclick="filterAlertas('todas', this)">
     Todas
-    {% if total_count %}<span style="background:#E2E8F0;color:#4A5568;padding:0 7px;border-radius:999px;font-size:12px;margin-left:6px;">{{ total_count }}</span>{% endif %}
+    {% if total_count %}<span style="background:#4A5568;color:#FFFFFF;padding:0 7px;border-radius:4px;font-size:12px;margin-left:6px;">{{ total_count }}</span>{% endif %}
   </button>
   <button class="tab-btn" onclick="filterAlertas('no-leidas', this)">
     Sin resolver
-    {% if unread_count %}<span style="background:#F8D7DA;color:#721C24;padding:0 7px;border-radius:999px;font-size:12px;margin-left:6px;">{{ unread_count }}</span>{% endif %}
+    {% if unread_count %}<span style="background:#EF5350;color:#FFFFFF;padding:0 7px;border-radius:4px;font-size:12px;margin-left:6px;">{{ unread_count }}</span>{% endif %}
   </button>
   <button class="tab-btn" onclick="filterAlertas('stock', this)">Stock</button>
   <button class="tab-btn" onclick="filterAlertas('produccion', this)">Producción</button>
@@ -43,7 +43,7 @@
 <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px;align-items:flex-start;">
 
   <!-- Lista de alertas -->
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;max-height:calc(100vh - 280px);overflow-y:auto;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;max-height:calc(100vh - 280px);overflow-y:auto;">
     {% for alerta in alertas %}
     <div class="alerta-item" id="item-{{ alerta.pk }}"
          data-tipo="{{ alerta.tipo }}"
@@ -83,14 +83,14 @@
 
   <!-- Panel detalle -->
   <div id="panel-detalle">
-    <div id="detalle-vacio" style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:64px 32px;text-align:center;">
+    <div id="detalle-vacio" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:64px 32px;text-align:center;">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0" stroke-width="1.5" style="margin:0 auto 16px;display:block;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <p style="font-size:15px;color:#CBD5E0;">Selecciona una alerta para ver el detalle</p>
     </div>
 
-    <div id="detalle-contenido" style="display:none;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:28px;">
+    <div id="detalle-contenido" style="display:none;background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:28px;">
       <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;">
-        <div id="det-icono-wrap" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+        <div id="det-icono-wrap" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
         <div style="flex:1;">
           <div id="det-badge" style="font-size:13px;font-weight:600;margin-bottom:6px;"></div>
           <h2 id="det-titulo" style="font-size:20px;font-weight:700;color:#1A202C;margin:0 0 4px;"></h2>
@@ -214,6 +214,18 @@ function filterAlertas(tipo, btn) {
     el.style.display = show ? '' : 'none';
   });
 }
+
+// ── Abrir directamente una alerta específica (?alerta=N), p.ej. desde
+// el dashboard o la campana de notificaciones ──
+document.addEventListener('DOMContentLoaded', function () {
+  var pk = new URLSearchParams(window.location.search).get('alerta');
+  if (!pk) return;
+  pk = parseInt(pk, 10);
+  if (!_alertasData[pk]) return;
+  mostrarDetalle(pk);
+  var item = document.getElementById('item-' + pk);
+  if (item) item.scrollIntoView({ block: 'center' });
+});
 </script>
 {% endblock %}
 {% endblock %}

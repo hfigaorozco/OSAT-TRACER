@@ -3,36 +3,35 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="page-title" style="margin-bottom:20px;">Dashboard</h1>
 
 <!-- KPI CARDS — Yield, Throughput, OEE, Lotes en Hold -->
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
 
-  <div class="card" style="padding:20px;">
+  <div class="card" style="padding:14px 20px;">
     <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Yield Total</div>
-    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.yield_pct }}%</div>
+    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.yield_pct }}%</div>
     <div style="font-size:13px;color:#16A85E;">{{ kpi.yield_delta }}</div>
   </div>
 
-  <div class="card" style="padding:20px;">
+  <div class="card" style="padding:14px 20px;">
     <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Throughput</div>
     <div style="font-size:15px;font-weight:600;color:#718096;margin-bottom:4px;">UPH</div>
-    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.throughput }}</div>
+    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.throughput }}</div>
     <div style="font-size:13px;color:#EF5350;">{{ kpi.throughput_delta }}</div>
   </div>
 
-  <div class="card" style="padding:20px;">
+  <div class="card" style="padding:14px 20px;">
     <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">OEE</div>
-    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.oee_pct }}%</div>
+    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.oee_pct }}%</div>
     <div style="font-size:13px;color:#16A85E;">{{ kpi.oee_delta }}</div>
   </div>
 
-  <div class="card" style="padding:20px;">
+  <a class="card" href="{% url 'supervisor_ordenes' %}?estado=hold" style="padding:14px 20px;display:block;transition:transform .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Lotes en Hold</div>
     <div style="font-size:15px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
-    <div style="font-size:32px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.lotes_hold }}</div>
-    <div style="font-size:13px;color:#F5A623;">{{ kpi.lotes_hold_delta }}</div>
-  </div>
+    <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;margin-bottom:4px;">{{ kpi.lotes_hold }}</div>
+    <div style="font-size:13px;color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+  </a>
 
 </div>
 
@@ -128,7 +127,7 @@
   <div class="card" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:12px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Alertas activas</div>
-      {% if alertas_activas %}<span style="background:#F8D7DA;color:#721C24;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
+      {% if alertas_activas %}<span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
@@ -137,22 +136,23 @@
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Descripción</th>
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Fecha</th>
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Hora</th>
-          <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Estado</th>
         </tr>
       </thead>
       <tbody>
         {% for alerta in alertas_activas %}
-        <tr style="border-bottom:1px solid #EDF2F7;">
-          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">#{{ alerta.numero }}</td>
+        <tr style="border-bottom:1px solid #EDF2F7;cursor:pointer;" onclick="location.href='{% url 'supervisor_notificaciones' %}?alerta={{ alerta.numero }}'">
+          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span>#{{ alerta.numero }}</span>
+              <span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;font-family:var(--font-main);">{{ alerta.estado }}</span>
+            </div>
+          </td>
           <td style="padding:10px 14px;color:#2D3748;font-size:13px;">{{ alerta.descripcion }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.fecha }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.hora }}</td>
-          <td style="padding:10px 14px;">
-            <span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;">{{ alerta.estado }}</span>
-          </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay alertas activas.</td></tr>
+        <tr><td colspan="4" style="padding:16px 14px;color:#A0AEC0;text-align:center;">No hay alertas activas.</td></tr>
         {% endfor %}
       </tbody>
     </table>

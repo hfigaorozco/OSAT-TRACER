@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from . import serializers, models
-from .services import calcular_kpi_por_linea
+from .services import calcular_kpi_por_linea, registrar_kpis_de_lote
 
 # Create your views here.
 
@@ -129,3 +129,18 @@ class KpiPorLineaAPIView(APIView):
         fecha_fin = request.query_params.get('fecha_fin')
         data = calcular_kpi_por_linea(fecha_inicio, fecha_fin)
         return Response(data)
+
+
+### Registrar el KPI final de un lote (Yield/Throughput/OEE) al quedar en
+### estado terminal — lo llama el cliente (produccion/views.py) justo
+### después de confirmar que el lote quedó Terminada o Rechazada.
+class RegistrarKpiPorLoteAPIView(APIView):
+
+    def post(self, request, oblea_pk):
+        from api_produccion.models import Oblea
+        try:
+            oblea = Oblea.objects.get(pk=oblea_pk)
+        except Oblea.DoesNotExist:
+            return Response({'detail': 'Lote no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        registrar_kpis_de_lote(oblea)
+        return Response({'ok': True})

@@ -95,26 +95,27 @@ def _alerta_para_kpi(kpi, valor, codigo_semaforo, oblea):
     return alerta
 
 
-def registrar_kpis_por_paso(paso_realizado):
-    """Calcula y guarda Yield/Throughput/OEE EN VIVO para la oblea de un
-    Paso_Realizado recién creado — es la pieza que faltaba para que el
-    semáforo del dashboard (calcular_kpi_por_linea, arriba) deje de mostrar
-    siempre los mismos datos de la carga inicial y refleje producción real
-    después de cada paso. Se llama desde
-    CreatePasoRealizadoSerializer.create() en api_produccion, justo después
-    de guardar el Paso_Realizado (aprobado o rechazado — ambos casos mueven
-    el yield del lote).
+def registrar_kpis_de_lote(oblea):
+    """Calcula y guarda el Yield/Throughput/OEE FINAL de un lote — se llama
+    una sola vez, cuando el lote (Oblea) queda en estado terminal (Terminada
+    o Rechazada), no después de cada paso individual. Throughput y OEE son
+    medidas de todo el proceso (dies por hora del lote completo, rendimiento
+    contra el tiempo estimado de TODOS sus pasos) — calcularlas a medio
+    proceso las hacía salir "críticas" solo porque faltaba tiempo/pasos por
+    recorrer, no porque el lote realmente rindiera mal. Se llama desde
+    client/produccion/views.py::_avanzar_estado_lote_y_orden justo después
+    de confirmar el estado final del lote, vía el endpoint
+    /v1/kpi/registrar_por_lote/<oblea>/.
 
     Fórmulas (con los datos que hoy existen en el modelo; no hay tracking
     de tiempo muerto de máquina, así que Disponibilidad se asume 100%):
-      - Yield      = diesGenerados actual / cantidadDies inicial del lote.
-      - Throughput = diesGenerados actual / horas transcurridas desde el
-                     primer Paso_Realizado de este lote.
+      - Yield      = diesGenerados final / cantidadDies inicial del lote.
+      - Throughput = diesGenerados final / horas entre el primer y el
+                     último Paso_Realizado del lote.
       - OEE        = Rendimiento x Calidad, donde Rendimiento = suma de
-                     tiempoEstimado de los pasos ya hechos / tiempo real
+                     tiempoEstimado de todos los pasos / tiempo real
                      transcurrido (tope 100%), y Calidad = Yield.
     """
-    oblea = paso_realizado.oblea
     oblea.refresh_from_db()
     if not oblea.orden_id or not oblea.orden.tipoOblea_id:
         return
@@ -122,14 +123,18 @@ def registrar_kpis_por_paso(paso_realizado):
     if dies_iniciales <= 0:
         return
 
-    dies_actuales = oblea.diesGenerados or 0
-    yield_pct = max(0.0, min(100.0, dies_actuales / dies_iniciales * 100))
-
     pasos_de_la_oblea = list(
         Paso_Realizado.objects.filter(oblea=oblea).select_related('paso').order_by('fecha', 'hora')
     )
-    primer_paso = pasos_de_la_oblea[0] if pasos_de_la_oblea else paso_realizado
-    horas_transcurridas = max((paso_realizado.fecha - primer_paso.fecha).total_seconds() / 3600, 1 / 60)
+    if not pasos_de_la_oblea:
+        return
+
+    dies_actuales = oblea.diesGenerados or 0
+    yield_pct = max(0.0, min(100.0, dies_actuales / dies_iniciales * 100))
+
+    primer_paso = pasos_de_la_oblea[0]
+    ultimo_paso = pasos_de_la_oblea[-1]
+    horas_transcurridas = max((ultimo_paso.fecha - primer_paso.fecha).total_seconds() / 3600, 1 / 60)
     throughput = dies_actuales / horas_transcurridas
 
     segundos_estimados = sum((pr.paso.tiempoEstimado.total_seconds() for pr in pasos_de_la_oblea), 0.0)

@@ -553,6 +553,11 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
         nuevo_estado_lote = 'recha' if hay_rechazo else 'termi'
         if str(ob.get('estado', '')).lower() not in ('termi', 'recha'):
             _patch(f'/v1/update/Oblea/{oblea_pk}/', {'estado': nuevo_estado_lote})
+            # KPI final del lote (Yield/Throughput/OEE) — se calcula una sola
+            # vez aquí, no después de cada paso, para que Throughput/OEE
+            # reflejen el proceso completo y no salgan "críticos" solo por
+            # faltar tiempo/pasos a medio camino.
+            _post(f'/v1/kpi/registrar_por_lote/{oblea_pk}/', {})
 
     edo_orden_actual = str(orden.get('estado', '')).lower()
     if edo_orden_actual == 'abier':
@@ -822,6 +827,7 @@ def _build_ordenes_lotes():
             'folio': f'LOT-{num:04d}' if isinstance(num, int) else str(num),
             'orden_pk': orden_num,
             'proceso': str(orden_data.get('proceso', '—')),
+            'proceso_nombre': procesos_map.get(str(orden_data.get('proceso', '')), {}).get('nombre', orden_data.get('proceso', '—')),
             'hora_inicio': _hora_display(orden_data.get('horaIni', '')),
             'hora_fin': _hora_display(orden_data.get('horaFin', '')),
             'total_pasos': len(etapas),
@@ -986,7 +992,8 @@ def admin_etapa_completar(request, pk):
 
 def admin_organizacion(request):
     (procesos_bd, tipos_oblea, lineas_bd, _alertas_bd,
-     pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd, linea_proceso_bd) = _get_many(
+     pasos_bd, pasos_proceso_bd, proceso_pieza_bd, piezas_bd, linea_proceso_bd,
+     maquina_paso_bd, maquinas_bd) = _get_many(
         '/v1/list/Proceso/',
         '/v1/list/TipoOblea/',
         '/v1/list/Linea/',
@@ -996,7 +1003,19 @@ def admin_organizacion(request):
         '/v1/list/ProcesoPieza/',
         '/v1/list/piezas/',
         '/v1/list/LineaProceso/',
+        '/v1/list/MaquinaPaso/',
+        '/v1/list/maquinaria/',
     )
+    maquinas_map = {str(m.get('numSerie', '')): m for m in maquinas_bd}
+    maquinas_por_paso = {}
+    for mp in maquina_paso_bd:
+        codigo_paso = str(mp.get('paso', ''))
+        num_serie = str(mp.get('maquina', ''))
+        m = maquinas_map.get(num_serie)
+        if m:
+            maquinas_por_paso.setdefault(codigo_paso, []).append(
+                {'rel_pk': mp.get('id'), 'pk': num_serie, 'nombre': m.get('nombre', num_serie)}
+            )
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
     # recent_notifications/unread_count del topbar los pone el context
     # processor home.context_processors.notificaciones para toda la app.
@@ -1069,6 +1088,8 @@ def admin_organizacion(request):
             'descripcion':         p.get('descripcion', ''),
             'tiempo_estimado_seg': p.get('tiempoEstimado', 0),
             'tiempo_estimado_min': round((p.get('tiempoEstimado', 0) or 0) / 60),
+            'maquinas':            maquinas_por_paso.get(str(p.get('codigo', '')), []),
+            'maquinas_json':       json.dumps(maquinas_por_paso.get(str(p.get('codigo', '')), [])),
         }
         for p in pasos_bd
     ]
@@ -1092,6 +1113,10 @@ def admin_organizacion(request):
         'pasos_extra_params': 'tab=pasos&',
         'pasos_activos': pasos,
         'piezas_catalogo': [{'pk': z.get('codigo'), 'nombre': z.get('nombre', '')} for z in piezas_bd],
+        'maquinas_catalogo': [
+            {'pk': m.get('numSerie'), 'nombre': m.get('nombre', '')}
+            for m in maquinas_bd if str(m.get('estado', '')).lower() == 'act'
+        ],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Organización', 'url': '/admin/organizacion/'},
@@ -1565,6 +1590,7 @@ def admin_organizacion_paso_crear(request):
         nombre = request.POST.get('nombre', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
         minutos = request.POST.get('tiempo_estimado', '').strip()
+        maquinas_codigos = [m for m in request.POST.getlist('maquina_codigo') if m]
 
         errores = []
         if not codigo:
@@ -1587,6 +1613,9 @@ def admin_organizacion_paso_crear(request):
         if not minutos or not minutos.isdigit() or int(minutos) < 1:
             errores.append('El tiempo estimado es obligatorio y debe ser un número mayor a 0.')
 
+        if not maquinas_codigos:
+            errores.append('Asigna al menos una máquina a este paso.')
+
         if not errores:
             pasos_bd = _get('/v1/list/pasos/', [])
             if any(str(p.get('codigo', '')).lower() == codigo for p in pasos_bd):
@@ -1606,6 +1635,8 @@ def admin_organizacion_paso_crear(request):
             'tiempoEstimado': _duracion_str(int(minutos) * 60),
         })
         if ok:
+            for maquina_codigo in maquinas_codigos:
+                _post('/v1/create/MaquinaPaso/', {'maquina': maquina_codigo, 'paso': codigo})
             messages.success(request, 'Paso creado.')
         else:
             messages.error(request, f'Error: {resp}')
@@ -1617,6 +1648,7 @@ def admin_organizacion_paso_editar(request, pk):
         nombre = request.POST.get('nombre', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
         minutos = request.POST.get('tiempo_estimado', '').strip()
+        maquinas_codigos = [m for m in request.POST.getlist('maquina_codigo') if m]
 
         errores = []
         if not nombre:
@@ -1631,6 +1663,9 @@ def admin_organizacion_paso_editar(request, pk):
 
         if minutos and not minutos.isdigit():
             errores.append('El tiempo estimado debe ser un número.')
+
+        if not maquinas_codigos:
+            errores.append('Asigna al menos una máquina a este paso.')
 
         if not errores and nombre:
             pasos_bd = _get('/v1/list/pasos/', [])
@@ -1648,6 +1683,18 @@ def admin_organizacion_paso_editar(request, pk):
             'tiempoEstimado': _duracion_str(int(minutos or 0) * 60),
         })
         if ok:
+            # Sincroniza las máquinas asignadas: borra las que ya no vengan
+            # marcadas y crea las nuevas — más simple que ir comparando
+            # altas/bajas una por una desde el JS.
+            maquina_paso_bd = _get('/v1/list/MaquinaPaso/', [])
+            relaciones_actuales = [mp for mp in maquina_paso_bd if str(mp.get('paso', '')) == str(pk)]
+            actuales_por_maquina = {str(mp.get('maquina', '')): mp.get('id') for mp in relaciones_actuales}
+            for maquina_codigo, rel_pk in actuales_por_maquina.items():
+                if maquina_codigo not in maquinas_codigos:
+                    _delete(f'/v1/delete/MaquinaPaso/{rel_pk}/')
+            for maquina_codigo in maquinas_codigos:
+                if maquina_codigo not in actuales_por_maquina:
+                    _post('/v1/create/MaquinaPaso/', {'maquina': maquina_codigo, 'paso': pk})
             messages.success(request, 'Paso actualizado.')
         else:
             messages.error(request, f'Error: {resp}')

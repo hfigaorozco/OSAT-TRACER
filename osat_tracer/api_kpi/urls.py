@@ -31,4 +31,8 @@ urlpatterns = [
 
     # KPI por línea (semáforo real)
     path('v1/kpi/semaforo_por_linea/', views.KpiPorLineaAPIView.as_view(), name='kpi_semaforo_por_linea'),
+
+    # Registrar el KPI final de un lote (Yield/Throughput/OEE), una vez que
+    # queda en estado terminal (Terminada o Rechazada).
+    path('v1/kpi/registrar_por_lote/<int:oblea_pk>/', views.RegistrarKpiPorLoteAPIView.as_view(), name='kpi_registrar_por_lote'),
 ]
