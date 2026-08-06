@@ -4,24 +4,36 @@
 
 {% block content %}
 
-<!-- KPI SUMMARY — solo texto, alineado a la derecha -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;">
+<!-- KPI SUMMARY — solo texto + ícono, pegado a la derecha -->
+<div class="kpi-plain-row">
   <a href="{% url 'admin_cuentas' %}" class="kpi-plain">
-    <div class="kpi-plain-label">Cuentas activas</div>
-    <div class="kpi-plain-value">{{ kpi.cuentas }}</div>
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--turquoise)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <div>
+      <div class="kpi-plain-label">Cuentas activas</div>
+      <div class="kpi-plain-value">{{ kpi.cuentas }}</div>
+    </div>
   </a>
   <a href="{% url 'admin_personal' %}" class="kpi-plain">
-    <div class="kpi-plain-label">Empleados registrados</div>
-    <div class="kpi-plain-value">{{ kpi.empleados }}</div>
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--turquoise)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <div>
+      <div class="kpi-plain-label">Empleados registrados</div>
+      <div class="kpi-plain-value">{{ kpi.empleados }}</div>
+    </div>
   </a>
   <a href="{% url 'admin_maquinaria' %}" class="kpi-plain">
-    <div class="kpi-plain-label">Máquinas activas</div>
-    <div class="kpi-plain-value">{{ kpi.maquinas }}</div>
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    <div>
+      <div class="kpi-plain-label">Máquinas activas</div>
+      <div class="kpi-plain-value">{{ kpi.maquinas }}</div>
+    </div>
   </a>
   <a href="{% url 'admin_produccion' %}?estado=hold" class="kpi-plain">
-    <div class="kpi-plain-label">Lotes en Hold</div>
-    <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
-    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    <div>
+      <div class="kpi-plain-label">Lotes en Hold</div>
+      <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
+      <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
+    </div>
   </a>
 </div>
 
