@@ -3,6 +3,7 @@
 {% block page_title %}{{ lote.folio }}{% endblock %}
 
 {% block content %}
+<div class="lote-detalle-page">
 <a href="{% if lote.orden %}{% url 'supervisor_orden_detalle' lote.orden.pk %}{% else %}{% url 'supervisor_ordenes' %}{% endif %}" title="Regresar"
    style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #E2E8F0;color:#4A5568;text-decoration:none;margin-bottom:14px;">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -60,39 +61,62 @@
   </div>
 </div>
 
-<!-- KPI Stats -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
-  <div class="card" style="padding:16px;">
-    <div style="font-size:12px;color:#718096;margin-bottom:4px;">Dies iniciales</div>
-    <div style="font-size:24px;font-weight:700;color:#1A202C;">{{ lote.dies_iniciales|default:"—" }}</div>
-  </div>
-  <div class="card" style="padding:16px;">
-    <div style="font-size:12px;color:#718096;margin-bottom:4px;">Dies activos</div>
-    <div style="font-size:24px;font-weight:700;color:#1A202C;">{{ lote.dies_activos|default:"—" }}</div>
-  </div>
-  <div class="card" style="padding:16px;">
-    <div style="font-size:12px;color:#718096;margin-bottom:4px;">Scrap total</div>
-    <div style="font-size:24px;font-weight:700;color:#EF5350;">{{ lote.scrap_total|default:"0" }}</div>
-  </div>
-  <div class="card" style="padding:16px;">
-    <div style="font-size:12px;color:#718096;margin-bottom:4px;">Yield</div>
-    {% with y=lote.yield_pct|default:0 %}
-    <div style="font-size:24px;font-weight:700;color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>
-    {% endwith %}
-  </div>
-</div>
+<div class="lote-detalle-layout">
+  <div class="lote-detalle-left">
 
-<!-- Trazabilidad -->
-<div class="card">
-  <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
-  {% if lote.estado.nombre == 'Terminada' %}
-  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:14px;background:#16A85E;color:#FFFFFF;font-size:14px;font-weight:600;margin-bottom:14px;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    Este lote ha completado todas sus etapas de trazabilidad.
+    <!-- Datos del lote — sin card, texto sobre el fondo oscuro -->
+    <div class="lote-stats-row">
+      <div>
+        <div class="lote-stat-label">Dies iniciales</div>
+        <div class="lote-stat-value">{{ lote.dies_iniciales|default:"—" }}</div>
+      </div>
+      <div>
+        <div class="lote-stat-label">Dies activos</div>
+        <div class="lote-stat-value">{{ lote.dies_activos|default:"—" }}</div>
+      </div>
+      <div>
+        <div class="lote-stat-label">Scrap total</div>
+        <div class="lote-stat-value" style="color:{% if lote.scrap_total %}#EF5350{% else %}var(--text-white){% endif %};">{{ lote.scrap_total|default:"0" }}</div>
+      </div>
+      <div>
+        <div class="lote-stat-label">Yield</div>
+        {% with y=lote.yield_pct|default:0 %}
+        <div class="lote-stat-value" style="color:{% if y >= 90 %}#16A85E{% elif y >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{{ y|floatformat:1 }}%</div>
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- Proceso + piezas que usa -->
+    <div class="lote-proceso-piezas">
+      Proceso: <strong>{{ lote.proceso_nombre|default:"—" }}</strong>
+      {% if lote.piezas %}
+      &nbsp;·&nbsp;Piezas: <strong>{% for z in lote.piezas %}{{ z.nombre }} ({{ z.cantidad }}){% if not forloop.last %}, {% endif %}{% endfor %}</strong>
+      {% endif %}
+    </div>
+
+    <!-- Progreso general del lote (pasos completados) -->
+    <div class="lote-progreso-general">
+      <div class="lote-progreso-general-head">
+        <span>Progreso del lote</span>
+        <span>{{ lote.pasos_completados|default:0 }}/{{ lote.total_pasos|default:0 }} pasos · {{ lote.pct_completados|default:0 }}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:{{ lote.pct_completados|default:0 }}%;"></div></div>
+    </div>
+
   </div>
-  {% endif %}
-  <div style="display:flex;flex-direction:column;gap:6px;">
-    {% for etapa in lote.etapas %}
+
+  <div class="lote-detalle-right">
+    <div class="card lote-etapas-card">
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
+      <div class="lote-etapas-scroll">
+      {% if lote.estado.nombre == 'Terminada' %}
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:14px;background:#16A85E;color:#FFFFFF;font-size:14px;font-weight:600;margin-bottom:14px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Este lote ha completado todas sus etapas de trazabilidad.
+      </div>
+      {% endif %}
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        {% for etapa in lote.etapas %}
     {% if etapa.completado %}
     <!-- Etapa completada (aprobada o rechazada) -->
     <div onclick="toggleSupEtapaDetalle(this)" style="border-radius:14px;padding:14px 16px;border:1px solid transparent;cursor:pointer;{% if etapa.rechazado %}background:#FDEDEE;{% endif %}">
@@ -240,7 +264,11 @@
     </div>
     {% endif %}
     {% endfor %}
+      </div>
+      </div>
+    </div>
   </div>
+</div>
 </div>
 
 

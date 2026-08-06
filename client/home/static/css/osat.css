@@ -295,14 +295,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .kpi-plain-label {
   font-size: 12.5px; font-weight: 600;
   color: var(--text-subtle);
-  margin-bottom: 2px;
+  white-space: nowrap;
 }
 .kpi-plain-value {
-  font-size: 28px; font-weight: 700;
+  font-size: 22px; font-weight: 700;
   color: var(--text-white);
-  line-height: 1.15;
+  line-height: 1;
+  white-space: nowrap;
 }
-.kpi-plain-delta { font-size: 12px; }
+.kpi-plain-delta { font-size: 12px; white-space: nowrap; }
 
 /* ══════════════════════════════════════
    TABLAS — BLANCAS con texto oscuro
@@ -545,6 +546,49 @@ select.form-control {
 ══════════════════════════════════════ */
 .progress-bar { flex: 1; height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width .3s; }
+
+/* ══════════════════════════════════════
+   LOTE DETALLE — datos a la izquierda (sin card, texto sobre fondo
+   oscuro), trazabilidad a la derecha con scroll propio e independiente
+   del resto de la página.
+══════════════════════════════════════ */
+.lote-detalle-page { height: 100%; display: flex; flex-direction: column; }
+.lote-detalle-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+}
+.lote-detalle-left { flex: 0 0 40%; min-width: 0; }
+.lote-detalle-right { flex: 1; min-width: 0; }
+
+.lote-stats-row { display: flex; flex-wrap: wrap; gap: 20px 24px; margin: 20px 0; }
+.lote-stat-label { font-size: 12px; font-weight: 600; color: var(--text-subtle); margin-bottom: 4px; }
+.lote-stat-value { font-size: 24px; font-weight: 700; color: var(--text-white); line-height: 1; }
+
+.lote-proceso-piezas { font-size: 14px; color: var(--text-subtle); margin-bottom: 22px; line-height: 1.6; }
+.lote-proceso-piezas strong { color: var(--text-white); font-weight: 600; }
+
+.lote-progreso-general { margin-bottom: 4px; }
+.lote-progreso-general-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12.5px; color: var(--text-subtle); margin-bottom: 6px;
+}
+.lote-progreso-general .progress-bar { height: 8px; }
+
+.lote-etapas-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.lote-etapas-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  padding-right: 4px;
+}
 
 /* ══════════════════════════════════════
    BANNERS — dentro de contenido oscuro
