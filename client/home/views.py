@@ -7,11 +7,13 @@ from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
+from django.urls import reverse
+from django.utils import timezone
+from client.middleware import obtener_horario
 import requests
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.contrib import messages
+
+
 BACKEND_URL = 'http://localhost:8001/api'
 
 
@@ -409,5 +411,25 @@ def registro_view(request):
     return render(request, 'base/registro.html')
 
 
+# Verificaciones de horario
+def _dashboard_por_rol(rol):
+    rol = rol or ''
+    if 'administrador' in rol:
+        return reverse('admin_dashboard')
+    if 'supervisor' in rol:
+        return reverse('supervisor_dashboard')
+    return reverse('login')
+
+
 def horario_laboral(request):
-    return render(request, '404pages/horario_laboral.html', status=503)
+    destino = _dashboard_por_rol(request.session.get('user_rol'))
+    return render(request, '404pages/horario_laboral.html', {
+        'destino_dashboard': destino,
+    }, status=503)
+
+
+def verificar_horario(request):
+    horario = obtener_horario()
+    hora_actual = timezone.localtime(timezone.now()).time()
+    disponible = horario['inicio'] <= hora_actual <= horario['fin']
+    return JsonResponse({'disponible': disponible})

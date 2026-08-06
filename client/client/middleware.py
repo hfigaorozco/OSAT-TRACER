@@ -1,11 +1,19 @@
 # client/client/middleware.py
-from datetime import time
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.core.cache import cache
+from core.models import HorarioSistema
 
-HORA_INICIO = time(7, 0) #7:00 am
-HORA_FIN = time(23, 0) #5:00 pm
+
+def obtener_horario():
+    horario = cache.get('horario_sistema')
+    if horario is None:
+        h = HorarioSistema.obtener()
+        horario = {'inicio': h.hora_inicio, 'fin': h.hora_fin}
+        cache.set('horario_sistema', horario, 300)
+    return horario
+
 
 class AccesoPorRol:
     def __init__(self, get_response):
@@ -17,6 +25,7 @@ class AccesoPorRol:
             reverse('registro'),
             reverse('logout'),
             reverse('horario_laboral'),
+            reverse('verificar_horario'),
         ]
 
         if request.path in urls_publicas:
@@ -28,14 +37,13 @@ class AccesoPorRol:
         if not usuario_id:
             return redirect('login')
 
-        # Ventana de disponibilidsd del sistema 
+        horario = obtener_horario()
         hora_actual = timezone.localtime(timezone.now()).time()
-        horario = HORA_INICIO <= hora_actual <= HORA_FIN
-        
-        if not horario and 'administrador' not in usuario_rol:
+        dentro_de_horario = horario['inicio'] <= hora_actual <= horario['fin']
+
+        if not dentro_de_horario and 'administrador' not in usuario_rol:
             return redirect('horario_laboral')
 
-        # Control de acceso por rol (lógica original del Chema) 
         if 'supervisor' in request.path and 'supervisor' not in usuario_rol:
             return redirect('admin_dashboard')
 
