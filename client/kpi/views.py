@@ -5,6 +5,11 @@ from django.utils.dateparse import parse_datetime
 from django.urls import reverse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
 
+# Importaciones para los horarios del sistema
+from core.models import HorarioSistema
+from django.core.cache import cache
+from datetime import datetime
+
 # ── Catálogo de colores/íconos por tipo de alerta ─────────────────────────────
 
 _COLOR_MAP = {
@@ -337,6 +342,7 @@ def admin_configuracion(request):
 
     ctx.update({
         'kpi_cards':     kpi_cards,
+        'horario_sistema': HorarioSistema.obtener(),
         'tipos_defecto': [
             _FakeObj(
                 pk=d.get('codigo'), codigo=d.get('codigo', ''),
@@ -531,7 +537,7 @@ def admin_config_defecto_toggle_estado(request, pk):
 def admin_config_change_password(request):
     if request.method == 'POST':
         current_password = request.POST.get('current_password', '')
-        new_password     = request.POST.get('new_password', '')
+        new_password = request.POST.get('new_password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
         errores = []
@@ -562,4 +568,29 @@ def admin_config_change_password(request):
             messages.success(request, 'Contraseña actualizada correctamente.')
         else:
             messages.error(request, f'Error: {resp}')
+    return redirect('admin_configuracion')
+
+
+def admin_config_horario_save(request):
+    if request.method == 'POST':
+        inicio_raw = request.POST.get('hora_inicio', '').strip()
+        fin_raw = request.POST.get('hora_fin', '').strip()
+
+        try:
+            hora_inicio = datetime.strptime(inicio_raw, '%H:%M').time()
+            hora_fin = datetime.strptime(fin_raw, '%H:%M').time()
+        except ValueError:
+            messages.error(request, 'Formato de hora inválido.')
+            return redirect('admin_configuracion')
+
+        if hora_inicio >= hora_fin:
+            messages.error(request, 'La hora de inicio debe ser menor a la hora de fin.')
+            return redirect('admin_configuracion')
+
+        horario = HorarioSistema.obtener()
+        horario.hora_inicio = hora_inicio
+        horario.hora_fin = hora_fin
+        horario.save() 
+
+        messages.success(request, 'Horario del sistema actualizado.')
     return redirect('admin_configuracion')
