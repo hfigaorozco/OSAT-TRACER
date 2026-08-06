@@ -14,7 +14,6 @@ def obtener_horario():
         cache.set('horario_sistema', horario, 300)
     return horario
 
-
 class AccesoPorRol:
     def __init__(self, get_response):
         self.get_response = get_response

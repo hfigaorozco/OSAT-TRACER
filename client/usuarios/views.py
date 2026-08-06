@@ -96,7 +96,7 @@ def admin_dashboard(request):
     estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
 
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map, limit=20)
 
     alertas_activas = [{
         'numero': a.get('numero', '—'),
@@ -104,7 +104,7 @@ def admin_dashboard(request):
         'fecha': a.get('fecha', '—'),
         'hora': str(a.get('hora', ''))[:5],
         'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
-    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:5]
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:20]
 
     ctx.update({'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}]})
 
@@ -414,7 +414,7 @@ def supervisor_dashboard(request):
 
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
     kpi_prod = _kpi_produccion_reales(obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd)
-    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map)
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map, limit=20)
 
     alertas_activas = [{
         'numero': a.get('numero', '—'),
@@ -422,7 +422,7 @@ def supervisor_dashboard(request):
         'fecha': a.get('fecha', '—'),
         'hora': str(a.get('hora', ''))[:5],
         'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
-    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:5]
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:20]
 
     # recent_notifications/unread_count del topbar los pone el context
     # processor home.context_processors.notificaciones para toda la app.

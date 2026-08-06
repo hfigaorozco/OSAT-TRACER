@@ -4,22 +4,27 @@ from datetime import datetime
 from django.conf import settings
 
 _CSS_PATH = os.path.join(settings.BASE_DIR, 'home', 'static', 'css', 'osat.css')
+_JS_PATH = os.path.join(settings.BASE_DIR, 'home', 'static', 'js', 'osat.js')
 
 
 def static_version(request):
-    """Query param de cache-busting para osat.css — sin esto, el navegador
-    se queda con la versión vieja del CSS cacheada indefinidamente (pasó
-    varias veces en pruebas: los cambios de color/forma de los badges no se
-    veían hasta hacer un hard refresh manual). Se lee el mtime del archivo
-    en cada request (no una sola vez al arrancar el proceso) porque en
-    desarrollo el CSS se edita sin reiniciar el servidor — cachear el valor
-    al importar el módulo dejaba el query param pegado al primer arranque
-    y el navegador nunca se enteraba de ediciones posteriores."""
+    """Query param de cache-busting para osat.css/osat.js — sin esto, el
+    navegador se queda con la versión vieja cacheada indefinidamente (pasó
+    varias veces en pruebas: cambios de CSS y de funciones JS nuevas no se
+    veían hasta hacer un hard refresh manual). Se lee el mtime de cada
+    archivo en cada request (no una sola vez al arrancar el proceso) porque
+    en desarrollo se editan sin reiniciar el servidor — cachear el valor al
+    importar el módulo dejaba el query param pegado al primer arranque y el
+    navegador nunca se enteraba de ediciones posteriores."""
     try:
-        version = int(os.path.getmtime(_CSS_PATH))
+        css_version = int(os.path.getmtime(_CSS_PATH))
     except OSError:
-        version = 0
-    return {'css_version': version}
+        css_version = 0
+    try:
+        js_version = int(os.path.getmtime(_JS_PATH))
+    except OSError:
+        js_version = 0
+    return {'css_version': css_version, 'js_version': js_version}
 
 
 def notificaciones(request):

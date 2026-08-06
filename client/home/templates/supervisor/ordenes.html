@@ -26,12 +26,16 @@
           <option value="rechazado">Rechazado</option>
         </select>
       </div>
+      <div class="pager-controls" id="pager-ordenes">
+        <button type="button" class="pager-btn" id="pager-ordenes-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button type="button" class="pager-btn" id="pager-ordenes-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
     </div>
   </div>
   <div class="table-wrap">
     <table class="data-table">
       <thead><tr><th>Número</th><th>Proceso</th><th>Línea</th><th>Tipo de oblea</th><th>Fecha inicio</th><th>Fecha fin</th><th>Lotes</th><th>Progreso</th><th>Estado</th><th>Acciones</th></tr></thead>
-      <tbody>
+      <tbody id="tbody-ordenes">
         {% for orden in ordenes %}
         <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}">
           <td>{% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}<a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ orden.numero }}</a></td>
@@ -155,18 +159,23 @@ var ORDENES_DATA = JSON.parse(document.getElementById('ordenes-data').textConten
 var URL_ORDEN_EDITAR = "{% url 'supervisor_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 
 // ── Filtros ──
+var _ordenesPager = null;
 function filterOrdenes(q) {
   q = (q || '').toLowerCase();
   var estado = document.getElementById('filter-estado-orden').value;
   document.querySelectorAll('.orden-row').forEach(function(row) {
     var matchQ = !q || (row.dataset.numero || '').includes(q);
     var matchE = !estado || row.dataset.estado === estado;
-    row.style.display = matchQ && matchE ? '' : 'none';
+    row.dataset.filteredOut = (matchQ && matchE) ? '' : 'true';
   });
+  if (_ordenesPager) _ordenesPager.reset();
 }
 
 // ── Restaurar filtro de estado tras venir de un enlace (?estado=) ──
 document.addEventListener('DOMContentLoaded', function () {
+  _ordenesPager = initRowPager({tbody: '#tbody-ordenes', rowSelector: '.orden-row', pageSize: 10,
+    prevId: 'pager-ordenes-prev', nextId: 'pager-ordenes-next', controlsId: 'pager-ordenes'});
+
   var estado = new URLSearchParams(window.location.search).get('estado');
   if (!estado) return;
   var selEstado = document.getElementById('filter-estado-orden');

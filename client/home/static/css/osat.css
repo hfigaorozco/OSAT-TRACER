@@ -318,6 +318,20 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .action-btn:hover { background: #E2E8F0; color: #1A202C; }
 .action-btn svg { width: 16px; height: 16px; }
 
+/* Flechas de paginación compacta (< >) — chevrons finos sin "palito",
+   para tablas de widgets (dashboard, semáforo) donde una paginación
+   numerada tradicional no cabe. */
+.pager-controls { display: flex; align-items: center; gap: 2px; }
+.pager-btn {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  color: #718096; background: none; border: none; cursor: pointer;
+  transition: background .15s, color .15s, opacity .15s;
+}
+.pager-btn svg { width: 15px; height: 15px; }
+.pager-btn:hover:not(:disabled) { background: #E2E8F0; color: #1A202C; }
+.pager-btn:disabled { opacity: .3; cursor: default; }
+
 /* Card que contiene tabla — sin padding para que la tabla llegue a los bordes */
 .card-table {
   position: relative;

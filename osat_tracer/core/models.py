@@ -23,3 +23,27 @@ class HorarioSistema(models.Model):
     def obtener(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+# Modelo independiente para configurar la app móvil — separado de
+# HorarioSistema a propósito, para no mezclarse con el horario laboral.
+class ConfiguracionMovil(models.Model):
+    inactividad_minutos = models.PositiveIntegerField(default=30)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuración de la app móvil"
+        verbose_name_plural = "Configuración de la app móvil"
+
+    def __str__(self):
+        return f"Inactividad móvil: {self.inactividad_minutos} min"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # patrón singleton: siempre el mismo registro
+        super().save(*args, **kwargs)
+        cache.delete('configuracion_movil')
+
+    @classmethod
+    def obtener(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

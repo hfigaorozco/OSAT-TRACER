@@ -23,6 +23,7 @@ urlpatterns = [
     path('v1/list/alertas/', views.ListAlertaAPIView.as_view(), name='list_alerta'),
     path('v1/detail/alerta/<int:pk>/', views.DetailAlertaAPIView.as_view(), name='detail_alerta'),
     path('v1/update/alerta/<int:pk>/', views.UpdateAlertaAPIView.as_view(), name='update_alerta'),
+    path('v1/list/alertas_operador/', views.AlertasOperadorAPIView.as_view(), name='list_alertas_operador'),
 
     # Registro Kpi
     path('v1/create/registro_kpi/', views.CreateRegistroKpiAPIView.as_view(), name='create_registroKpi'),

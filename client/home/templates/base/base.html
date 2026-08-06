@@ -13,7 +13,7 @@
 </head>
 <body>
   {% block body %}{% endblock %}
-  <script src="{% static 'js/osat.js' %}"></script>
+  <script src="{% static 'js/osat.js' %}?v={{ js_version }}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

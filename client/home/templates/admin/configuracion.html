@@ -129,30 +129,52 @@
   </div>
 </div>
 
-<!-- Horario de disponibilidad del sistema -->
-<div class="section-block">
-  <div class="section-block-title">Horario de disponibilidad del sistema</div>
-  <p style="font-size:14px;color:#4A5568;margin-bottom:16px;">
-    Defina el rango horario en que los usuarios (no administradores) pueden usar el sistema.
-  </p>
-  <div class="card" style="padding:28px;max-width:480px;">
-    <form method="post" action="{% url 'admin_config_horario_save' %}">{% csrf_token %}
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Hora de inicio</label>
-          <input type="time" name="hora_inicio" class="form-control" style="height:44px;font-size:16px;"
-                 value="{{ horario_sistema.hora_inicio|time:'H:i' }}" required>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <!-- Horario de disponibilidad del sistema -->
+  <div class="section-block">
+    <div class="section-block-title">Horario de disponibilidad del sistema</div>
+    <p style="font-size:14px;color:#4A5568;margin-bottom:16px;">
+      Defina el rango horario en que los usuarios (no administradores) pueden usar el sistema.
+    </p>
+    <div class="card" style="padding:28px;max-width:480px;">
+      <form method="post" action="{% url 'admin_config_horario_save' %}">{% csrf_token %}
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Hora de inicio</label>
+            <input type="time" name="hora_inicio" class="form-control" style="height:44px;font-size:16px;"
+                   value="{{ horario_sistema.hora_inicio|time:'H:i' }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora de fin</label>
+            <input type="time" name="hora_fin" class="form-control" style="height:44px;font-size:16px;"
+                   value="{{ horario_sistema.hora_fin|time:'H:i' }}" required>
+          </div>
         </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:15.5px;margin-top:8px;">
+          Guardar horario
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Configuración de la app móvil (independiente del horario laboral) -->
+  <div class="section-block">
+    <div class="section-block-title">Configuración de la app móvil</div>
+    <p style="font-size:14px;color:#4A5568;margin-bottom:16px;">
+      Minutos de inactividad antes de bloquear la sesión en la app móvil.
+    </p>
+    <div class="card" style="padding:28px;">
+      <form method="post" action="{% url 'admin_config_movil_save' %}">{% csrf_token %}
         <div class="form-group">
-          <label class="form-label">Hora de fin</label>
-          <input type="time" name="hora_fin" class="form-control" style="height:44px;font-size:16px;"
-                 value="{{ horario_sistema.hora_fin|time:'H:i' }}" required>
+          <label class="form-label">Inactividad antes de bloquear sesión (minutos)</label>
+          <input type="number" name="inactividad_minutos" class="form-control" style="height:44px;font-size:16px;"
+                 value="{{ configuracion_movil.inactividad_minutos }}" min="1" max="480" required>
         </div>
-      </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:15.5px;margin-top:8px;">
-        Guardar horario
-      </button>
-    </form>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:15.5px;margin-top:8px;">
+          Guardar configuración móvil
+        </button>
+      </form>
+    </div>
   </div>
 </div>
 
