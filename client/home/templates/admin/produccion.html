@@ -16,24 +16,19 @@
     </div>
   </div>
 
-  <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-    <div style="position:relative;">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Buscar..." id="search-ordenes" oninput="filterOrdenes(this.value)"
-        style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar..." id="search-ordenes" oninput="filterOrdenes(this.value)" class="form-control">
     </div>
-    <div style="position:relative;">
-      <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-      <select id="filter-estado-orden" onchange="filterOrdenes()"
-        style="height:38px;padding:0 32px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:180px;outline:none;appearance:none;">
-        <option value="">Todos</option>
-        <option value="abierta">Abierta</option>
-        <option value="en_proceso">En proceso</option>
-        <option value="hold">En Hold</option>
-        <option value="cerrada">Cerrada</option>
-        <option value="rechazado">Rechazado</option>
-      </select>
-    </div>
+    <select id="filter-estado-orden" onchange="filterOrdenes()" class="form-control" style="width:180px;">
+      <option value="">Todos los estados</option>
+      <option value="abierta">Abierta</option>
+      <option value="en_proceso">En proceso</option>
+      <option value="hold">En Hold</option>
+      <option value="cerrada">Cerrada</option>
+      <option value="rechazado">Rechazado</option>
+    </select>
   </div>
 
   <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
@@ -142,10 +137,9 @@
   <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <h3 style="font-weight:600;font-size:15px;margin:0;color:#1A202C;">Lotes de esta orden</h3>
-      <div style="position:relative;">
-        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)"
-          style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:220px;outline:none;">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)" class="form-control">
       </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">

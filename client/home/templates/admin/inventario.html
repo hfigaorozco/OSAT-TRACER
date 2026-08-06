@@ -10,12 +10,11 @@
 </div>
 
 <!-- Filtros + chips + botón -->
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+<div class="filter-bar">
   <!-- Search -->
-  <div style="position:relative;">
-    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="inv-search" placeholder="Buscar por nombre" oninput="filterInventario()"
-      style="height:38px;padding:0 12px 0 34px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="inv-search" placeholder="Buscar por nombre" oninput="filterInventario()" class="form-control">
   </div>
 
   <!-- Botón -->
