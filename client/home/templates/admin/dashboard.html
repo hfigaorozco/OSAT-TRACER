@@ -4,48 +4,24 @@
 
 {% block content %}
 
-<!-- KPI CARDS -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
-  <a class="card" href="{% url 'admin_cuentas' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Cuentas activas</div>
-        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.cuentas }}</div>
-        <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
-      </div>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2" style="flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    </div>
+<!-- KPI SUMMARY — solo texto, alineado a la derecha -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;">
+  <a href="{% url 'admin_cuentas' %}" class="kpi-plain">
+    <div class="kpi-plain-label">Cuentas activas</div>
+    <div class="kpi-plain-value">{{ kpi.cuentas }}</div>
   </a>
-  <a class="card" href="{% url 'admin_personal' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Empleados registrados</div>
-        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.empleados }}</div>
-        <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
-      </div>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
+  <a href="{% url 'admin_personal' %}" class="kpi-plain">
+    <div class="kpi-plain-label">Empleados registrados</div>
+    <div class="kpi-plain-value">{{ kpi.empleados }}</div>
   </a>
-  <a class="card" href="{% url 'admin_maquinaria' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Máquinas activas</div>
-        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.maquinas }}</div>
-        <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
-      </div>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" stroke-width="2" style="flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-    </div>
+  <a href="{% url 'admin_maquinaria' %}" class="kpi-plain">
+    <div class="kpi-plain-label">Máquinas activas</div>
+    <div class="kpi-plain-value">{{ kpi.maquinas }}</div>
   </a>
-  <a class="card" href="{% url 'admin_produccion' %}?estado=hold" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:4px;">LOTES EN HOLD</div>
-        <div style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
-        <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.lotes_hold }}</div>
-        <div style="font-size:12.5px;color:#EF5350;margin-top:6px;">{{ kpi.lotes_hold_delta }}</div>
-      </div>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2" style="flex-shrink:0;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-    </div>
+  <a href="{% url 'admin_produccion' %}?estado=hold" class="kpi-plain">
+    <div class="kpi-plain-label">Lotes en Hold</div>
+    <div class="kpi-plain-value">{{ kpi.lotes_hold }}</div>
+    <div class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</div>
   </a>
 </div>
 
