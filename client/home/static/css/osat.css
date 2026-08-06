@@ -1,6 +1,6 @@
 :root {
   --bg-app:          #1C2433;
-  --bg-topbar:       #243040;
+  --bg-topbar:        #1C2433;
   --bg-sidebar:      #243040;
 /* --nav-item-bg:     #2E3D52;*/
   --nav-item-active: #16A85E;
@@ -110,7 +110,6 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
   transition: width .22s ease;
   overflow: hidden;
-  border-right: 1px solid #1a2838;
 }
 .sidebar.open { width: var(--sidebar-open); }
 
