@@ -189,7 +189,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 /* Activo */
 .nav-item.active { background: var(--nav-item-active); color: #fff; }
 .sidebar-toggle-btn:hover,
-.nav-item:hover:not(.active) { background: transparent; color: #fff; }
+.nav-item:hover:not(.active) { background:  transparent; color: #fff,; }
 
 /* Badge */
 .nav-badge {
