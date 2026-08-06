@@ -40,13 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Apps del cliente OSAT Tracer
-    'home',        # auth, helpers compartidos
-    'usuarios',    # personal, cuentas, dashboards
-    'maquinaria',  # máquinas y tipos
-    'inventario',  # piezas, entradas, salidas
-    'produccion',  # órdenes, lotes, organización
-    'kpi',         # alertas, configuración KPI
-    'reportes',    # reportes de producción e inventario
+    'core', # Configuraciones del sistema
+    'home', # auth, helpers compartidos
+    'usuarios', # personal, cuentas, dashboards
+    'maquinaria', # máquinas y tipos
+    'inventario', # piezas, entradas, salidas
+    'produccion', # órdenes, lotes, organización
+    'kpi', # alertas, configuración KPI
+    'reportes', # reportes de producción e inventario
 ]
 
 MIDDLEWARE = [

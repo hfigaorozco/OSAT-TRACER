@@ -19,4 +19,5 @@ urlpatterns = [
     path('admin/configuracion/defecto/<str:pk>/editar/', views.admin_config_defecto_editar, name='admin_config_defecto_editar'),
     path('admin/configuracion/defecto/<str:pk>/estado/', views.admin_config_defecto_toggle_estado, name='admin_config_defecto_toggle_estado'),
     path('admin/configuracion/password/', views.admin_config_change_password, name='admin_config_change_password'),
+    path('configuracion/horario/guardar/', views.admin_config_horario_save, name='admin_config_horario_save'),
 ]

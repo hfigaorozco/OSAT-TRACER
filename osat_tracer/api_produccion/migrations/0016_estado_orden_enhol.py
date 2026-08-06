@@ -1,4 +1,6 @@
-from django.db import migrations
+# api_produccion/migrations/0016_estado_orden_enhol.py
+
+from django.db import migrations, models
 
 
 def crear_estado_enhol(apps, schema_editor):
@@ -28,5 +30,14 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='linea',
             name='proceso',
+        ),
+        migrations.AlterModelOptions(
+            name='linea',
+            options={'ordering': ['codigo']},
+        ),
+        migrations.AlterField(
+            model_name='linea',
+            name='nombre',
+            field=models.CharField(max_length=50),
         ),
     ]
