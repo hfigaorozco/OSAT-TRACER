@@ -9,7 +9,7 @@
   <a class="card" href="{% url 'admin_cuentas' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;color:#718096;margin-bottom:6px;">Cuentas activas</div>
+        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Cuentas activas</div>
         <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.cuentas }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
@@ -19,7 +19,7 @@
   <a class="card" href="{% url 'admin_personal' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;color:#718096;margin-bottom:6px;">Empleados registrados</div>
+        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Empleados registrados</div>
         <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.empleados }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
@@ -29,7 +29,7 @@
   <a class="card" href="{% url 'admin_maquinaria' %}" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;color:#718096;margin-bottom:6px;">Máquinas activas</div>
+        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:6px;">Máquinas activas</div>
         <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.maquinas }}</div>
         <div style="font-size:12.5px;color:#16A85E;margin-top:6px;">↗ Actualizado hoy</div>
       </div>
@@ -39,7 +39,7 @@
   <a class="card" href="{% url 'admin_produccion' %}?estado=hold" style="padding:14px 20px;display:block;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
       <div>
-        <div style="font-size:13px;color:#718096;margin-bottom:4px;">LOTES EN HOLD</div>
+        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:4px;">LOTES EN HOLD</div>
         <div style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px;">Cantidad</div>
         <div style="font-size:26px;font-weight:700;color:#1A202C;line-height:1;">{{ kpi.lotes_hold }}</div>
         <div style="font-size:12.5px;color:#EF5350;margin-top:6px;">{{ kpi.lotes_hold_delta }}</div>
@@ -53,11 +53,15 @@
 <div style="margin-bottom:20px;">
   <div class="card" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:12px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Semáforo KPI por línea de producción</div>
+      <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Semáforo KPI por línea de producción</div>
       <div style="display:flex;gap:12px;align-items:center;">
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#D4EDDA;display:inline-block;"></span>Verde</span>
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#FFF3CD;display:inline-block;"></span>Amarillo</span>
         <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#718096;"><span style="width:10px;height:10px;border-radius:2px;background:#F8D7DA;display:inline-block;"></span>Rojo</span>
+        <div class="pager-controls" id="pager-semaforo">
+          <button type="button" class="pager-btn" id="pager-semaforo-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button type="button" class="pager-btn" id="pager-semaforo-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
         <button onclick="openModal('modal-generar-reporte-kpi')" title="Generar reporte de KPI"
                 style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:#718096;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
@@ -71,12 +75,12 @@
         </a>
       </div>
     </div>
-    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+    <table id="tabla-semaforo-kpi" style="width:100%;border-collapse:collapse;font-size:14px;">
       <thead style="background:#F7FAFC;">
         <tr>
           <th style="padding:10px 20px;text-align:left;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;width:120px;">KPI</th>
           {% for columna in semaforo_columnas %}
-          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">{{ columna }}</th>
+          <th style="padding:10px 20px;text-align:center;font-size:14px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;{% if forloop.last %}border-left:2px solid #E2E8F0;{% endif %}">{{ columna }}</th>
           {% endfor %}
         </tr>
       </thead>
@@ -85,7 +89,7 @@
         <tr style="border-bottom:1px solid #EDF2F7;">
           <td style="padding:14px 20px;font-weight:600;color:#2D3748;white-space:nowrap;font-size:14px;">{{ row.nombre }}</td>
           {% for celda in row.celdas %}
-          <td style="padding:14px 20px;text-align:center;">
+          <td style="padding:14px 20px;text-align:center;{% if forloop.last %}border-left:2px solid #E2E8F0;{% endif %}">
             <span style="display:inline-block;width:90px;padding:8px 0;text-align:center;border-radius:6px;font-weight:700;font-size:16px;background:{{ celda.bg }};color:{{ celda.color }};">
               {{ celda.valor }}
             </span>
@@ -103,8 +107,12 @@
 
   <!-- Órdenes activas -->
   <div class="card" style="padding:0;overflow:hidden;">
-    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;">
-      <div style="font-size:12px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Órdenes activas</div>
+    <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Órdenes activas</div>
+      <div class="pager-controls" id="pager-ordenes-activas">
+        <button type="button" class="pager-btn" id="pager-ordenes-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button type="button" class="pager-btn" id="pager-ordenes-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
@@ -115,7 +123,7 @@
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Estado</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-ordenes-activas">
         {% for orden in ordenes_activas %}
         <tr style="border-bottom:1px solid #EDF2F7;cursor:pointer;" onclick="location.href='{% url 'admin_produccion' %}?orden={{ orden.pk }}'">
           <td style="padding:10px 14px;font-family:monospace;font-weight:600;color:#009EAF;font-size:13px;">{{ orden.numero }}</td>
@@ -147,8 +155,19 @@
   <!-- Alertas activas -->
   <div class="card" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:12px;font-weight:600;color:#4A5568;text-transform:uppercase;letter-spacing:.08em;">Alertas activas</div>
-      {% if alertas_activas %}<span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>{% endif %}
+      <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Alertas activas</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        {% if alertas_activas %}
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:#4A5568;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">{{ alertas_activas|length }}</span>
+          <span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap;">Sin resolver</span>
+        </div>
+        {% endif %}
+        <div class="pager-controls" id="pager-alertas-activas">
+          <button type="button" class="pager-btn" id="pager-alertas-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button type="button" class="pager-btn" id="pager-alertas-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
       <thead style="background:#F7FAFC;">
@@ -159,15 +178,10 @@
           <th style="padding:8px 14px;text-align:left;font-size:12px;color:#718096;border-bottom:1px solid #E2E8F0;font-weight:500;">Hora</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-alertas-activas">
         {% for alerta in alertas_activas %}
         <tr style="border-bottom:1px solid #EDF2F7;cursor:pointer;" onclick="location.href='{% url 'admin_notificaciones' %}?alerta={{ alerta.numero }}'">
-          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <span>#{{ alerta.numero }}</span>
-              <span style="background:#EF5350;color:#FFFFFF;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;font-family:var(--font-main);">{{ alerta.estado }}</span>
-            </div>
-          </td>
+          <td style="padding:10px 14px;font-family:monospace;color:#009EAF;font-size:13px;">#{{ alerta.numero }}</td>
           <td style="padding:10px 14px;color:#2D3748;font-size:13px;">{{ alerta.descripcion }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.fecha }}</td>
           <td style="padding:10px 14px;color:#718096;font-size:12px;white-space:nowrap;">{{ alerta.hora }}</td>
@@ -206,4 +220,17 @@
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  initRowPager({tbody: '#tbody-ordenes-activas', rowSelector: 'tr', pageSize: 5,
+    prevId: 'pager-ordenes-prev', nextId: 'pager-ordenes-next', controlsId: 'pager-ordenes-activas'});
+  initRowPager({tbody: '#tbody-alertas-activas', rowSelector: 'tr', pageSize: 5,
+    prevId: 'pager-alertas-prev', nextId: 'pager-alertas-next', controlsId: 'pager-alertas-activas'});
+  initSemaforoPager({table: '#tabla-semaforo-kpi', pageSize: 4,
+    prevId: 'pager-semaforo-prev', nextId: 'pager-semaforo-next'});
+});
+</script>
 {% endblock %}

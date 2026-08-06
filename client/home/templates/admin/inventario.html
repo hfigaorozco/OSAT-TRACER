@@ -58,6 +58,12 @@
 
 <!-- Tabla -->
 <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;">
+  <div style="padding:10px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:flex-end;">
+    <div class="pager-controls" id="pager-inventario">
+      <button type="button" class="pager-btn" id="pager-inv-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button type="button" class="pager-btn" id="pager-inv-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
   <table style="width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;" id="inv-table">
     <colgroup>
       <col style="width:20%;">
@@ -533,6 +539,12 @@ function closeAjuste() {
 });
 
 // Filtro de tabla
+var _inventarioPager = null;
+document.addEventListener('DOMContentLoaded', function () {
+  _inventarioPager = initRowPager({tbody: '#inv-tbody', rowSelector: '.inv-row', pageSize: 10,
+    prevId: 'pager-inv-prev', nextId: 'pager-inv-next', controlsId: 'pager-inventario'});
+});
+
 function filterInventario() {
     const q = document.getElementById("inv-search").value.toLowerCase();
     document.querySelectorAll(".inv-row").forEach(function(row){
@@ -541,8 +553,9 @@ function filterInventario() {
         const mostrar =
             nombre.includes(q) ||
             codigo.includes(q);
-        row.style.display = mostrar ? "" : "none";
+        row.dataset.filteredOut = mostrar ? "" : "true";
     });
+    if (_inventarioPager) _inventarioPager.reset();
 }
 
 // Chips de categoría
