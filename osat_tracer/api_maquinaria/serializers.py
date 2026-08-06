@@ -12,7 +12,6 @@ class CreateMaquinaSerializer(serializers.ModelSerializer):
             "tipoMaquina",
             "estado",
             "empleado",
-            "linea",
         ]
         
 #LIST
@@ -51,7 +50,6 @@ class UpdateMaquinaSerializer(serializers.ModelSerializer):
             "nombre",
             "estado",
             "empleado",
-            "linea",
         ]
         
            

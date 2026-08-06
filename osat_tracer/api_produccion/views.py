@@ -398,12 +398,17 @@ class CreateMaquinaPasoAPIView(generics.CreateAPIView):
 
 #LIST
 class ListMaquinaPasoAPIView(APIView):
-    
+
     def get(self, request):
         MaquinaPasos = models.MaquinaPaso.objects.all()
         data = serializers.ListMaquinaPasoSerializer(MaquinaPasos, many=True).data
         return Response(data)
-    
+
+#DELETE (quita solo la relación máquina-paso, no borra la Máquina ni el Paso)
+class DeleteMaquinaPasoAPIView(generics.DestroyAPIView):
+    queryset = models.MaquinaPaso.objects.all()
+    lookup_field = 'pk'
+
 #Vistas  PasoRealizado
 #CREATE
 class CreatePasoRealizadoAPIView(generics.CreateAPIView):

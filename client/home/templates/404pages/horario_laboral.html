@@ -61,3 +61,24 @@
   </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var destino = "{{ destino_dashboard }}";
+
+  function verificar() {
+    fetch("{% url 'verificar_horario' %}")
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.disponible) {
+          window.location.href = destino;
+        }
+      })
+      .catch(function () {});
+  }
+
+  setInterval(verificar, 20000); // revisa cada 20 segundos
+})();
+</script>
+{% endblock %}

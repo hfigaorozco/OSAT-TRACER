@@ -5,6 +5,11 @@ from django.utils.dateparse import parse_datetime
 from django.urls import reverse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj
 
+# Importaciones para los horarios del sistema
+from core.models import HorarioSistema, ConfiguracionMovil
+from django.core.cache import cache
+from datetime import datetime
+
 # ── Catálogo de colores/íconos por tipo de alerta ─────────────────────────────
 
 _COLOR_MAP = {
@@ -273,26 +278,20 @@ def supervisor_alertas_marcar_todas_leidas(request):
 # ════════════════════════════════════════════════════════════════
 
 def admin_configuracion(request):
-    defectos, paso_defecto_bd, pasos_bd, kpis_bd, empleados_bd, alertas_bd = _get_many(
+    defectos, paso_defecto_bd, pasos_bd, kpis_bd, empleados_bd = _get_many(
         '/v1/list/Defecto/',
         '/v1/list/PasoDefecto/',
         '/v1/list/pasos/',
         '/v1/list/kpis/',
         '/v1/list/empleados/',
-        '/v1/list/alertas/',
     )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # unread_count/recent_notifications los pone home.context_processors.
+    # notificaciones() para toda la app — no armarlos aquí a mano, porque
+    # el contexto explícito de esta vista gana sobre el del context
+    # processor y tapaba el valor correcto (icono/color/tipo reales) con
+    # una forma vieja que dejaba la campana rota en esta página.
     ctx = {
         'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
     }
 
@@ -337,6 +336,8 @@ def admin_configuracion(request):
 
     ctx.update({
         'kpi_cards':     kpi_cards,
+        'horario_sistema': HorarioSistema.obtener(),
+        'configuracion_movil': ConfiguracionMovil.obtener(),
         'tipos_defecto': [
             _FakeObj(
                 pk=d.get('codigo'), codigo=d.get('codigo', ''),
@@ -531,7 +532,7 @@ def admin_config_defecto_toggle_estado(request, pk):
 def admin_config_change_password(request):
     if request.method == 'POST':
         current_password = request.POST.get('current_password', '')
-        new_password     = request.POST.get('new_password', '')
+        new_password = request.POST.get('new_password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
         errores = []
@@ -562,4 +563,47 @@ def admin_config_change_password(request):
             messages.success(request, 'Contraseña actualizada correctamente.')
         else:
             messages.error(request, f'Error: {resp}')
+    return redirect('admin_configuracion')
+
+
+def admin_config_horario_save(request):
+    if request.method == 'POST':
+        inicio_raw = request.POST.get('hora_inicio', '').strip()
+        fin_raw = request.POST.get('hora_fin', '').strip()
+
+        try:
+            hora_inicio = datetime.strptime(inicio_raw, '%H:%M').time()
+            hora_fin = datetime.strptime(fin_raw, '%H:%M').time()
+        except ValueError:
+            messages.error(request, 'Formato de hora inválido.')
+            return redirect('admin_configuracion')
+
+        if hora_inicio >= hora_fin:
+            messages.error(request, 'La hora de inicio debe ser menor a la hora de fin.')
+            return redirect('admin_configuracion')
+
+        horario = HorarioSistema.obtener()
+        horario.hora_inicio = hora_inicio
+        horario.hora_fin = hora_fin
+        horario.save()
+
+        messages.success(request, 'Horario del sistema actualizado.')
+    return redirect('admin_configuracion')
+
+
+# Guardado de la app móvil — independiente del horario laboral (modelo,
+# form y vista propios; ConfiguracionMovil no toca HorarioSistema).
+def admin_config_movil_save(request):
+    if request.method == 'POST':
+        inactividad_raw = request.POST.get('inactividad_minutos', '').strip()
+
+        if not inactividad_raw.isdigit() or not (1 <= int(inactividad_raw) <= 480):
+            messages.error(request, 'La inactividad debe ser un número entre 1 y 480 minutos.')
+            return redirect('admin_configuracion')
+
+        config = ConfiguracionMovil.obtener()
+        config.inactividad_minutos = int(inactividad_raw)
+        config.save()
+
+        messages.success(request, 'Configuración de la app móvil actualizada.')
     return redirect('admin_configuracion')

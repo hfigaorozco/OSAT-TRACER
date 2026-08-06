@@ -100,21 +100,18 @@ class BaseReportesView(View):
             if not r.get('oblea') and r.get('orden') not in reporte_padre_de_orden:
                 reporte_padre_de_orden[r.get('orden')] = r.get('numero')
 
-        alcance_prod = request.GET.get('alcance_prod', 'todos')
-        if alcance_prod == 'orden':
-            reportes_prod_filtrados = [r for r in reportes_prod if not r.get('oblea')]
-        elif alcance_prod == 'lote':
-            reportes_prod_filtrados = [r for r in reportes_prod if r.get('oblea')]
-        else:
-            reportes_prod_filtrados = reportes_prod
-
-        prod_rows = []
-        for r in reportes_prod_filtrados:
+        # Reportes de orden y de lote van en sub-pestañas separadas dentro de
+        # Producción — antes era una sola lista mezclada con un <select> para
+        # filtrar; ahora son dos listas/paginadores independientes desde el
+        # origen, así nunca se mezclan.
+        prod_rows_orden = []
+        prod_rows_lote = []
+        for r in reportes_prod:
             es_lote = bool(r.get('oblea'))
             padre_numero = reporte_padre_de_orden.get(r.get('orden')) if es_lote else None
             if padre_numero == r.get('numero'):
                 padre_numero = None
-            prod_rows.append({
+            fila = {
                 'numero': r.get('numero'),
                 'alcance': f"Lote LOT-{r['oblea']:04d}" if es_lote else f"Orden ORD-{r.get('orden', 0):04d}",
                 'orden_ref': f"ORD-{r.get('orden', 0):04d}",
@@ -124,7 +121,8 @@ class BaseReportesView(View):
                 'generado_por': empleados_map.get(str(r.get('generado_por')), '—') if r.get('generado_por') else 'Sistema',
                 'dies_finales': r.get('unidades_apro'),
                 'scrap': r.get('unidaes_defect'),
-            })
+            }
+            (prod_rows_lote if es_lote else prod_rows_orden).append(fila)
 
         inv_rows = [{
             'numero': r.get('numero'),
@@ -145,18 +143,20 @@ class BaseReportesView(View):
             'kpis_evaluados': len((r.get('snapshot') or {}).get('filas', [])),
         } for r in reportes_kpi]
 
-        page_prod = Paginator(prod_rows, PAGE_SIZE_REPORTES).get_page(request.GET.get('page_prod', 1))
+        page_prod_orden = Paginator(prod_rows_orden, PAGE_SIZE_REPORTES).get_page(request.GET.get('page_prod_orden', 1))
+        page_prod_lote = Paginator(prod_rows_lote, PAGE_SIZE_REPORTES).get_page(request.GET.get('page_prod_lote', 1))
         page_inv = Paginator(inv_rows, PAGE_SIZE_REPORTES).get_page(request.GET.get('page_inv', 1))
         page_kpi = Paginator(kpi_rows, PAGE_SIZE_REPORTES).get_page(request.GET.get('page_kpi', 1))
 
         ctx = _base_ctx_from_alertas(self.role, alertas_bd)
         ctx.update({
             'backend_url': BACKEND_URL,
-            'reportes_produccion_page': page_prod,
+            'reportes_produccion_orden_page': page_prod_orden,
+            'reportes_produccion_lote_page': page_prod_lote,
             'reportes_inventario_page': page_inv,
             'reportes_kpi_page': page_kpi,
-            'alcance_prod': alcance_prod,
-            'extra_params_prod': f"tab=produccion&alcance_prod={alcance_prod}&",
+            'extra_params_prod_orden': "tab=produccion&subtab_prod=orden&",
+            'extra_params_prod_lote': "tab=produccion&subtab_prod=lote&",
             'ordenes_picker': ordenes_picker,
             'lotes_picker': lotes_picker,
             'breadcrumbs': [

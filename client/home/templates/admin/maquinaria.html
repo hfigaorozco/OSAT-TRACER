@@ -86,7 +86,7 @@
 
 <!-- Modal nueva / editar máquina -->
 <div class="modal-overlay" id="modal-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-maquina')">
-  <div class="modal-card modal-md">
+  <div class="modal-card" style="width:80vw;max-width:800px;">
     <div class="modal-header">
       <h2 id="maquina-modal-title">Nueva máquina</h2>
       <button class="modal-close" onclick="closeModal('modal-maquina')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -97,14 +97,14 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label class="form-label">Número de serie <span class="required">*</span></label>
-            <input type="text" name="num_serie" id="maquina-numserie-input" class="form-control" maxlength="5" required>
+            <input type="text" name="num_serie" id="maquina-numserie-input" class="form-control" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre <span class="required">*</span></label>
             <input type="text" name="nombre" id="maquina-nombre-input" class="form-control" maxlength="30" required>
           </div>
         </div>
-        <div class="form-grid-2">
+        <div class="form-grid-3">
           <div class="form-group">
             <label class="form-label">Tipo de máquina <span class="required">*</span></label>
             <select name="tipo" id="maquina-tipo-input" class="form-control" required>
@@ -112,15 +112,6 @@
               {% for tipo in tipos_maquina %}<option value="{{ tipo.pk }}">{{ tipo.nombre }}</option>{% endfor %}
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Línea de producción <span class="required">*</span></label>
-            <select name="linea" id="maquina-linea-input" class="form-control" required>
-              <option value="">Seleccionar…</option>
-              {% for linea in lineas %}<option value="{{ linea.pk }}">{{ linea.nombre }}</option>{% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="form-grid-2">
           <div class="form-group">
             <label class="form-label">Estado <span class="required">*</span></label>
             <select name="estado" id="maquina-estado-input" class="form-control" required>
@@ -190,7 +181,6 @@ function openNuevaMaquina() {
   document.getElementById('maquina-nombre-input').disabled = false;
   document.getElementById('maquina-tipo-input').value = '';
   document.getElementById('maquina-tipo-input').disabled = false;
-  document.getElementById('maquina-linea-input').value = '';
   document.getElementById('maquina-estado-input').value = '';
   document.getElementById('maquina-empleado-input').value = '';
   document.getElementById('maquina-form').action = "{% url 'admin_maquinaria_crear' %}";
@@ -207,7 +197,6 @@ function openEditarMaquina(pk) {
   document.getElementById('maquina-nombre-input').disabled = true;
   document.getElementById('maquina-tipo-input').value = m.tipo_pk;
   document.getElementById('maquina-tipo-input').disabled = true;
-  document.getElementById('maquina-linea-input').value = m.linea_pk;
   document.getElementById('maquina-estado-input').value = m.estado_pk;
   document.getElementById('maquina-empleado-input').value = m.empleado_pk;
   document.getElementById('maquina-form').action = URL_MAQUINA_EDITAR.replace('__PK__', pk);

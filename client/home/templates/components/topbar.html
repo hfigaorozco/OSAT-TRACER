@@ -34,13 +34,13 @@
     </span>
     {% with rol=request.session.user_rol|default:"" %}
     {% if 'admin' in rol %}
-      <span style="background:#EFBF04;color:#000000;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Administrador</span>
+      <span style="background:#F5A623;color:#1A202C;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:600;">Administrador</span>
     {% elif 'super' in rol %}
-      <span style="background:#D4EDDA;color:#155724;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Supervisor</span>
+      <span style="background:#16A85E;color:#FFFFFF;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:600;">Supervisor</span>
     {% elif 'opera' in rol %}
-      <span style="background:#BEE3F8;color:#2B6CB0;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">Operador</span>
+      <span style="background:#009EAF;color:#FFFFFF;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:600;">Operador</span>
     {% else %}
-      <span style="background:#E9ECEF;color:#495057;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;">{{ rol }}</span>
+      <span style="background:#4A5568;color:#FFFFFF;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:600;">{{ rol }}</span>
     {% endif %}
     {% endwith %}
 
@@ -65,14 +65,15 @@
         <div style="max-height:300px;overflow-y:auto;">
           {% if recent_notifications %}
             {% for notif in recent_notifications %}
-            <div class="notif-item {% if not notif.leida %}unread{% endif %}">
+            <div class="notif-item {% if not notif.leida %}unread{% endif %}" style="cursor:pointer;"
+                 onclick="location.href='{% if 'admin' in request.session.user_rol %}{% url 'admin_notificaciones' %}{% else %}{% url 'supervisor_notificaciones' %}{% endif %}?alerta={{ notif.numero }}'">
               <div style="flex-shrink:0;margin-top:2px;">
-                {% if notif.tipo == 'hold' or notif.tipo == 'alerta' %}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                {% elif notif.tipo == 'critico' %}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF5350" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                {% if notif.tipo == 'stock' %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                {% elif notif.tipo == 'kpi' %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 {% else %}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#009EAF" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                 {% endif %}
               </div>
               <div style="flex:1;min-width:0;">
