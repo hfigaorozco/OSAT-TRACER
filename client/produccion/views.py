@@ -739,9 +739,24 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
 
 # ── Helper compartido para construir ordenes y lotes ─────────────────────────
 
+def _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd):
+    """codigo_proceso -> [{'nombre':..., 'cantidad':...}, ...]"""
+    piezas_map = {str(z.get('codigo', '')): z for z in piezas_bd}
+    resultado = {}
+    for rel in proceso_pieza_bd:
+        proceso_cod = str(rel.get('proceso', ''))
+        pieza = piezas_map.get(str(rel.get('pieza', '')), {})
+        resultado.setdefault(proceso_cod, []).append({
+            'nombre': pieza.get('nombre', rel.get('pieza')),
+            'cantidad': rel.get('cantPiezas', 0),
+        })
+    return resultado
+
+
 def _build_ordenes_lotes():
     (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
-     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd, linea_proceso_bd) = _get_many(
+     pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd, linea_proceso_bd,
+     proceso_pieza_bd, piezas_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -752,9 +767,12 @@ def _build_ordenes_lotes():
         '/v1/list/PasoRealizado/',
         '/v1/list/alertas/',
         '/v1/list/LineaProceso/',
+        '/v1/list/ProcesoPieza/',
+        '/v1/list/piezas/',
     )
     catalogo_map = {str(p.get('codigo', '')): p for p in pasos_catalogo}
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
+    piezas_por_proceso = _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd)
     # Linea.proceso (campo directo del modelo) no se usa realmente — la
     # relación línea↔proceso real vive en la tabla puente LineaProceso.
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
@@ -839,6 +857,7 @@ def _build_ordenes_lotes():
             'scrap': scrap_total,
             'yield_pct': yield_pct,
             'etapas': etapas,
+            'piezas': piezas_por_proceso.get(proceso_codigo, []),
         })
 
     plantillas = [
@@ -1976,7 +1995,8 @@ def supervisor_orden_detalle(request, pk):
 
 def supervisor_lote_detalle(request, pk):
     (obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados,
-     defectos_bd, paso_defecto_bd, _alertas_bd, tipos_oblea_bd) = _get_many(
+     defectos_bd, paso_defecto_bd, _alertas_bd, tipos_oblea_bd,
+     procesos_bd, proceso_pieza_bd, piezas_bd) = _get_many(
         '/v1/list/Oblea/',
         '/v1/list/Orden/',
         '/v1/list/PasoProceso/',
@@ -1986,7 +2006,12 @@ def supervisor_lote_detalle(request, pk):
         '/v1/list/PasoDefecto/',
         '/v1/list/alertas/',
         '/v1/list/TipoOblea/',
+        '/v1/list/Proceso/',
+        '/v1/list/ProcesoPieza/',
+        '/v1/list/piezas/',
     )
+    procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
+    piezas_por_proceso = _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd)
     # recent_notifications/unread_count del topbar los pone el context
     # processor home.context_processors.notificaciones para toda la app.
     ctx = {
@@ -2051,6 +2076,10 @@ def supervisor_lote_detalle(request, pk):
         num, pasos_realizados, dies_iniciales, ob.get('diesGenerados', 0)
     )
 
+    proceso_nombre = procesos_map.get(proceso_codigo, {}).get('nombre', proceso_codigo or '—')
+    total_pasos_lote = len(etapas)
+    pasos_completados_lote = sum(1 for e in etapas if e.completado)
+
     lote = {
         'pk':             num,
         'folio':          f'LOT-{num:04d}' if isinstance(num, int) else str(num),
@@ -2060,12 +2089,17 @@ def supervisor_lote_detalle(request, pk):
                           ) if orden_data else None,
         'estado':         _FakeObj(nombre=edo_str),
         'orden_en_hold':  str(orden_data.get('estado', '')).lower() == 'enhol',
+        'proceso_nombre': proceso_nombre,
+        'piezas':         piezas_por_proceso.get(proceso_codigo, []),
         'dies_iniciales': dies_iniciales,
         'dies_activos':   dies_activos,
         'scrap_total':    scrap_total,
         'yield_pct':      yield_pct,
         'etapas':         etapas,
         'etapa_activa':   etapa_activa,
+        'total_pasos':         total_pasos_lote,
+        'pasos_completados':   pasos_completados_lote,
+        'pct_completados':     round(pasos_completados_lote / total_pasos_lote * 100) if total_pasos_lote else 0,
     }
 
     defectos_map = {str(d.get('codigo')): d for d in defectos_bd if d.get('activo', True)}
