@@ -32,7 +32,7 @@
 </div>
 
 {% if orden.estado == 'hold' %}
-<div style="margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#FDEDEE;color:#721C24;font-size:14px;font-weight:600;border:1px solid #EF5350;">
+<div style="margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:14px;font-weight:600;">
   ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla.
 </div>
 {% endif %}
@@ -63,7 +63,7 @@
           <td>{{ lote.numero_oblea|default:"—" }}</td>
           <td>{{ lote.dies_buenos|default:"—" }}</td>
           <td>{{ lote.etapa_actual.nombre|default:"—" }}</td>
-          <td>{% if lote.estado.nombre == 'En Hold' %}<span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #F5A623;font-weight:700;">⏸ En Hold</span>{% elif lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Terminada' %}<span class="badge badge-aprobado">Terminada</span>{% elif lote.estado.nombre == 'Rechazada' %}<span class="badge badge-critico">Rechazada</span>{% else %}<span class="badge badge-pendiente">{{ lote.estado.nombre }}</span>{% endif %}</td>
+          <td>{% if lote.estado.nombre == 'En Hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>{% elif lote.estado.nombre == 'Terminada' %}<span class="badge badge-aprobado">Terminada</span>{% elif lote.estado.nombre == 'Rechazada' %}<span class="badge badge-critico">Rechazada</span>{% else %}<span class="badge badge-pendiente">{{ lote.estado.nombre }}</span>{% endif %}</td>
           <td style="text-align:right;font-weight:600;color:{% if lote.yield_pct >= 90 %}#16A85E{% elif lote.yield_pct >= 75 %}#F5A623{% else %}#EF5350{% endif %};">{% if lote.yield_pct is not None %}{{ lote.yield_pct|floatformat:1 }}%{% else %}—{% endif %}</td>
           <td class="table-actions">
             <a href="{% url 'supervisor_lote_detalle' lote.pk %}" class="action-btn" title="Ver trazabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>

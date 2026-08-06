@@ -502,9 +502,10 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.MaquinaPaso
         fields = [
+            "id",
             "maquina",
-            "paso",   
-        ] 
+            "paso",
+        ]
 #DETAIL
 #UPDATE
 
@@ -618,12 +619,21 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 continue
 
         # Rechazar una etapa rechaza el lote completo de una vez — ya no
-        # espera a que se completen las etapas restantes.
+        # espera a que se completen las etapas restantes. Esto SÍ deja al
+        # lote en un estado terminal aquí mismo (a diferencia del caso
+        # "todas las etapas aprobadas", que el cliente decide aparte en
+        # _avanzar_estado_lote_y_orden) — se registra el KPI final ya mismo.
         if oblea and estado_codigo == 'nocom':
             try:
                 oblea.estado = models.Estado_Oblea.objects.get(pk='recha')
                 oblea.save(update_fields=['estado'])
+                from api_kpi.services import registrar_kpis_de_lote
+                registrar_kpis_de_lote(oblea)
             except models.Estado_Oblea.DoesNotExist:
+                pass
+            except Exception:
+                # El KPI es un extra — no debe tumbar la respuesta si falla,
+                # completar la etapa ya se guardó y es lo importante.
                 pass
 
         return paso_realizado

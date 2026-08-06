@@ -45,7 +45,7 @@
 </div>
 <div class="card-table"><div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Nombre</th><th style="text-align:left;">Stock</th><th style="text-align:left;">Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
   <tbody>
-    {% for pieza in piezas %}
+    {% for pieza in piezas_page %}
     <tr {% if pieza.stock <= pieza.stock_minimo %}style="background:rgba(239,83,80,.06);"{% endif %}>
       <td style="font-family:monospace;font-weight:600;">{{ pieza.codigo }}</td>
       <td style="font-weight:500;{% if pieza.stock <= pieza.stock_minimo %}color:#EF5350;{% endif %}">
@@ -77,6 +77,7 @@
     {% endfor %}
   </tbody>
   </div>
+  {% include "components/pagination.html" with page_obj=piezas_page extra_params=inventario_extra_params %}
 </div>
 
 <div class="modal-overlay" id="modal-entrada-sup" style="display:none;" onclick="if(event.target===this)closeModal('modal-entrada-sup')">
@@ -122,7 +123,7 @@
     </div>
     <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;">
       <div style="display:flex;align-items:flex-start;gap:16px;">
-        <div style="width:48px;height:48px;border-radius:10px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:48px;height:48px;border-radius:14px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         </div>
         <div style="flex:1;">
@@ -165,7 +166,7 @@
               height:220px;
               object-fit:contain;
               border:1px solid #E2E8F0;
-              border-radius:10px;
+              border-radius:14px;
               background:#FAFAFA;
               padding:10px;
           ">

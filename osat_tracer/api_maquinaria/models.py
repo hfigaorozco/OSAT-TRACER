@@ -31,7 +31,13 @@ class Maquina(models.Model):
     tipoMaquina = models.ForeignKey(Tipo_Maquina, on_delete=models.CASCADE, related_name='maquina')
     estado = models.ForeignKey(Estado_Maquina, on_delete=models.CASCADE, related_name='maquina')
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='maquina')
-    linea = models.ForeignKey('api_produccion.Linea', on_delete=models.CASCADE, related_name='maquina')
+    # Ya no se elige a mano en el form de crear/editar máquina — la línea de
+    # una máquina se deriva de a qué Pasos está ligada (MaquinaPaso -> Paso ->
+    # PasoProceso -> Proceso -> LineaProceso -> Linea), ver
+    # client/produccion/views.py::_lineas_por_maquina. Se deja el campo
+    # nullable (no se borra la columna) para no perder los datos históricos
+    # que sí se capturaron a mano antes de este cambio.
+    linea = models.ForeignKey('api_produccion.Linea', on_delete=models.SET_NULL, related_name='maquina', null=True, blank=True)
 
     class Meta:
         db_table = 'maquina'

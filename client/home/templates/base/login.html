@@ -7,7 +7,12 @@
 <style>
 .login-wrap {
   min-height: 100vh;
-  background: var(--bg-app);
+ 
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{% static 'img/background_login.jpg' %}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
   display: flex; align-items: center; justify-content: center; padding: 2rem;
 }
 .login-card {
@@ -25,7 +30,7 @@
   font-family: var(--font-main); font-weight: 700; font-size: 22px; color: var(--text-primary);
 }
 .login-tagline {
-  text-align: center; color: #718096; font-size: 13px; margin-bottom: 28px;
+  text-align: center; color: #0b0c0f; font-size: 13px; margin-bottom: 28px;
   font-family: var(--font-main); font-weight: 300;
 }
 .password-wrap { position: relative; }
@@ -44,7 +49,7 @@
 
     <div class="login-logo">
       <img src="{% static 'img/logo.png' %}" alt="OSAT Tracer">
-      <h1>OSAT Tracer</h1>
+      <h1 style="color: black;">OSAT Tracer</h1>
     </div>
     <p class="login-tagline">Sistema de Trazabilidad de Ensamblado de Semiconductores</p>
 
@@ -96,7 +101,7 @@
       </button>
     </form>
 
-    <p style="text-align:center;margin-top:20px;font-size:11.5px;color:#B0BEC5;">
+    <p style="text-align:center;margin-top:20px;font-size:11.5px; color: #0b0c0f;">
       Solo disponible en el horario laboral de la empresa
     </p>
 

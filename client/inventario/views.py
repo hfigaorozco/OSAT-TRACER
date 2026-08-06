@@ -1,13 +1,16 @@
 import re
+from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import generic
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _post_file
 import requests
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
+PAGE_SIZE_INVENTARIO = 10
 
 
 # ADMIN — INVENTARIO
@@ -164,22 +167,14 @@ def admin_inventario_movimiento(request):
 # SUPERVISOR — INVENTARIO (solo entradas, sin crear piezas)
 
 def supervisor_inventario(request):
-    piezas_bd, alertas_bd = _get_many(
-        '/v1/list/piezas/',
-        '/v1/list/alertas/',
-    )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    piezas_bd = _get('/v1/list/piezas/', [])
+    # unread_count/recent_notifications los pone home.context_processors.
+    # notificaciones() para toda la app — no armarlos aquí a mano, porque
+    # el contexto explícito de esta vista gana sobre el del context
+    # processor y tapaba el valor correcto (icono/color/tipo reales) con
+    # una forma vieja que dejaba la campana rota en esta página.
     ctx = {
         'user_role': 'Supervisor',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
     }
     piezas = [
@@ -198,8 +193,12 @@ def supervisor_inventario(request):
     if q:
         piezas = [p for p in piezas if q in p['nombre'].lower()]
 
+    piezas_page = Paginator(piezas, PAGE_SIZE_INVENTARIO).get_page(request.GET.get('page', 1))
+    inventario_extra_params = (urlencode({'q': q}) + '&') if q else ''
+
     ctx.update({
-        'piezas': piezas,
+        'piezas_page': piezas_page,
+        'inventario_extra_params': inventario_extra_params,
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Inventario', 'url': '/supervisor/inventario/'},

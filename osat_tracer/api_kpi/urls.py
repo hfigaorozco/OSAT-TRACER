@@ -23,6 +23,7 @@ urlpatterns = [
     path('v1/list/alertas/', views.ListAlertaAPIView.as_view(), name='list_alerta'),
     path('v1/detail/alerta/<int:pk>/', views.DetailAlertaAPIView.as_view(), name='detail_alerta'),
     path('v1/update/alerta/<int:pk>/', views.UpdateAlertaAPIView.as_view(), name='update_alerta'),
+    path('v1/list/alertas_operador/', views.AlertasOperadorAPIView.as_view(), name='list_alertas_operador'),
 
     # Registro Kpi
     path('v1/create/registro_kpi/', views.CreateRegistroKpiAPIView.as_view(), name='create_registroKpi'),
@@ -31,4 +32,8 @@ urlpatterns = [
 
     # KPI por línea (semáforo real)
     path('v1/kpi/semaforo_por_linea/', views.KpiPorLineaAPIView.as_view(), name='kpi_semaforo_por_linea'),
+
+    # Registrar el KPI final de un lote (Yield/Throughput/OEE), una vez que
+    # queda en estado terminal (Terminada o Rechazada).
+    path('v1/kpi/registrar_por_lote/<int:oblea_pk>/', views.RegistrarKpiPorLoteAPIView.as_view(), name='kpi_registrar_por_lote'),
 ]

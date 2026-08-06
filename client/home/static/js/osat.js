@@ -128,3 +128,101 @@ function addPasoRow(listId) {
   list.appendChild(row);
   row.querySelector('input').focus();
 }
+
+/* ── Paginación compacta con flechas < > (tablas de dashboard y listados) ──
+   No usa Paginator de Django ni recarga la página: agrupa filas ya
+   renderizadas en "páginas" del tamaño visual que ya tenía la tabla y
+   muestra/oculta con display, con botones prev/next arriba a la derecha.
+   Si hay menos filas que pageSize, los controles quedan ocultos —no
+   tiene sentido mostrar flechas si no hay a dónde navegar.
+
+   Convive con buscadores/filtros JS ya existentes (inventario, órdenes):
+   en vez de que el filtro esconda filas directamente con style.display,
+   debe marcarlas con row.dataset.filteredOut = 'true'/'' y llamar a
+   pager.reset() — así el pager solo pagina sobre las filas que SÍ pasan
+   el filtro, sin pelearse por quién controla el display de cada fila. */
+function initRowPager(opts) {
+  var tbody = typeof opts.tbody === 'string' ? document.querySelector(opts.tbody) : opts.tbody;
+  var prevBtn = document.getElementById(opts.prevId);
+  var nextBtn = document.getElementById(opts.nextId);
+  var controls = opts.controlsId ? document.getElementById(opts.controlsId) : null;
+  if (!tbody || !prevBtn || !nextBtn) return null;
+  var pageSize = opts.pageSize || 5;
+  var page = 0;
+
+  function rows() {
+    return Array.prototype.slice.call(tbody.querySelectorAll(opts.rowSelector || ':scope > tr'));
+  }
+
+  function render() {
+    var all = rows();
+    all.forEach(function (row) { if (row.dataset.filteredOut === 'true') row.style.display = 'none'; });
+    var eligible = all.filter(function (row) { return row.dataset.filteredOut !== 'true'; });
+    var totalPages = Math.max(1, Math.ceil(eligible.length / pageSize));
+    if (page >= totalPages) page = totalPages - 1;
+    if (page < 0) page = 0;
+    eligible.forEach(function (row, i) {
+      row.style.display = (i >= page * pageSize && i < (page + 1) * pageSize) ? '' : 'none';
+    });
+    prevBtn.disabled = page <= 0;
+    nextBtn.disabled = page >= totalPages - 1;
+    if (controls) controls.style.display = eligible.length > pageSize ? 'flex' : 'none';
+  }
+
+  prevBtn.addEventListener('click', function () { page--; render(); });
+  nextBtn.addEventListener('click', function () { page++; render(); });
+  render();
+
+  return { render: render, reset: function () { page = 0; render(); } };
+}
+
+/* ── Paginación por columnas para la tabla de semáforo KPI ──
+   Igual idea que initRowPager pero paginando COLUMNAS de línea de
+   producción en vez de filas: la primera columna (nombre del KPI) y la
+   última (Global) siempre quedan visibles; solo se pagina el bloque de
+   columnas de línea intermedias, sincronizando header y cada fila del
+   body por índice de columna. */
+function initSemaforoPager(opts) {
+  var table = typeof opts.table === 'string' ? document.querySelector(opts.table) : opts.table;
+  var prevBtn = document.getElementById(opts.prevId);
+  var nextBtn = document.getElementById(opts.nextId);
+  if (!table || !prevBtn || !nextBtn) return null;
+  var pageSize = opts.pageSize || 4;
+  var page = 0;
+
+  function middleCellsByColumn() {
+    var headerRow = table.querySelector('thead tr');
+    var ths = Array.prototype.slice.call(headerRow.children);
+    var midCount = ths.length - 2; // menos KPI y Global
+    var columns = [];
+    for (var c = 1; c <= midCount; c++) {
+      var cells = [ths[c]];
+      table.querySelectorAll('tbody tr').forEach(function (tr) {
+        cells.push(tr.children[c]);
+      });
+      columns.push(cells);
+    }
+    return columns;
+  }
+
+  function render() {
+    var columns = middleCellsByColumn();
+    var totalPages = Math.max(1, Math.ceil(columns.length / pageSize));
+    if (page >= totalPages) page = totalPages - 1;
+    if (page < 0) page = 0;
+    columns.forEach(function (cells, i) {
+      var visible = i >= page * pageSize && i < (page + 1) * pageSize;
+      cells.forEach(function (cell) { if (cell) cell.style.display = visible ? '' : 'none'; });
+    });
+    prevBtn.style.display = columns.length > pageSize ? '' : 'none';
+    nextBtn.style.display = columns.length > pageSize ? '' : 'none';
+    prevBtn.disabled = page <= 0;
+    nextBtn.disabled = page >= totalPages - 1;
+  }
+
+  prevBtn.addEventListener('click', function () { page--; render(); });
+  nextBtn.addEventListener('click', function () { page++; render(); });
+  render();
+
+  return { render: render };
+}

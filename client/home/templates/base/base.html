@@ -8,12 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/osat.css' %}">
+  <link rel="stylesheet" href="{% static 'css/osat.css' %}?v={{ css_version }}">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
   {% block body %}{% endblock %}
-  <script src="{% static 'js/osat.js' %}"></script>
+  <script src="{% static 'js/osat.js' %}?v={{ js_version }}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>
