@@ -40,11 +40,31 @@
 </div>
 {% endif %}
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-  <div class="card kpi-card"><div class="kpi-label">Total lotes</div><div class="kpi-value">{{ orden.total_lotes|default:"0" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">Completados</div><div class="kpi-value" style="color:#16A85E;">{{ orden.lotes_completados|default:"0" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">En proceso</div><div class="kpi-value" style="color:#F5A623;">{{ orden.lotes_en_proceso|default:"0" }}</div></div>
-  <div class="card kpi-card"><div class="kpi-label">Estado</div><div style="margin-top:8px;">{% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</div></div>
+<div class="kpi-plain-row">
+  <div class="kpi-plain">
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--turquoise)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span class="kpi-plain-label">Total lotes</span>
+    <span class="kpi-plain-value">{{ orden.total_lotes|default:"0" }}</span>
+  </div>
+  <div class="kpi-plain">
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    <span class="kpi-plain-label">Completados</span>
+    <span class="kpi-plain-value" style="color:#16A85E;">{{ orden.lotes_terminados|default:"0" }}</span>
+  </div>
+  <div class="kpi-plain">
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span class="kpi-plain-label">En proceso</span>
+    <span class="kpi-plain-value" style="color:#F5A623;">{{ orden.lotes_en_proceso|default:"0" }}</span>
+  </div>
+  <div class="kpi-plain">
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <span class="kpi-plain-label">Rechazados</span>
+    <span class="kpi-plain-value" style="color:#EF5350;">{{ orden.lotes_rechazados|default:"0" }}</span>
+  </div>
+  <div class="kpi-plain">
+    <span class="kpi-plain-label">Estado</span>
+    {% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}
+  </div>
 </div>
 
 <div class="card-table">

@@ -23,11 +23,11 @@
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <h1 style="font-size:24px;font-weight:700;color:#fff;margin:0;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;">{{ lote.folio }}</h1>
     {% if lote.orden %}<span style="background:#009EAF20;color:#009EAF;padding:2px 12px;border-radius:999px;font-size:14px;font-weight:500;">{{ lote.orden.numero }}</span>{% endif %}
-    {% if lote.estado.nombre == 'En Hold' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#F5A623;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:700;">⏸ En Hold</span>
-    {% elif lote.estado.nombre == 'En proceso' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#FFCA28;color:#1A202C;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">En proceso</span>
-    {% elif lote.estado.nombre == 'Terminada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#16A85E;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Terminada</span>
-    {% elif lote.estado.nombre == 'Rechazada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#EF5350;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Rechazada</span>
-    {% else %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#4A5568;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
+    {% if lote.estado.nombre == 'En Hold' %}<span class="badge badge-hold">⏸ En Hold</span>
+    {% elif lote.estado.nombre == 'En proceso' %}<span class="badge badge-en-proceso">En proceso</span>
+    {% elif lote.estado.nombre == 'Terminada' %}<span class="badge badge-ok">Terminada</span>
+    {% elif lote.estado.nombre == 'Rechazada' %}<span class="badge badge-rechazado">Rechazada</span>
+    {% else %}<span class="badge badge-inactivo">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
     <button type="button" onclick="document.getElementById('modal-qr').style.display='flex'"
             title="Ver / imprimir código QR"
             style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">

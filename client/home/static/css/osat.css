@@ -417,8 +417,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    BADGES — visibles sobre fondo blanco
 ══════════════════════════════════════ */
 .badge {
+  /* width fijo (no min-width): con min-width, un texto largo como
+     "Administrador" (114.8px reales) se salía del piso de 96px y quedaba
+     más ancho que el resto — width fijo + nowrap hace que TODOS midan
+     exactamente lo mismo sin importar el largo del texto. 120px es el
+     texto más largo que usa esta clase ("Administrador") + margen. */
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 96px; text-align: center;
+  width: 120px; flex-shrink: 0; white-space: nowrap; text-align: center;
   padding: 3px 11px; border-radius: 4px;
   font-size: 12.5px; font-weight: 600;
 }
@@ -426,7 +431,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .badge-inactivo  { background: #4A5568; color: #FFFFFF; }
 .badge-aprobado  { background: #16A85E; color: #FFFFFF; }
 .badge-rechazado { background: #EF5350; color: #FFFFFF; }
-.badge-en-proceso{ background: #FFCA28; color: #1A202C; }
+/* En proceso tiene que seguir siendo amarillo (no turquesa) — pero un
+   amarillo con más separación de matiz respecto al naranja de Hold
+   (--gold, #F5A623, tono ~37°) que el amarillo anterior (#FFCA28, tono
+   ~45° — a solo 8° de diferencia, muy parecidos a simple vista). #FFEB3B
+   tiene un tono ~54°, casi 20° más lejos del naranja, y se distingue
+   claramente sin dejar de leerse como "amarillo". */
+.badge-en-proceso{ background: #FFEB3B; color: #1A202C; }
 .badge-pendiente { background: #FFCA28; color: #1A202C; }
 .badge-abierta   { background: #FFCA28; color: #1A202C; }
 .badge-hold      { background: var(--gold); color: #FFFFFF; }

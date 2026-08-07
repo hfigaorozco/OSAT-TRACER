@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
     prevId: 'pager-alertas-prev', nextId: 'pager-alertas-next', controlsId: 'pager-alertas-activas'});
   initSemaforoPager({table: '#tabla-semaforo-kpi', pageSize: 4,
     prevId: 'pager-semaforo-prev', nextId: 'pager-semaforo-next'});
+  iniciarAutoRefreshDashboard();
 });
 </script>
 {% endblock %}

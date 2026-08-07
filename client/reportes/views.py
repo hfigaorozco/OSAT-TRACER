@@ -49,6 +49,17 @@ def _rango_str(fecha_inicio, fecha_fin):
     return f"{fecha_inicio} a {fecha_fin}"
 
 
+def _pagina_de_reporte(rows_ordenados, numero):
+    """En qué página de PAGE_SIZE_REPORTES cae el reporte `numero` dentro de
+    una lista ya ordenada igual que BaseReportesView.get() ordena esa misma
+    pestaña — para que el botón "Ver" de la notificación pueda mandar
+    directo a esa página en vez de a la página 1 de la pantalla general."""
+    for i, r in enumerate(rows_ordenados):
+        if r.get('numero') == numero:
+            return i // PAGE_SIZE_REPORTES + 1
+    return 1
+
+
 class BaseReportesView(View):
     """Página de Reportes: 3 pestañas (Producción/Inventario/KPI), cada una
     con la lista PAGINADA de reportes ya generados (ya no se recalcula nada
@@ -217,7 +228,15 @@ class BaseReportesGenerarView(View):
             'tipo_generacion': 'manual', 'generado_por': generado_por,
         })
         if ok:
-            ver_url = f"{reverse(self.redirect_url_name)}?tab={tipo}"
+            list_endpoint = {
+                'inventario': '/v1/list/reportes_inventario/',
+                'kpi': '/v1/list/reportes_kpi/',
+            }[tipo]
+            rows = _get(list_endpoint, [])
+            rows = sorted(rows, key=lambda r: r.get('fecha_generado', ''), reverse=True)
+            page = _pagina_de_reporte(rows, resp.get('numero'))
+            page_param = 'page_inv' if tipo == 'inventario' else 'page_kpi'
+            ver_url = f"{reverse(self.redirect_url_name)}?tab={tipo}&{page_param}={page}"
             messages.success(request, 'Reporte generado correctamente.', extra_tags=ver_url)
         else:
             messages.error(request, f'Error: {resp}')

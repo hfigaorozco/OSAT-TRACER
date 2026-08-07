@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.views import View
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj
 
-PAGE_SIZE_MAQUINARIA = 9
+PAGE_SIZE_MAQUINARIA = 6
 
 _NUM_SERIE_RE = re.compile(r'^[A-Za-z0-9]+$')
 
