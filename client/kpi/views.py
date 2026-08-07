@@ -103,6 +103,12 @@ def _build_alertas(role):
             tipo = 'kpi'
         elif pasos_de_esta:
             tipo = 'produccion'
+        elif str(a.get('descripcion', '')).startswith('Orden #'):
+            # Alertas de rechazo manual de orden (ver _orden_rechazar): no
+            # quedan ligadas a Registro_Kpi ni a Paso_Realizado porque no
+            # nacen de un paso, así que sin este caso caían en 'stock' y
+            # apuntaban al ícono/acción de inventario, que no tiene sentido.
+            tipo = 'produccion'
         else:
             tipo = 'stock'
 
@@ -126,7 +132,10 @@ def _build_alertas(role):
             if kpi_data:
                 cuerpo = f"{cuerpo} (KPI: {kpi_data.get('nombre', '—')}, valor registrado: {reg.get('valor', '—')})"
 
-        elif tipo == 'produccion':
+        elif tipo == 'produccion' and pasos_de_esta:
+            # OJO: tipo puede ser 'produccion' sin pasos_de_esta (alertas de
+            # rechazo manual de orden, ver arriba) — sin este segundo check
+            # el sorted([])[-1] de abajo truena con IndexError.
             paso_reg = sorted(
                 pasos_de_esta,
                 key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))

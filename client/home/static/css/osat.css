@@ -429,7 +429,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .badge-en-proceso{ background: #FFCA28; color: #1A202C; }
 .badge-pendiente { background: #FFCA28; color: #1A202C; }
 .badge-abierta   { background: #FFCA28; color: #1A202C; }
-.badge-hold      { background: #EF5350; color: #FFFFFF; }
+.badge-hold      { background: var(--gold); color: #FFFFFF; }
 .badge-ok        { background: #16A85E; color: #FFFFFF; }
 .badge-bajo      { background: #FFCA28; color: #1A202C; }
 .badge-critico   { background: #EF5350; color: #FFFFFF; }
@@ -491,7 +491,7 @@ select.form-control {
 }
 .modal-sm  { max-width: 400px; }
 .modal-md  { max-width: 520px; }
-.modal-lg  { max-width: 720px; }
+.modal-lg  { max-width: 720px; width: 90%; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 24px; border-bottom: 1px solid #E2E8F0;

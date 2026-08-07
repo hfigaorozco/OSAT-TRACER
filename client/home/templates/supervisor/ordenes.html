@@ -72,7 +72,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-orden')">
-  <div class="modal-card modal-md">
+  <div class="modal-card modal-lg">
     <div class="modal-header"><h2 id="orden-modal-title">Nueva orden de producción</h2><button class="modal-close" onclick="closeModal('modal-orden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <form method="post" id="orden-form" action="{% url 'supervisor_ordenes_crear' %}">{% csrf_token %}
       <div class="modal-body">
@@ -89,19 +89,36 @@
         </div>
         <div class="form-group">
           <label class="form-label">Tipo de oblea <span class="required">*</span></label>
-          <select name="tipo_oblea" id="orden-tipo-oblea-input" class="form-control" required>
+          <select name="tipo_oblea" id="orden-tipo-oblea-input" class="form-control" required onchange="_actualizarLotesMaxStock()">
             <option value="">Seleccionar…</option>
             {% for t in tipos_oblea %}<option value="{{ t.pk }}">{{ t.nombre }}</option>{% endfor %}
           </select>
         </div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Hora de inicio <span class="required">*</span></label><input type="time" step="1" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Hora estimada de fin <span class="required">*</span></label><input type="time" step="1" name="hora_fin" id="orden-hora-fin-input" class="form-control" required></div>
+          <div class="form-group">
+            <label class="form-label">Hora de inicio <span class="required">*</span></label>
+            <div style="display:flex;gap:6px;">
+              <select id="orden-hora-inicio-h" class="form-control" required></select>
+              <select id="orden-hora-inicio-m" class="form-control" required></select>
+              <select id="orden-hora-inicio-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
+            </div>
+            <input type="hidden" name="hora_inicio" id="orden-hora-inicio-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora estimada de fin <span class="required">*</span></label>
+            <div style="display:flex;gap:6px;">
+              <select id="orden-hora-fin-h" class="form-control" required></select>
+              <select id="orden-hora-fin-m" class="form-control" required></select>
+              <select id="orden-hora-fin-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
+            </div>
+            <input type="hidden" name="hora_fin" id="orden-hora-fin-input">
+          </div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
           <input type="number" name="cantidad_lotes" id="orden-cantidad-crear-input" class="form-control" min="1" value="1" required>
           <div style="font-size:13px;color:#718096;margin-top:4px;">Todos los lotes de la orden usan el mismo tipo de oblea elegido arriba.</div>
+          <div id="orden-lotes-max-hint" style="font-size:13px;margin-top:4px;display:none;"></div>
         </div>
         <div class="form-group" id="orden-cantidad-extra-wrap" style="display:none;">
           <label class="form-label">Agregar lotes nuevos</label>
@@ -158,6 +175,7 @@
 <script>
 var ORDENES_DATA = JSON.parse(document.getElementById('ordenes-data').textContent);
 var URL_ORDEN_EDITAR = "{% url 'supervisor_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_LOTES_MAX_STOCK = "{% url 'supervisor_lotes_max_stock' %}";
 
 // ── Filtros ──
 var _ordenesPager = null;
@@ -183,10 +201,79 @@ document.addEventListener('DOMContentLoaded', function () {
   if (selEstado) { selEstado.value = estado; filterOrdenes(); }
 });
 
+// ── Selector de hora de 12h (HH/MM/AM-PM) sin segundos ──
+// El <input type="time"> nativo depende del locale del sistema operativo
+// para mostrar AM/PM (en muchos equipos con locale 24h no lo muestra
+// nunca) — este selector lo garantiza siempre, sin importar el SO. El
+// input oculto sigue mandando 'HH:MM' en 24h, que es lo que ya espera
+// _normalizar_hora() en produccion/views.py.
+function _horaPickerPoblar(prefix) {
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  if (h.options.length) return;
+  h.appendChild(new Option('HH', ''));
+  for (var i = 1; i <= 12; i++) { var v = String(i).padStart(2, '0'); h.appendChild(new Option(v, v)); }
+  m.appendChild(new Option('MM', ''));
+  for (var j = 0; j < 60; j++) { var v2 = String(j).padStart(2, '0'); m.appendChild(new Option(v2, v2)); }
+}
+function _horaPickerInit(prefix) {
+  _horaPickerPoblar(prefix);
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  var ap = document.getElementById(prefix + '-ap');
+  var sync = function () {
+    var hidden = document.getElementById(prefix + '-input');
+    if (!h.value || !m.value) { hidden.value = ''; return; }
+    var hh = parseInt(h.value, 10) % 12;
+    if (ap.value === 'PM') hh += 12;
+    hidden.value = String(hh).padStart(2, '0') + ':' + m.value;
+  };
+  h.onchange = sync; m.onchange = sync; ap.onchange = sync;
+}
+function _horaPickerSet(prefix, value24) {
+  _horaPickerPoblar(prefix);
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  var ap = document.getElementById(prefix + '-ap');
+  var hidden = document.getElementById(prefix + '-input');
+  if (!value24) { h.value = ''; m.value = ''; ap.value = 'AM'; hidden.value = ''; return; }
+  var partes = value24.split(':');
+  var hh = parseInt(partes[0], 10);
+  var mm = partes[1];
+  ap.value = hh >= 12 ? 'PM' : 'AM';
+  var h12 = hh % 12; if (h12 === 0) h12 = 12;
+  h.value = String(h12).padStart(2, '0');
+  m.value = mm;
+  hidden.value = String(hh).padStart(2, '0') + ':' + mm;
+}
+document.addEventListener('DOMContentLoaded', function () {
+  _horaPickerInit('orden-hora-inicio');
+  _horaPickerInit('orden-hora-fin');
+});
+
 function actualizarProcesoOrden() {
   var sel = document.getElementById('orden-linea-input');
   var opt = sel.options[sel.selectedIndex];
   document.getElementById('orden-proceso-display').value = opt ? (opt.getAttribute('data-proceso') || '') : '';
+  _actualizarLotesMaxStock();
+}
+
+// Avisa, antes de guardar, cuántos lotes alcanza a producir el stock actual
+// de inventario (sp_lotestotalesXstock vía supervisor_lotes_max_stock).
+function _actualizarLotesMaxStock() {
+  var hint = document.getElementById('orden-lotes-max-hint');
+  var linea = document.getElementById('orden-linea-input').value;
+  var tipoOblea = document.getElementById('orden-tipo-oblea-input').value;
+  if (!linea || !tipoOblea) { hint.style.display = 'none'; return; }
+  fetch(URL_LOTES_MAX_STOCK + '?linea=' + encodeURIComponent(linea) + '&tipo_oblea=' + encodeURIComponent(tipoOblea))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.lotes_max === null || data.lotes_max === undefined) { hint.style.display = 'none'; return; }
+      hint.style.display = '';
+      hint.style.color = data.lotes_max > 0 ? '#718096' : '#EF5350';
+      hint.textContent = 'Stock disponible alcanza para máximo ' + data.lotes_max + ' lote(s).';
+    })
+    .catch(function () { hint.style.display = 'none'; });
 }
 
 function openNuevaOrden() {
@@ -194,11 +281,12 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  document.getElementById('orden-hora-inicio-input').value = '';
-  document.getElementById('orden-hora-fin-input').value = '';
+  _horaPickerSet('orden-hora-inicio', '');
+  _horaPickerSet('orden-hora-fin', '');
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
+  document.getElementById('orden-lotes-max-hint').style.display = 'none';
   document.getElementById('orden-cantidad-extra-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-extra-input').value = 0;
   document.getElementById('orden-estado-wrap').style.display = 'none';
@@ -217,8 +305,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio;
-  document.getElementById('orden-hora-fin-input').value = o.hora_fin;
+  _horaPickerSet('orden-hora-inicio', o.hora_inicio);
+  _horaPickerSet('orden-hora-fin', o.hora_fin);
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';
