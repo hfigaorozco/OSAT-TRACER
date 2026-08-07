@@ -567,13 +567,33 @@ select.form-control {
 .lote-stat-label { font-size: 12px; font-weight: 600; color: var(--text-subtle); margin-bottom: 4px; }
 .lote-stat-value { font-size: 24px; font-weight: 700; color: var(--text-white); line-height: 1; }
 
-.lote-proceso-piezas { font-size: 14px; color: var(--text-subtle); margin-bottom: 22px; line-height: 1.6; }
+.lote-proceso-piezas { font-size: 14px; color: var(--text-subtle); margin-bottom: 8px; line-height: 1.6; }
 .lote-proceso-piezas strong { color: var(--text-white); font-weight: 600; }
 
-.lote-progreso-general { margin-bottom: 4px; }
+.lote-piezas-details { margin-bottom: 22px; }
+.lote-piezas-details summary {
+  font-size: 13px; font-weight: 600; color: var(--text-subtle);
+  cursor: pointer; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.lote-piezas-details summary::-webkit-details-marker { display: none; }
+.lote-piezas-details summary::before {
+  content: ""; width: 7px; height: 7px;
+  border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle);
+  transform: rotate(-45deg); transition: transform .15s; flex-shrink: 0;
+}
+.lote-piezas-details[open] summary::before { transform: rotate(45deg); }
+.lote-piezas-list {
+  list-style: disc; margin: 8px 0 0 18px; padding: 0;
+  font-size: 13.5px; color: var(--text-subtle); line-height: 1.8;
+}
+.lote-piezas-list li { color: var(--text-white); }
+.lote-piezas-cant { color: var(--text-subtle); font-weight: 400; }
+
+.lote-progreso-general { margin-bottom: 16px; }
 .lote-progreso-general-head {
   display: flex; align-items: center; justify-content: space-between;
-  font-size: 12.5px; color: var(--text-subtle); margin-bottom: 6px;
+  font-size: 12.5px; color: #718096; margin-bottom: 6px;
 }
 .lote-progreso-general .progress-bar { height: 8px; }
 

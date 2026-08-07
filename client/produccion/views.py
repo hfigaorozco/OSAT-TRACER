@@ -648,6 +648,31 @@ def _maquinas_por_paso():
     return {codigo: ', '.join(nombres) for codigo, nombres in agrupado.items()}
 
 
+def _operador_por_paso():
+    """codigo_paso -> nombre del operador (Empleado) asignado a la primera
+    máquina del catálogo (MaquinaPaso) que puede correr ese paso, igual que
+    _maquinas_por_paso pero resolviendo Maquina.empleado -> Empleado."""
+    maquina_paso_bd, maquinas_bd, empleados_bd = _get_many(
+        '/v1/list/MaquinaPaso/', '/v1/list/maquinaria/', '/v1/list/empleados/'
+    )
+    maquinas_map = {str(m.get('numSerie', '')): m for m in maquinas_bd}
+    empleados_map = {str(e.get('numero', '')): e for e in empleados_bd}
+    resultado = {}
+    for mp in maquina_paso_bd:
+        codigo_paso = str(mp.get('paso', ''))
+        if codigo_paso in resultado:
+            continue
+        maquina = maquinas_map.get(str(mp.get('maquina', '')))
+        if not maquina or not maquina.get('empleado'):
+            continue
+        emp = empleados_map.get(str(maquina.get('empleado')))
+        if emp:
+            nombre = f"{emp.get('nombre', '')} {emp.get('primerApell', '')}".strip()
+            if nombre:
+                resultado[codigo_paso] = nombre
+    return resultado
+
+
 def _construir_etapas(pasos_de_proceso, catalogo_map, pasos_realizados_de_oblea, maquinas_por_paso=None):
     """
     pasos_de_proceso: lista de PasoProceso (dicts) ya ordenados por 'orden'.
@@ -756,7 +781,7 @@ def _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd):
 def _build_ordenes_lotes():
     (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
      pasos_bd, pasos_catalogo, pasos_realizados_bd, alertas_bd, linea_proceso_bd,
-     proceso_pieza_bd, piezas_bd) = _get_many(
+     proceso_pieza_bd, piezas_bd, empleados_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -769,10 +794,12 @@ def _build_ordenes_lotes():
         '/v1/list/LineaProceso/',
         '/v1/list/ProcesoPieza/',
         '/v1/list/piezas/',
+        '/v1/list/empleados/',
     )
     catalogo_map = {str(p.get('codigo', '')): p for p in pasos_catalogo}
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
     piezas_por_proceso = _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd)
+    empleados_map = {str(e.get('numero', '')): e for e in empleados_bd}
     # Linea.proceso (campo directo del modelo) no se usa realmente — la
     # relación línea↔proceso real vive en la tabla puente LineaProceso.
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
@@ -802,6 +829,8 @@ def _build_ordenes_lotes():
             'hora_fin':            _hora_display(o.get('horaFin', '')),
             'hora_inicio_display': _hora_display(o.get('horaIni', '')),
             'hora_fin_display':    _hora_display(o.get('horaFin', '')),
+            'fecha_creacion_display': _fecha_display(o.get('fecha', '')),
+            'creado_por': (lambda e: f"{e.get('nombre','')} {e.get('primerApell','')}".strip() or '—')(empleados_map.get(str(o.get('empleado', '')), {})),
             'total_lotes': total,
             'completados': comp,
             'pct': pct,
@@ -811,6 +840,7 @@ def _build_ordenes_lotes():
         })
 
     maquinas_por_paso = _maquinas_por_paso()
+    operador_por_paso = _operador_por_paso()
 
     lotes = []
     for ob in obleas_bd:
@@ -833,6 +863,7 @@ def _build_ordenes_lotes():
         }
         etapas = _construir_etapas(pasos_de_proceso, catalogo_map, realizados_de_esta_oblea, maquinas_por_paso)
         pasos_completados = sum(1 for e in etapas if e['estado'] in ('aprobado', 'rechazado'))
+        etapa_activa = next((e for e in etapas if e['estado'] == 'en_curso'), None)
 
         tipo_pk_lote  = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
         dies_iniciales = tipos_map.get(tipo_pk_lote, {}).get('cantidadDies') or ob.get('diesGenerados', 0)
@@ -840,12 +871,16 @@ def _build_ordenes_lotes():
             num, pasos_realizados_bd, dies_iniciales, ob.get('diesGenerados', 0)
         )
 
+        lote_linea_pk = str(orden_data.get('linea', '')) if orden_data.get('linea') else ''
+
         lotes.append({
             'pk': num,
             'folio': f'LOT-{num:04d}' if isinstance(num, int) else str(num),
             'orden_pk': orden_num,
             'proceso': str(orden_data.get('proceso', '—')),
             'proceso_nombre': procesos_map.get(str(orden_data.get('proceso', '')), {}).get('nombre', orden_data.get('proceso', '—')),
+            'linea_nombre': lineas_map.get(lote_linea_pk, {}).get('nombre', '—') if lote_linea_pk else '—',
+            'operador_nombre': operador_por_paso.get(etapa_activa['codigo'], '—') if etapa_activa else '—',
             'hora_inicio': _hora_display(orden_data.get('horaIni', '')),
             'hora_fin': _hora_display(orden_data.get('horaFin', '')),
             'total_pasos': len(etapas),
@@ -1725,7 +1760,7 @@ def admin_organizacion_paso_editar(request, pk):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_ordenes(request):
-    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, _alertas_bd, linea_proceso_bd = _get_many(
+    ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd, _alertas_bd, linea_proceso_bd, empleados_bd = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -1733,6 +1768,7 @@ def supervisor_ordenes(request):
         '/v1/list/TipoOblea/',
         '/v1/list/alertas/',
         '/v1/list/LineaProceso/',
+        '/v1/list/empleados/',
     )
     proceso_por_linea = {str(lp.get('linea')): str(lp.get('proceso')) for lp in linea_proceso_bd}
     # recent_notifications/unread_count del topbar los pone el context
@@ -1746,6 +1782,7 @@ def supervisor_ordenes(request):
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
     lineas_map   = {str(l.get('codigo', '')): l for l in lineas_bd}
     tipos_map    = {str(t.get('codigo', '')): t for t in tipos_oblea_bd}
+    empleados_map = {str(e.get('numero', '')): e for e in empleados_bd}
 
     # Construir lista de órdenes con los campos que espera supervisor/ordenes.html
     ordenes = []
@@ -1763,6 +1800,8 @@ def supervisor_ordenes(request):
 
         linea_pk = str(o.get('linea', '')) if o.get('linea') else ''
         tipo_pk  = str(o.get('tipoOblea', '')) if o.get('tipoOblea') else ''
+        creador  = empleados_map.get(str(o.get('empleado', '')), {})
+        creador_nombre = f"{creador.get('nombre', '')} {creador.get('primerApell', '')}".strip() or '—'
 
         ordenes.append({
             'pk':               num,
@@ -1776,8 +1815,10 @@ def supervisor_ordenes(request):
             'fecha_fin':        str(o.get('horaFin', '—'))[:10],
             'fecha_inicio_display': _fecha_display(o.get('horaIni', '')),
             'fecha_fin_display':    _fecha_display(o.get('horaFin', '')),
+            'fecha_creacion_display': _fecha_display(o.get('fecha', '')),
             'hora_inicio':      _hora_display(o.get('horaIni', '')),
             'hora_fin':         _hora_display(o.get('horaFin', '')),
+            'creado_por':       creador_nombre,
             'total_lotes':      total,
             'lotes_completados': comp,
             'lotes_en_proceso': en_proc,
@@ -1895,7 +1936,7 @@ def supervisor_lote_scrap(request, pk):
 
 def supervisor_orden_detalle(request, pk):
     (ordenes_bd, obleas_bd, procesos_bd, lineas_bd, tipos_oblea_bd,
-     pasos_bd, pasos_catalogo, pasos_realizados_bd, _alertas_bd) = _get_many(
+     pasos_bd, pasos_catalogo, pasos_realizados_bd, _alertas_bd, empleados_bd) = _get_many(
         '/v1/list/Orden/',
         '/v1/list/Oblea/',
         '/v1/list/Proceso/',
@@ -1905,6 +1946,7 @@ def supervisor_orden_detalle(request, pk):
         '/v1/list/pasos/',
         '/v1/list/PasoRealizado/',
         '/v1/list/alertas/',
+        '/v1/list/empleados/',
     )
     # recent_notifications/unread_count del topbar los pone el context
     # processor home.context_processors.notificaciones para toda la app.
@@ -1940,12 +1982,17 @@ def supervisor_orden_detalle(request, pk):
 
     edo_str, comp, _pct = _estado_orden_display(orden_data.get('estado'), obs)
 
+    creador = next((e for e in empleados_bd if str(e.get('numero')) == str(orden_data.get('empleado', ''))), {})
+    creador_nombre = f"{creador.get('nombre', '')} {creador.get('primerApell', '')}".strip() or '—'
+
     orden = {
         'pk':               num,
         'numero':           f'ORD-{num:04d}' if isinstance(num, int) else str(num),
         'proceso':          proceso_obj,
         'linea_nombre':     linea_data.get('nombre', '—'),
         'tipo_oblea_nombre': tipo_data.get('descripcion', '—'),
+        'creado_por':       creador_nombre,
+        'fecha_creacion_display': _fecha_display(orden_data.get('fecha', '')),
         'total_lotes':      total,
         'lotes_completados': comp,
         'lotes_en_proceso': en_proc,
@@ -1996,7 +2043,7 @@ def supervisor_orden_detalle(request, pk):
 def supervisor_lote_detalle(request, pk):
     (obleas_bd, ordenes_bd, pasos_bd, pasos_catalogo, pasos_realizados,
      defectos_bd, paso_defecto_bd, _alertas_bd, tipos_oblea_bd,
-     procesos_bd, proceso_pieza_bd, piezas_bd) = _get_many(
+     procesos_bd, proceso_pieza_bd, piezas_bd, lineas_bd) = _get_many(
         '/v1/list/Oblea/',
         '/v1/list/Orden/',
         '/v1/list/PasoProceso/',
@@ -2009,9 +2056,12 @@ def supervisor_lote_detalle(request, pk):
         '/v1/list/Proceso/',
         '/v1/list/ProcesoPieza/',
         '/v1/list/piezas/',
+        '/v1/list/Linea/',
     )
     procesos_map = {str(p.get('codigo', '')): p for p in procesos_bd}
     piezas_por_proceso = _piezas_por_proceso_map(proceso_pieza_bd, piezas_bd)
+    lineas_map = {str(l.get('codigo', '')): l for l in lineas_bd}
+    operador_por_paso = _operador_por_paso()
     # recent_notifications/unread_count del topbar los pone el context
     # processor home.context_processors.notificaciones para toda la app.
     ctx = {
@@ -2079,6 +2129,7 @@ def supervisor_lote_detalle(request, pk):
     proceso_nombre = procesos_map.get(proceso_codigo, {}).get('nombre', proceso_codigo or '—')
     total_pasos_lote = len(etapas)
     pasos_completados_lote = sum(1 for e in etapas if e.completado)
+    lote_linea_pk = str(orden_data.get('linea', '')) if orden_data.get('linea') else ''
 
     lote = {
         'pk':             num,
@@ -2090,6 +2141,8 @@ def supervisor_lote_detalle(request, pk):
         'estado':         _FakeObj(nombre=edo_str),
         'orden_en_hold':  str(orden_data.get('estado', '')).lower() == 'enhol',
         'proceso_nombre': proceso_nombre,
+        'linea_nombre':   lineas_map.get(lote_linea_pk, {}).get('nombre', '—') if lote_linea_pk else '—',
+        'operador_nombre': operador_por_paso.get(etapa_activa.codigo, '—') if etapa_activa else '—',
         'piezas':         piezas_por_proceso.get(proceso_codigo, []),
         'dies_iniciales': dies_iniciales,
         'dies_activos':   dies_activos,

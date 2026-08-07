@@ -28,21 +28,21 @@
     {% elif lote.estado.nombre == 'Terminada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#16A85E;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Terminada</span>
     {% elif lote.estado.nombre == 'Rechazada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#EF5350;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Rechazada</span>
     {% else %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#4A5568;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">{{ lote.estado.nombre|default:"—" }}</span>{% endif %}
-  </div>
-  <!-- Acciones: QR + Hold, sin botón Scrap -->
-  <div style="display:flex;align-items:center;gap:10px;">
     <button type="button" onclick="document.getElementById('modal-qr').style.display='flex'"
             title="Ver / imprimir código QR"
-            style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="14"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+            style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="14"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
     </button>
     <form method="post" action="{% url 'supervisor_lote_generar_reporte' lote.pk %}" style="margin:0;" onsubmit="return confirm('¿Generar un reporte de este lote? Podrás verlo e imprimirlo desde la página de Reportes.');">{% csrf_token %}
       <input type="hidden" name="orden_id" value="{{ lote.orden.pk }}">
       <button type="submit" title="Generar reporte de este lote"
-              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       </button>
     </form>
+  </div>
+  <!-- Acciones: solo Hold -->
+  <div style="display:flex;align-items:center;gap:10px;">
     {% if lote.estado.nombre == 'En Hold' %}
     <form method="post" action="{% url 'supervisor_lote_liberar' lote.pk %}" style="margin:0;">{% csrf_token %}
       <button type="submit"
@@ -86,28 +86,36 @@
       </div>
     </div>
 
-    <!-- Proceso + piezas que usa -->
+    <!-- Proceso, línea, operador + piezas que usa -->
     <div class="lote-proceso-piezas">
       Proceso: <strong>{{ lote.proceso_nombre|default:"—" }}</strong>
-      {% if lote.piezas %}
-      &nbsp;·&nbsp;Piezas: <strong>{% for z in lote.piezas %}{{ z.nombre }} ({{ z.cantidad }}){% if not forloop.last %}, {% endif %}{% endfor %}</strong>
-      {% endif %}
+      &nbsp;·&nbsp;Línea: <strong>{{ lote.linea_nombre|default:"—" }}</strong>
     </div>
-
-    <!-- Progreso general del lote (pasos completados) -->
-    <div class="lote-progreso-general">
-      <div class="lote-progreso-general-head">
-        <span>Progreso del lote</span>
-        <span>{{ lote.pasos_completados|default:0 }}/{{ lote.total_pasos|default:0 }} pasos · {{ lote.pct_completados|default:0 }}%</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:{{ lote.pct_completados|default:0 }}%;"></div></div>
+    <div class="lote-proceso-piezas">
+      Operador asignado: <strong>{{ lote.operador_nombre|default:"—" }}</strong>
     </div>
+    {% if lote.piezas %}
+    <details class="lote-piezas-details">
+      <summary>Piezas ({{ lote.piezas|length }})</summary>
+      <ul class="lote-piezas-list">
+        {% for z in lote.piezas %}<li>{{ z.nombre }} <span class="lote-piezas-cant">× {{ z.cantidad }}</span></li>{% endfor %}
+      </ul>
+    </details>
+    {% endif %}
 
   </div>
 
   <div class="lote-detalle-right">
     <div class="card lote-etapas-card">
-      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
+      <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 12px;">Trazabilidad del lote</h2>
+      <!-- Progreso general del lote (pasos completados) — arriba del módulo de pasos -->
+      <div class="lote-progreso-general">
+        <div class="lote-progreso-general-head">
+          <span>Progreso del lote</span>
+          <span>{{ lote.pasos_completados|default:0 }}/{{ lote.total_pasos|default:0 }} pasos · {{ lote.pct_completados|default:0 }}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:{{ lote.pct_completados|default:0 }}%;"></div></div>
+      </div>
       <div class="lote-etapas-scroll">
       {% if lote.estado.nombre == 'Terminada' %}
       <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:14px;background:#16A85E;color:#FFFFFF;font-size:14px;font-weight:600;margin-bottom:14px;">
@@ -130,19 +138,19 @@
             {% endif %}
           </div>
           <div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:15px;font-weight:400;color:#1A202C;">{{ etapa.nombre }}</span>
-              {% if etapa.rechazado %}
-              <span style="background:#EF5350;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Rechazado</span>
-              {% else %}
-              <span style="background:#16A85E;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Aprobado</span>
-              {% endif %}
-            </div>
+            <span style="font-size:15px;font-weight:400;color:#1A202C;">{{ etapa.nombre }}</span>
             {% if etapa.hora_inicio_iso %}<div style="font-size:13px;color:#718096;margin-top:2px;">{{ etapa.hora_inicio_iso }}</div>{% endif %}
             {% if etapa.notas %}<div style="font-size:13px;color:#718096;margin-top:2px;">{{ etapa.notas }}</div>{% endif %}
           </div>
         </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          {% if etapa.rechazado %}
+          <span style="background:#EF5350;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Rechazado</span>
+          {% else %}
+          <span style="background:#16A85E;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Aprobado</span>
+          {% endif %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
       <div class="etapa-detalle-body" style="display:none;margin:10px 0 0 42px;padding:12px;background:#F7FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13.5px;color:#4A5568;">
         {% if etapa.descripcion %}<div style="margin-bottom:4px;">{{ etapa.descripcion }}</div>{% endif %}
@@ -162,10 +170,7 @@
             <div style="width:8px;height:8px;border-radius:50%;background:#fff;"></div>
           </div>
           <div style="flex:1;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:15px;font-weight:600;color:#1A202C;">{{ etapa.nombre }}</span>
-              <span style="background:#009EAF;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">En curso</span>
-            </div>
+            <span style="font-size:15px;font-weight:600;color:#1A202C;">{{ etapa.nombre }}</span>
 
             {% if etapa.tiempo_estimado_seg > 0 %}
             <!-- Barra de progreso -->
@@ -224,10 +229,11 @@
             {% endif %}
           </div>
         </div>
+        <span style="background:#009EAF;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;flex-shrink:0;">En curso</span>
       </div>
 
       <!-- Botón completar etapa — ancho completo, llena el cuadro del paso -->
-      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and not lote.orden_en_hold %}
+      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and lote.estado.nombre != 'Terminada' and not lote.orden_en_hold %}
       <button onclick="event.stopPropagation();document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
               style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">
         ✓ Completar etapa
@@ -235,6 +241,7 @@
       {% else %}
       <div style="margin-top:14px;padding:12px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:13px;text-align:center;font-weight:600;">
         {% if lote.estado.nombre == 'En Hold' %}Este lote está en Hold. No se pueden completar etapas.
+        {% elif lote.estado.nombre == 'Terminada' %}Este lote ya está terminado y no puede continuar con más etapas.
         {% elif lote.orden_en_hold %}La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.
         {% else %}Este lote fue rechazado y ya no puede continuar con más etapas.{% endif %}
       </div>
@@ -288,8 +295,38 @@
       {% if lote.etapa_activa %}<input type="hidden" name="paso" value="{{ lote.etapa_activa.codigo }}">{% endif %}
       <div style="padding:20px 24px;">
 
+        <!-- Unidades con defecto -->
+        <div style="margin-bottom:16px;">
+          <label style="font-size:14px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Unidades con defecto en esta etapa</label>
+          <input type="number" name="unidades_defecto" id="sup-scrap-input" class="form-control" min="0" value="0" oninput="supActualizarRechazoDisponible()" style="max-width:180px;background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:14px;">
+        </div>
+
+        <!-- Yield del lote — actual, proyectado y umbral, siempre visible -->
+        <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Yield actual</div>
+              <div style="font-size:20px;font-weight:700;color:#1A202C;">{{ lote.yield_pct|default:0|floatformat:1 }}%</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Proyectado con este scrap</div>
+              <div id="sup-yield-proyectado" style="font-size:20px;font-weight:700;">—</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Umbral mínimo</div>
+              <div style="font-size:20px;font-weight:700;color:#4A5568;">95%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aviso — aparece ANTES de enviar, no después -->
+        <div id="sup-aviso-umbral" style="display:none;background:#FFF3CD;border:1px solid #FBBF24;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13.5px;color:#92400E;gap:8px;align-items:flex-start;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Con este scrap el yield cae por debajo del umbral: la orden completa entrará en Hold automáticamente al confirmar, y ya puedes marcar esta etapa como <strong>Rechazado</strong> si corresponde.</span>
+        </div>
+
         <!-- Resultado -->
-        <div style="margin-bottom:20px;">
+        <div style="margin-bottom:16px;">
           <label style="font-size:14px;font-weight:600;color:#2D3748;display:block;margin-bottom:8px;">Resultado <span style="color:#EF5350;">*</span></label>
           <div style="display:flex;gap:10px;">
             <label style="flex:1;cursor:pointer;">
@@ -307,15 +344,6 @@
               </div>
             </label>
           </div>
-          <div id="sup-rechazo-hint" style="font-size:12px;color:#A0AEC0;margin-top:6px;">
-            "Rechazado" se habilita cuando el yield global del lote caería por debajo del 95% (scrap mayor a <span id="sup-rechazo-umbral">0</span>).
-          </div>
-        </div>
-
-        <!-- Unidades con defecto -->
-        <div style="margin-bottom:16px;">
-          <label style="font-size:14px;font-weight:600;color:#2D3748;display:block;margin-bottom:6px;">Unidades con defecto en esta etapa</label>
-          <input type="number" name="unidades_defecto" id="sup-scrap-input" class="form-control" min="0" value="0" oninput="supActualizarRechazoDisponible()" style="max-width:180px;background:#fff;color:#1A202C;border:1.5px solid #CBD5E0;border-radius:7px;padding:8px 12px;font-size:14px;">
         </div>
 
         <!-- Defectos -->
@@ -338,15 +366,22 @@
         </div>
       </div>
 
-      <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;gap:10px;">
-        <button type="button" onclick="document.getElementById('modal-completar').style.display='none'"
-                style="padding:10px 20px;background:#fff;color:#4A5568;border:1.5px solid #CBD5E0;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">
-          Cancelar
+      <div style="padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button type="button" onclick="document.getElementById('modal-completar').style.display='none';document.getElementById('modal-hold').style.display='flex';"
+                style="padding:10px 18px;background:none;color:#F5A623;border:1.5px solid #F5A623;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          Poner en Hold en su lugar
         </button>
-        <button type="submit"
-                style="padding:10px 28px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;min-width:150px;">
-          ✓ Confirmar
-        </button>
+        <div style="display:flex;gap:10px;">
+          <button type="button" onclick="document.getElementById('modal-completar').style.display='none'"
+                  style="padding:10px 20px;background:#fff;color:#4A5568;border:1.5px solid #CBD5E0;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">
+            Cancelar
+          </button>
+          <button type="submit"
+                  style="padding:10px 28px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;min-width:150px;">
+            ✓ Confirmar
+          </button>
+        </div>
       </div>
     </form>
   </div>
@@ -433,6 +468,13 @@ function supActualizarRechazoDisponible() {
   var yieldDespues = SUP_DIES_INICIALES > 0 ? ((SUP_DIES_ACTIVOS - scrap) / SUP_DIES_INICIALES * 100) : 0;
   var habilitado = yieldDespues < 95;
 
+  var proyectadoEl = document.getElementById('sup-yield-proyectado');
+  proyectadoEl.textContent = yieldDespues.toFixed(1) + '%';
+  proyectadoEl.style.color = habilitado ? '#EF5350' : (yieldDespues < 97 ? '#F5A623' : '#16A85E');
+
+  var aviso = document.getElementById('sup-aviso-umbral');
+  aviso.style.display = habilitado ? 'flex' : 'none';
+
   var label = document.getElementById('sup-label-rechazado');
   var input = document.getElementById('sup-res-rechazado');
   var btn = document.getElementById('sup-btn-rechazado');
@@ -448,9 +490,6 @@ function supActualizarRechazoDisponible() {
     btn.style.background = '#fff';
     btn.style.color = '#718096';
   }
-
-  document.getElementById('sup-rechazo-umbral').textContent =
-    Math.floor(Math.max(0, SUP_DIES_ACTIVOS - 0.95 * SUP_DIES_INICIALES)) + ' unidades';
 }
 
 function supSelectRes(val) {

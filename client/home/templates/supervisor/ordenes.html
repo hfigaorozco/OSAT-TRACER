@@ -34,7 +34,7 @@
   </div>
   <div class="table-wrap">
     <table class="data-table">
-      <thead><tr><th>Número</th><th>Proceso</th><th>Línea</th><th>Tipo de oblea</th><th>Fecha inicio</th><th>Fecha fin</th><th>Lotes</th><th>Progreso</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <thead><tr><th>Número</th><th>Proceso</th><th>Línea</th><th>Tipo de oblea</th><th>Fecha de creación</th><th>Fecha inicio</th><th>Fecha fin</th><th>Lotes</th><th>Progreso</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody id="tbody-ordenes">
         {% for orden in ordenes %}
         <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}">
@@ -42,6 +42,7 @@
           <td>{{ orden.proceso.nombre|default:"—" }}</td>
           <td>{{ orden.linea_nombre }}</td>
           <td>{{ orden.tipo_oblea_nombre }}</td>
+          <td>{{ orden.fecha_creacion_display }}</td>
           <td>{{ orden.fecha_inicio_display }}</td>
           <td>{{ orden.fecha_fin_display }}</td>
           <td style="text-align:center;">{{ orden.total_lotes|default:"0" }}</td>
