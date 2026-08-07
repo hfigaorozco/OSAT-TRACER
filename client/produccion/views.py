@@ -1,10 +1,13 @@
 import json
 import re
+import uuid
 from datetime import date, timedelta
+from django.db import connection
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj, BACKEND_URL
 
 PAGE_SIZE_ORGANIZACION = 9
@@ -138,24 +141,70 @@ def _asignar_proceso_a_linea(linea_pk, proceso_pk):
 
 
 def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
-    """Crea `cantidad` lotes/obleas para una orden. diesGenerados se hereda de TipoOblea.cantidadDies."""
+    """Crea `cantidad` lotes/obleas para una orden llamando al procedimiento
+    almacenado sp_agregar_lotesAorden una vez por lote (diesGenerados sale
+    de TipoOblea.cantidadDies dentro del procedimiento — tipo_oblea_pk ya no
+    se usa aquí, se deja en la firma para no tocar los 3 call sites).
+
+    codigoQR es solo un valor único temporal: la imagen QR real (el PNG que
+    se imprime/escanea) se genera después, la primera vez que alguien la
+    pide, en api_produccion/services.py::asegurar_qr — esa función
+    sobreescribe codigoQR con la ruta real basada en el número de lote ya
+    asignado por MySQL (auto_increment), que no existe todavía en el
+    momento de este INSERT. Este valor solo evita dejar el campo vacío."""
     if cantidad <= 0:
         return 0, []
-    tipo = _get(f'/v1/detail/TipoOblea/{tipo_oblea_pk}/')
-    dies = (tipo or {}).get('cantidadDies', 0)
     errores = []
     creados = 0
-    for _ in range(cantidad):
-        ok, resp = _post('/v1/create/Oblea/', {
-            'diesGenerados': dies,
-            'orden':         orden_pk,
-            'estado':        'proce',
-        })
-        if ok:
-            creados += 1
-        else:
-            errores.append(str(resp))
+    with connection.cursor() as cursor:
+        for _ in range(cantidad):
+            qr_temporal = f'ORD{orden_pk}-{uuid.uuid4().hex[:12]}'
+            try:
+                cursor.callproc('sp_agregar_lotesAorden', [orden_pk, qr_temporal])
+                creados += 1
+            except Exception as e:
+                errores.append(str(e))
     return creados, errores
+
+
+def _lotes_max_por_stock(proceso_pk, tipo_oblea_pk):
+    """Cuántos lotes completos se pueden armar con el stock actual de
+    inventario para un proceso y tipo de oblea dados — vía el procedimiento
+    almacenado sp_lotestotalesXstock. Se usa en el modal de Nueva Orden para
+    avisar, antes de guardar, cuántos lotes alcanza a producir el stock
+    disponible (la pieza más escasa entre las que requiere el proceso es la
+    que limita el máximo)."""
+    if not proceso_pk or not tipo_oblea_pk:
+        return None
+    with connection.cursor() as cursor:
+        cursor.callproc('sp_lotestotalesXstock', [proceso_pk, tipo_oblea_pk, 0])
+        cursor.execute('SELECT @_sp_lotestotalesXstock_2')
+        row = cursor.fetchone()
+    return int(row[0]) if row and row[0] is not None else 0
+
+
+def _descontar_stock_lotes(proceso_pk, tipo_oblea_pk, cantidad_lotes):
+    """Descuenta del stock de piezas lo que consumen `cantidad_lotes` lotes
+    de este proceso + tipo de oblea — misma fórmula que usa el trigger
+    t_alerta_stock_insuficiente (cantidadDies del tipo de oblea x
+    cantPiezas del proceso). Ese trigger solo corre UNA vez, al INSERT de
+    la orden, y solo contempla su primer lote — nunca los adicionales que
+    _crear_lotes_para_orden agrega después (ni al crear la orden con
+    cantidad_lotes > 1, ni al agregar lotes a una orden ya existente, que
+    ni siquiera pasan por un INSERT en la tabla orden). Sin este descuento
+    el stock quedaba con lecturas infladas después de cualquier orden
+    multi-lote, y sp_lotestotalesXstock empezaba a mentir."""
+    if cantidad_lotes <= 0 or not proceso_pk or not tipo_oblea_pk:
+        return
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE pieza p "
+            "JOIN `proceso-pieza` pp ON p.codigo = pp.pieza_id "
+            "JOIN tipo_oblea tob ON tob.codigo = %s "
+            "SET p.stockActual = p.stockActual - (tob.cantidadDies * pp.cantPiezas * %s) "
+            "WHERE pp.proceso_id = %s",
+            [tipo_oblea_pk, cantidad_lotes, proceso_pk],
+        )
 
 
 def _piezas_insuficientes(proceso_pk, tipo_oblea_pk):
@@ -226,6 +275,15 @@ def _crear_orden(request):
         messages.error(request, 'La línea seleccionada no tiene un proceso asignado.')
         return
 
+    if cantidad_lotes > 0:
+        lotes_max = _lotes_max_por_stock(proceso_pk, tipo_oblea)
+        if lotes_max is not None and cantidad_lotes > lotes_max:
+            messages.error(
+                request,
+                f'El stock actual solo alcanza para {lotes_max} lote(s) de este tipo de oblea — se pidieron {cantidad_lotes}.'
+            )
+            return
+
     hoy = date.today().isoformat()
     ok, resp = _post('/v1/create/Orden/', {
         'horaIni': f'{hoy} {hora_inicio}',
@@ -254,6 +312,12 @@ def _crear_orden(request):
     orden_pk = resp.get('numero') if isinstance(resp, dict) else None
     if cantidad_lotes > 0 and orden_pk:
         creados, errores = _crear_lotes_para_orden(orden_pk, tipo_oblea, cantidad_lotes)
+        # El trigger t_alerta_stock_insuficiente ya descontó lo del primer
+        # lote al crear la orden (arriba); los demás lotes de este bucle
+        # nunca pasan por un INSERT en orden, así que su consumo de piezas
+        # no se descuenta solo — hay que hacerlo aquí.
+        if creados > 1:
+            _descontar_stock_lotes(proceso_pk, tipo_oblea, creados - 1)
         if errores:
             messages.error(request, f'Orden creada, pero solo {creados} de {cantidad_lotes} lotes se registraron.')
         else:
@@ -300,6 +364,16 @@ def _editar_orden(request, pk):
         return
     cantidad_lotes_extra = int(cantidad_extra_raw or 0)
 
+    proceso_para_stock = _get_linea_proceso(linea_pk) if linea_pk else orden_antes.get('proceso')
+    if cantidad_lotes_extra > 0:
+        lotes_max = _lotes_max_por_stock(proceso_para_stock, tipo_oblea)
+        if lotes_max is not None and cantidad_lotes_extra > lotes_max:
+            messages.error(
+                request,
+                f'El stock actual solo alcanza para {lotes_max} lote(s) nuevo(s) de este tipo de oblea — se pidieron {cantidad_lotes_extra}.'
+            )
+            return
+
     payload = {
         'tipoOblea': tipo_oblea,
         'estado':    estado,
@@ -311,12 +385,11 @@ def _editar_orden(request, pk):
         payload['horaFin'] = f'{hoy} {hora_fin}'
 
     if linea_pk:
-        proceso_pk = _get_linea_proceso(linea_pk)
-        if not proceso_pk:
+        if not proceso_para_stock:
             messages.error(request, 'La línea seleccionada no tiene un proceso asignado.')
             return
         payload['linea']   = linea_pk
-        payload['proceso'] = proceso_pk
+        payload['proceso'] = proceso_para_stock
 
     ok, resp = _patch(f'/v1/update/Orden/{pk}/', payload)
     if not ok:
@@ -328,6 +401,11 @@ def _editar_orden(request, pk):
 
     if cantidad_lotes_extra > 0 and tipo_oblea:
         creados, errores = _crear_lotes_para_orden(pk, tipo_oblea, cantidad_lotes_extra)
+        # A diferencia de crear una orden nueva, este PATCH nunca dispara el
+        # trigger de stock (solo corre en INSERT sobre orden) — el consumo
+        # de piezas de estos lotes no se descuenta solo, hay que hacerlo.
+        if creados > 0:
+            _descontar_stock_lotes(proceso_para_stock, tipo_oblea, creados)
         if errores:
             messages.error(request, f'Orden actualizada, pero solo se agregaron {creados} de {cantidad_lotes_extra} lotes nuevos.')
         else:
@@ -415,6 +493,34 @@ def _orden_liberar(request, pk):
         messages.error(request, f'Error: {resp}')
 
 
+def _orden_rechazar(request, pk):
+    """Rechaza una orden que está en Hold — alternativa a liberarla: en vez
+    de reanudar producción, se da por perdida. Mismo punto de entrada que
+    _orden_liberar (solo aplica sobre una orden en Hold), pero con la lógica
+    respectiva de un rechazo: pone la orden en 'recha' (no 'proce') y genera
+    una alerta real, ya que a diferencia del Hold automático (que dispara el
+    trigger t_scrap_excedente_del_permitido) un rechazo manual no la crea
+    por sí solo."""
+    orden_data = _get(f'/v1/detail/Orden/{pk}/') or {}
+    estado_orden = str(orden_data.get('estado', '')).lower()
+    if estado_orden == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
+    if estado_orden != 'enhol':
+        messages.error(request, 'Esta orden no está en hold.')
+        return
+    motivo = request.POST.get('motivo', '').strip()
+    ok, resp = _patch(f'/v1/update/Orden/{pk}/', {'estado': 'recha'})
+    if ok:
+        descripcion = f'Orden #{pk} rechazada'
+        if motivo:
+            descripcion += f': {motivo}'
+        _post('/v1/create/alerta/', {'descripcion': descripcion, 'estadoAlerta': 'sinre'})
+        messages.success(request, 'Orden rechazada.')
+    else:
+        messages.error(request, f'Error: {resp}')
+
+
 def _lote_scrap(request, pk):
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
     edo = str(ob.get('estado', '')).lower()
@@ -467,6 +573,9 @@ def _etapa_completar(request, pk):
         return
     if estado_orden == 'enhol':
         messages.error(request, 'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')
+        return
+    if estado_orden == 'recha':
+        messages.error(request, 'La orden de este lote fue rechazada. No se pueden completar más etapas.')
         return
 
     if resultado == 'rechazado':
@@ -730,26 +839,49 @@ def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales, dies_activos
     return dies_activos, scrap_total, yield_pct
 
 
+def _calcular_yield_sp(lote_pk):
+    """Yield de un lote vía el procedimiento almacenado sp_calcularYieldLote
+    — solo hace falta mandar el número de lote, el procedimiento hace el
+    join contra tipo_oblea internamente. Se usa en la vista de detalle de UN
+    solo lote (supervisor_lote_detalle); los listados con muchos lotes a la
+    vez (admin_produccion, supervisor_ordenes) siguen usando _calcular_yield
+    en Python puro sobre datos ya traídos en bloque por REST, para no
+    convertir cada carga de esas páginas en una llamada a MySQL por lote."""
+    with connection.cursor() as cursor:
+        cursor.callproc('sp_calcularYieldLote', [lote_pk, 0])
+        cursor.execute('SELECT @_sp_calcularYieldLote_1')
+        row = cursor.fetchone()
+    valor = row[0] if row and row[0] is not None else 0
+    return round(float(valor), 1)
+
+
 def _estado_orden_display(edo_orden, lotes_de_orden):
     """
     Determina el estado visual de una orden y cuántos de sus lotes ya quedaron
     resueltos (terminados o rechazados). Único punto de esta lógica — admin y
     supervisor la comparten para no divergir entre sí.
-    Catálogo real: Estado_Orden abier/proce/cerra/enhol. 'enhol' lo pone
+    Catálogo real: Estado_Orden abier/proce/cerra/enhol/recha. 'enhol' lo pone
     automáticamente el trigger t_scrap_excedente_del_permitido cuando el yield
-    global de algún lote de la orden cae por debajo del 95%. Una orden 'cerra'
-    se muestra como 'rechazado' solo si TODOS sus lotes terminaron rechazados;
-    si al menos uno se completó, se considera 'cerrada' (una orden cerrada ya
-    no admite más cambios — ni sobre ella ni sobre sus lotes).
+    global de algún lote de la orden cae por debajo del 95%. 'recha' lo pone
+    explícitamente _orden_rechazar cuando alguien rechaza manualmente una
+    orden que está en Hold — no confundir con el 'rechazado' derivado de una
+    orden 'cerra' cuando TODOS sus lotes terminaron rechazados (ambos casos
+    comparten la misma palabra visual porque para el usuario es el mismo
+    concepto: la orden no se pudo completar). Una orden 'cerra' se muestra
+    como 'rechazado' solo si TODOS sus lotes terminaron rechazados; si al
+    menos uno se completó, se considera 'cerrada' (una orden cerrada ya no
+    admite más cambios — ni sobre ella ni sobre sus lotes).
     """
     total = len(lotes_de_orden)
     rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
     resueltos = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() in ('termi', 'recha'))
     pct = round(resueltos / total * 100) if total > 0 else 0
-        
+
     edo = str(edo_orden or '').lower()
     if edo == 'enhol':
         edo_str = 'hold'
+    elif edo == 'recha':
+        edo_str = 'rechazado'
     elif edo == 'cerra':
         edo_str = 'rechazado' if (total > 0 and rechazados == total) else 'cerrada'
     elif edo == 'proce':
@@ -757,7 +889,7 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     elif edo == 'abier':
         edo_str = 'abierta'
     else:
-        edo_str = 'desconocido' 
+        edo_str = 'desconocido'
 
     return edo_str, resueltos, pct
 
@@ -887,6 +1019,7 @@ def _build_ordenes_lotes():
             'pasos_completados': pasos_completados,
             'estado': edo_str,
             'orden_en_hold': str(orden_data.get('estado', '')).lower() == 'enhol',
+            'orden_rechazada': str(orden_data.get('estado', '')).lower() == 'recha',
             'dies_iniciales': dies_iniciales,
             'dies_activos': dies_activos,
             'scrap': scrap_total,
@@ -987,6 +1120,12 @@ def admin_orden_crear(request):
     return redirect('admin_produccion')
 
 
+def admin_lotes_max_stock(request):
+    proceso_pk = request.GET.get('proceso', '') or _get_linea_proceso(request.GET.get('linea', ''))
+    lotes_max = _lotes_max_por_stock(proceso_pk, request.GET.get('tipo_oblea', ''))
+    return JsonResponse({'lotes_max': lotes_max})
+
+
 def admin_orden_editar(request, pk):
     if request.method == 'POST':
         _editar_orden(request, pk)
@@ -1017,6 +1156,11 @@ def admin_lote_liberar(request, pk):
 def admin_orden_liberar(request, pk):
     if request.method == 'POST':
         _orden_liberar(request, pk)
+    return _admin_produccion_redirect(orden_pk=pk)
+
+def admin_orden_rechazar(request, pk):
+    if request.method == 'POST':
+        _orden_rechazar(request, pk)
     return _admin_produccion_redirect(orden_pk=pk)
 
 
@@ -1874,6 +2018,12 @@ def supervisor_ordenes_crear(request):
     return redirect('supervisor_ordenes')
 
 
+def supervisor_lotes_max_stock(request):
+    proceso_pk = request.GET.get('proceso', '') or _get_linea_proceso(request.GET.get('linea', ''))
+    lotes_max = _lotes_max_por_stock(proceso_pk, request.GET.get('tipo_oblea', ''))
+    return JsonResponse({'lotes_max': lotes_max})
+
+
 def supervisor_orden_editar(request, pk):
     if request.method == 'POST':
         _editar_orden(request, pk)
@@ -1908,6 +2058,11 @@ def supervisor_lote_liberar(request, pk):
 def supervisor_orden_liberar(request, pk):
     if request.method == 'POST':
         _orden_liberar(request, pk)
+    return redirect('supervisor_orden_detalle', pk=pk)
+
+def supervisor_orden_rechazar(request, pk):
+    if request.method == 'POST':
+        _orden_rechazar(request, pk)
     return redirect('supervisor_orden_detalle', pk=pk)
 
 
@@ -2122,9 +2277,10 @@ def supervisor_lote_detalle(request, pk):
     tipo_pk   = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
     tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == tipo_pk), {})
     dies_iniciales = tipo_data.get('cantidadDies') or ob.get('diesGenerados', 0)
-    dies_activos, scrap_total, yield_pct = _calcular_yield(
+    dies_activos, scrap_total, _yield_pct_py = _calcular_yield(
         num, pasos_realizados, dies_iniciales, ob.get('diesGenerados', 0)
     )
+    yield_pct = _calcular_yield_sp(num)
 
     proceso_nombre = procesos_map.get(proceso_codigo, {}).get('nombre', proceso_codigo or '—')
     total_pasos_lote = len(etapas)
@@ -2140,6 +2296,7 @@ def supervisor_lote_detalle(request, pk):
                           ) if orden_data else None,
         'estado':         _FakeObj(nombre=edo_str),
         'orden_en_hold':  str(orden_data.get('estado', '')).lower() == 'enhol',
+        'orden_rechazada': str(orden_data.get('estado', '')).lower() == 'recha',
         'proceso_nombre': proceso_nombre,
         'linea_nombre':   lineas_map.get(lote_linea_pk, {}).get('nombre', '—') if lote_linea_pk else '—',
         'operador_nombre': operador_por_paso.get(etapa_activa.codigo, '—') if etapa_activa else '—',

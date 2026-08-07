@@ -22,10 +22,10 @@
     <span class="kpi-plain-value">{{ kpi.maquinas }}</span>
   </a>
   <a href="{% url 'admin_produccion' %}?estado=hold" class="kpi-plain">
-    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
     <span class="kpi-plain-label">Lotes en Hold</span>
     <span class="kpi-plain-value">{{ kpi.lotes_hold }}</span>
-    <span class="kpi-plain-delta" style="color:#EF5350;">{{ kpi.lotes_hold_delta }}</span>
+    <span class="kpi-plain-delta" style="color:#F5A623;">{{ kpi.lotes_hold_delta }}</span>
   </a>
 </div>
 

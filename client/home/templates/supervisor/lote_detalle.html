@@ -23,7 +23,7 @@
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <h1 style="font-size:24px;font-weight:700;color:#fff;margin:0;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;">{{ lote.folio }}</h1>
     {% if lote.orden %}<span style="background:#009EAF20;color:#009EAF;padding:2px 12px;border-radius:999px;font-size:14px;font-weight:500;">{{ lote.orden.numero }}</span>{% endif %}
-    {% if lote.estado.nombre == 'En Hold' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#EF5350;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:700;">⏸ En Hold</span>
+    {% if lote.estado.nombre == 'En Hold' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#F5A623;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:700;">⏸ En Hold</span>
     {% elif lote.estado.nombre == 'En proceso' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#FFCA28;color:#1A202C;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">En proceso</span>
     {% elif lote.estado.nombre == 'Terminada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#16A85E;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Terminada</span>
     {% elif lote.estado.nombre == 'Rechazada' %}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:#EF5350;color:#FFFFFF;padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;">Rechazada</span>
@@ -233,7 +233,7 @@
       </div>
 
       <!-- Botón completar etapa — ancho completo, llena el cuadro del paso -->
-      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and lote.estado.nombre != 'Terminada' and not lote.orden_en_hold %}
+      {% if lote.estado.nombre != 'En Hold' and lote.estado.nombre != 'Rechazada' and lote.estado.nombre != 'Terminada' and not lote.orden_en_hold and not lote.orden_rechazada %}
       <button onclick="event.stopPropagation();document.getElementById('modal-completar').style.display='flex';supActualizarRechazoDisponible();"
               style="margin-top:14px;width:100%;padding:16px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;">
         ✓ Completar etapa
@@ -243,6 +243,7 @@
         {% if lote.estado.nombre == 'En Hold' %}Este lote está en Hold. No se pueden completar etapas.
         {% elif lote.estado.nombre == 'Terminada' %}Este lote ya está terminado y no puede continuar con más etapas.
         {% elif lote.orden_en_hold %}La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.
+        {% elif lote.orden_rechazada %}La orden de este lote fue rechazada. No se pueden completar más etapas.
         {% else %}Este lote fue rechazado y ya no puede continuar con más etapas.{% endif %}
       </div>
       {% endif %}
