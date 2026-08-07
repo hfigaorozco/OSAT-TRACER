@@ -226,7 +226,7 @@ class Paso_Realizado(models.Model):
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
-    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado', null=True)
 
     class Meta:
         db_table = 'paso_realizado' 

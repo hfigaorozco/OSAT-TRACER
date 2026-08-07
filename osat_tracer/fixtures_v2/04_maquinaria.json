@@ -1,18 +1,410 @@
 [
-  {"model": "api_maquinaria.maquina", "pk": "mq001", "fields": {
-    "nombre": "Backgrinder", "fechaReg": "2026-06-20",
-    "tipoMaquina": "prep", "estado": "act", "empleado": 6, "linea": "lin1"
-  }},
-  {"model": "api_maquinaria.maquina", "pk": "mq002", "fields": {
-    "nombre": "Die Attacher", "fechaReg": "2026-06-20",
-    "tipoMaquina": "mont", "estado": "act", "empleado": 7, "linea": "lin1"
-  }},
-  {"model": "api_maquinaria.maquina", "pk": "mq003", "fields": {
-    "nombre": "Wire Bonder", "fechaReg": "2026-06-20",
-    "tipoMaquina": "mont", "estado": "act", "empleado": 8, "linea": "lin1"
-  }},
-  {"model": "api_maquinaria.maquina", "pk": "mq004", "fields": {
-    "nombre": "Encapsuladora", "fechaReg": "2026-06-20",
-    "tipoMaquina": "prot", "estado": "act", "empleado": 9, "linea": "lin2"
-  }}
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq001",
+    "fields": {
+      "nombre": "Backgrinder QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "prep",
+      "estado": "act",
+      "empleado": 8,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq002",
+    "fields": {
+      "nombre": "Die attacher QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "mont",
+      "estado": "act",
+      "empleado": 9,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq003",
+    "fields": {
+      "nombre": "Wire Bonder QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "mont",
+      "estado": "act",
+      "empleado": 9,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq004",
+    "fields": {
+      "nombre": "Encapsuladora QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "prot",
+      "estado": "act",
+      "empleado": 10,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq005",
+    "fields": {
+      "nombre": "Marcador Laser QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 11,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq006",
+    "fields": {
+      "nombre": "Prensa Trim/Form QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 11,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq007",
+    "fields": {
+      "nombre": "Sierra de Singulacion QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 12,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq008",
+    "fields": {
+      "nombre": "Linea de Plateado QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 12,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq009",
+    "fields": {
+      "nombre": "Probador Eléctrico QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "insp",
+      "estado": "act",
+      "empleado": 13,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq010",
+    "fields": {
+      "nombre": "Tape and Reel QFN",
+      "fechaReg": "2026-06-20",
+      "tipoMaquina": "empq",
+      "estado": "act",
+      "empleado": 14,
+      "linea": "lin1"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq011",
+    "fields": {
+      "nombre": "Backgrinder BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "prep",
+      "estado": "act",
+      "empleado": 15,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq012",
+    "fields": {
+      "nombre": "Die attacher BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "mont",
+      "estado": "act",
+      "empleado": 16,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq013",
+    "fields": {
+      "nombre": "Wire Bonder BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "mont",
+      "estado": "act",
+      "empleado": 16,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq014",
+    "fields": {
+      "nombre": "Encapsuladora BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "prot",
+      "estado": "act",
+      "empleado": 17,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq015",
+    "fields": {
+      "nombre": "Marcador Laser BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 18,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq016",
+    "fields": {
+      "nombre": "Prensa Trim/Form BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 18,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq017",
+    "fields": {
+      "nombre": "Sierra de Singulacion BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 19,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq018",
+    "fields": {
+      "nombre": "Linea de Plateado BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "acab",
+      "estado": "act",
+      "empleado": 19,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq019",
+    "fields": {
+      "nombre": "Probador Eléctrico BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "insp",
+      "estado": "act",
+      "empleado": 20,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_maquinaria.maquina",
+    "pk": "mq020",
+    "fields": {
+      "nombre": "Tape and Reel BGA",
+      "fechaReg": "2026-07-12",
+      "tipoMaquina": "empq",
+      "estado": "act",
+      "empleado": 21,
+      "linea": "lin2"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq001",
+      "paso": "bgr"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq001",
+      "paso": "dic"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq002",
+      "paso": "dia"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq003",
+      "paso": "wir"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq004",
+      "paso": "ovc"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq004",
+      "paso": "mol"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq005",
+      "paso": "mar"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq006",
+      "paso": "dtf"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq007",
+      "paso": "sin"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq008",
+      "paso": "plt"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq009",
+      "paso": "tst"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq010",
+      "paso": "pak"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq011",
+      "paso": "bgr"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq011",
+      "paso": "dic"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq012",
+      "paso": "dia"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq013",
+      "paso": "wir"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq014",
+      "paso": "ovc"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq014",
+      "paso": "mol"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq015",
+      "paso": "mar"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq016",
+      "paso": "dtf"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq017",
+      "paso": "sin"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq018",
+      "paso": "plt"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq019",
+      "paso": "tst"
+    }
+  },
+  {
+    "model": "api_produccion.maquinaPaso",
+    "fields": {
+      "maquina": "mq020",
+      "paso": "pak"
+    }
+  }
 ]
