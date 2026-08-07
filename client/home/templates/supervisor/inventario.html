@@ -5,10 +5,42 @@
 <div class="page-header">
   <div><h1 class="page-title">Inventario de materiales</h1><p class="page-subtitle">Consulta de existencias y registro de entradas</p></div>
   <div class="page-actions">
+    <button class="btn btn-outline" onclick="_abrirModalLotesPosibles()" title="Consultar cuántos lotes se pueden crear con el stock actual">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="12" y1="16" x2="12" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/></svg>
+      Lotes posibles por stock
+    </button>
     <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Generar reporte
     </button>
+  </div>
+</div>
+
+<!-- Modal Lotes posibles por stock -->
+<div class="modal-overlay" id="modal-lotes-posibles" style="display:none;" onclick="if(event.target===this)closeModal('modal-lotes-posibles')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Lotes posibles según stock</h2><button class="modal-close" onclick="closeModal('modal-lotes-posibles')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Proceso <span class="required">*</span></label>
+        <select id="lp-proceso" class="form-control" onchange="_ocultarResultadoLotesPosibles()">
+          <option value="">Seleccionar…</option>
+          {% for p in procesos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Tipo de oblea <span class="required">*</span></label>
+        <select id="lp-tipo-oblea" class="form-control" onchange="_ocultarResultadoLotesPosibles()">
+          <option value="">Seleccionar…</option>
+          {% for t in tipos_oblea %}<option value="{{ t.codigo }}">{{ t.descripcion }}</option>{% endfor %}
+        </select>
+      </div>
+      <div id="lp-resultado" style="display:none;margin-top:16px;padding:14px 16px;border-radius:8px;font-size:15px;font-weight:600;text-align:center;"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-lotes-posibles')">Cerrar</button>
+      <button type="button" class="btn btn-primary" onclick="_consultarLotesPosibles()">Consultar</button>
+    </div>
   </div>
 </div>
 
@@ -176,6 +208,48 @@
 
 {% block extra_js %}
 <script>
+// ── Lotes posibles por stock ──
+function _abrirModalLotesPosibles() {
+  document.getElementById('lp-proceso').value = '';
+  document.getElementById('lp-tipo-oblea').value = '';
+  _ocultarResultadoLotesPosibles();
+  openModal('modal-lotes-posibles');
+}
+function _ocultarResultadoLotesPosibles() {
+  document.getElementById('lp-resultado').style.display = 'none';
+}
+function _consultarLotesPosibles() {
+  var proceso = document.getElementById('lp-proceso').value;
+  var tipoOblea = document.getElementById('lp-tipo-oblea').value;
+  var res = document.getElementById('lp-resultado');
+  if (!proceso || !tipoOblea) {
+    res.style.display = '';
+    res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+    res.textContent = 'Selecciona un proceso y un tipo de oblea.';
+    return;
+  }
+  res.style.display = '';
+  res.style.background = '#F7FAFC'; res.style.color = '#4A5568';
+  res.textContent = 'Consultando…';
+  fetch("{% url 'supervisor_lotes_max_stock' %}?proceso=" + encodeURIComponent(proceso) + '&tipo_oblea=' + encodeURIComponent(tipoOblea))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.lotes_max === null || data.lotes_max === undefined) {
+        res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+        res.textContent = 'No se pudo calcular.';
+        return;
+      }
+      var ok = data.lotes_max > 0;
+      res.style.background = ok ? '#E7F8EF' : '#FEECEB';
+      res.style.color = ok ? '#16A85E' : '#EF5350';
+      res.textContent = 'El stock actual alcanza para ' + data.lotes_max + ' lote(s).';
+    })
+    .catch(function () {
+      res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+      res.textContent = 'Ocurrió un error al consultar.';
+    });
+}
+
 var _piezaSup = { pk: null, nombre: '', stock: 0 };
 
 async function openDetalle(codigo) {

@@ -47,45 +47,54 @@ function switchTab(tabId, btn, paneSelector) {
   btn.classList.add('active');
 }
 
-/* ── Toast ── */
-function showToast(message, type, duration) {
-  type = type || 'success'; duration = duration || 4000;
-  var stack = document.querySelector('.toast-stack');
-  if (!stack) {
-    stack = document.createElement('div');
-    stack.className = 'toast-stack';
-    stack.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;';
-    document.body.appendChild(stack);
-  }
-  var toast = document.createElement('div');
-  toast.style.cssText = 'display:flex;align-items:center;gap:12px;padding:0 16px;height:48px;min-width:320px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:13.5px;font-weight:500;background:#243040;color:#C4C5D0;';
-  toast.innerHTML = '<span style="flex:1;">'+message+'</span><button onclick="this.closest(\'div\').remove()" style="color:#718096;font-size:16px;background:none;border:none;cursor:pointer;">✕</button>';
-  stack.appendChild(toast);
-  if (duration > 0) setTimeout(function(){ toast.remove(); }, duration);
-}
+/* ── Notificaciones ── Todas usan el mismo panel flotante a la derecha
+   (antes había 3 estilos distintos: banner de ancho completo arriba,
+   toast centrado abajo, y notif-dropdown a la derecha — ahora una sola
+   clase visual y una sola duración estándar). */
+var NOTIF_DURATION_MS = 6000;
 
-/* ── Notificación de reporte (estilo notif-dropdown, arriba, con botón "Ver") ── */
-function showReportNotification(message, url, type) {
-  type = type || 'success';
+function _notifStack() {
   var stack = document.querySelector('.report-notif-stack');
   if (!stack) {
     stack = document.createElement('div');
     stack.className = 'report-notif-stack';
     document.body.appendChild(stack);
   }
-  var colors = {success:'#16A85E',error:'#EF5350',warning:'#F5A623',info:'#009EAF'};
-  var color = colors[type] || colors.success;
+  return stack;
+}
+
+function _notifColor(type) {
+  var colors = {success:'#16A85E', error:'#EF5350', warning:'#F5A623', info:'#009EAF'};
+  return colors[type] || colors.success;
+}
+
+function showToast(message, type, duration) {
+  type = type || 'success';
+  duration = duration == null ? NOTIF_DURATION_MS : duration;
   var notif = document.createElement('div');
   notif.className = 'report-notif';
   notif.innerHTML =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + _notifColor(type) + '" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>' +
+    '<div style="flex:1;min-width:0;"><div class="notif-title">' + message + '</div></div>' +
+    '<button onclick="this.closest(\'.report-notif\').remove()" style="color:#A0AEC0;background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;">&#10005;</button>';
+  _notifStack().appendChild(notif);
+  if (duration > 0) setTimeout(function(){ if (notif.parentNode) notif.remove(); }, duration);
+}
+
+/* ── Notificación de reporte (mismo panel, con botón "Ver") ── */
+function showReportNotification(message, url, type) {
+  type = type || 'success';
+  var notif = document.createElement('div');
+  notif.className = 'report-notif';
+  notif.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + _notifColor(type) + '" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>' +
     '<div style="flex:1;min-width:0;">' +
       '<div class="notif-title">' + message + '</div>' +
       (url ? '<a class="report-notif-ver" href="' + url + '">Ver</a>' : '') +
     '</div>' +
     '<button onclick="this.closest(\'.report-notif\').remove()" style="color:#A0AEC0;background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;">&#10005;</button>';
-  stack.appendChild(notif);
-  setTimeout(function(){ if (notif.parentNode) notif.remove(); }, 12000);
+  _notifStack().appendChild(notif);
+  setTimeout(function(){ if (notif.parentNode) notif.remove(); }, NOTIF_DURATION_MS);
 }
 
 /* ── Password toggle ── */

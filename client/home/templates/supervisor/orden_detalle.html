@@ -11,15 +11,18 @@
   <div>
     <h1 class="page-title" style="font-family:monospace;">{{ orden.numero }}</h1>
     <p class="page-subtitle">{{ orden.proceso.nombre|default:"—" }} · {{ orden.linea_nombre }} · {{ orden.tipo_oblea_nombre }}</p>
+    <p class="page-subtitle">Creado por {{ orden.creado_por }} · {{ orden.fecha_creacion_display }}</p>
   </div>
   <div class="page-actions">
     {% if orden.estado == 'hold' %}
-    <form method="post" action="{% url 'supervisor_orden_liberar' orden.pk %}" style="margin:0;">{% csrf_token %}
-      <button type="submit" class="btn" style="background:#16A85E;color:#fff;border:none;display:flex;align-items:center;gap:8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Liberar orden
-      </button>
-    </form>
+    <button type="button" class="btn" style="background:#16A85E;color:#fff;border:none;display:flex;align-items:center;gap:8px;" onclick="openModal('modal-liberar-orden')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Liberar orden
+    </button>
+    <button type="button" class="btn" style="background:#EF5350;color:#fff;border:none;display:flex;align-items:center;gap:8px;" onclick="openModal('modal-rechazar-orden')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Rechazar orden
+    </button>
     {% endif %}
     <form method="post" action="{% url 'supervisor_orden_generar_reporte' orden.pk %}" style="margin:0;" onsubmit="return confirm('¿Generar un reporte de esta orden? Podrás verlo e imprimirlo desde la página de Reportes.');">{% csrf_token %}
       <button type="submit" class="btn btn-primary" title="Generar reporte de esta orden">
@@ -32,8 +35,8 @@
 </div>
 
 {% if orden.estado == 'hold' %}
-<div style="margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:14px;font-weight:600;">
-  ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla.
+<div style="margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#F5A623;color:#FFFFFF;font-size:14px;font-weight:600;">
+  ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla o rechazarla.
 </div>
 {% endif %}
 
@@ -58,7 +61,8 @@
       <thead><tr><th>Folio QR</th><th>Número oblea</th><th>Dies buenos</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for lote in lotes %}
-        <tr class="lote-row" data-folio="{{ lote.folio|lower }}">
+        {% comment %}El lote realmente rechazado (la causa del Hold/rechazo de la orden) se ve completo; los demás se atenúan para dejar claro que no fueron la causa y que quedaron pausados.{% endcomment %}
+        <tr class="lote-row" data-folio="{{ lote.folio|lower }}"{% if orden.estado == 'hold' or orden.estado == 'rechazado' %}{% if lote.estado.nombre != 'Rechazada' %} style="opacity:.55;"{% endif %}{% endif %}>
           <td style="font-family:monospace;font-weight:600;">{{ lote.folio }}</td>
           <td>{{ lote.numero_oblea|default:"—" }}</td>
           <td>{{ lote.dies_buenos|default:"—" }}</td>
@@ -75,6 +79,40 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-liberar-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-liberar-orden')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Liberar orden del Hold</h2><button class="modal-close" onclick="closeModal('modal-liberar-orden')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_orden_liberar' orden.pk %}">{% csrf_token %}
+      <div class="modal-body">
+        <p style="font-size:14px;color:#4A5568;margin:0;">¿Liberar esta orden del Hold? Se podrán volver a completar etapas de sus lotes.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-liberar-orden')">Cancelar</button>
+        <button type="submit" class="btn" style="background:#16A85E;color:#fff;">⏸ Liberar orden</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-rechazar-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-rechazar-orden')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Rechazar orden</h2><button class="modal-close" onclick="closeModal('modal-rechazar-orden')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" action="{% url 'supervisor_orden_rechazar' orden.pk %}">{% csrf_token %}
+      <div class="modal-body">
+        <p style="font-size:14px;color:#4A5568;margin:0 0 14px;">Esta acción no se puede deshacer.</p>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Motivo del rechazo</label>
+          <textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo (opcional)…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-rechazar-orden')">Cancelar</button>
+        <button type="submit" class="btn" style="background:#EF5350;color:#fff;">✕ Rechazar orden</button>
+      </div>
+    </form>
   </div>
 </div>
 

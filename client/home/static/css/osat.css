@@ -295,14 +295,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .kpi-plain-label {
   font-size: 12.5px; font-weight: 600;
   color: var(--text-subtle);
-  margin-bottom: 2px;
+  white-space: nowrap;
 }
 .kpi-plain-value {
-  font-size: 28px; font-weight: 700;
+  font-size: 22px; font-weight: 700;
   color: var(--text-white);
-  line-height: 1.15;
+  line-height: 1;
+  white-space: nowrap;
 }
-.kpi-plain-delta { font-size: 12px; }
+.kpi-plain-delta { font-size: 12px; white-space: nowrap; }
 
 /* ══════════════════════════════════════
    TABLAS — BLANCAS con texto oscuro
@@ -428,7 +429,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .badge-en-proceso{ background: #FFCA28; color: #1A202C; }
 .badge-pendiente { background: #FFCA28; color: #1A202C; }
 .badge-abierta   { background: #FFCA28; color: #1A202C; }
-.badge-hold      { background: #EF5350; color: #FFFFFF; }
+.badge-hold      { background: var(--gold); color: #FFFFFF; }
 .badge-ok        { background: #16A85E; color: #FFFFFF; }
 .badge-bajo      { background: #FFCA28; color: #1A202C; }
 .badge-critico   { background: #EF5350; color: #FFFFFF; }
@@ -490,7 +491,7 @@ select.form-control {
 }
 .modal-sm  { max-width: 400px; }
 .modal-md  { max-width: 520px; }
-.modal-lg  { max-width: 720px; }
+.modal-lg  { max-width: 720px; width: 90%; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 24px; border-bottom: 1px solid #E2E8F0;
@@ -545,6 +546,69 @@ select.form-control {
 ══════════════════════════════════════ */
 .progress-bar { flex: 1; height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width .3s; }
+
+/* ══════════════════════════════════════
+   LOTE DETALLE — datos a la izquierda (sin card, texto sobre fondo
+   oscuro), trazabilidad a la derecha con scroll propio e independiente
+   del resto de la página.
+══════════════════════════════════════ */
+.lote-detalle-page { height: 100%; display: flex; flex-direction: column; }
+.lote-detalle-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+}
+.lote-detalle-left { flex: 0 0 40%; min-width: 0; }
+.lote-detalle-right { flex: 1; min-width: 0; }
+
+.lote-stats-row { display: flex; flex-wrap: wrap; gap: 20px 24px; margin: 20px 0; }
+.lote-stat-label { font-size: 12px; font-weight: 600; color: var(--text-subtle); margin-bottom: 4px; }
+.lote-stat-value { font-size: 24px; font-weight: 700; color: var(--text-white); line-height: 1; }
+
+.lote-proceso-piezas { font-size: 14px; color: var(--text-subtle); margin-bottom: 8px; line-height: 1.6; }
+.lote-proceso-piezas strong { color: var(--text-white); font-weight: 600; }
+
+.lote-piezas-details { margin-bottom: 22px; }
+.lote-piezas-details summary {
+  font-size: 13px; font-weight: 600; color: var(--text-subtle);
+  cursor: pointer; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.lote-piezas-details summary::-webkit-details-marker { display: none; }
+.lote-piezas-details summary::before {
+  content: ""; width: 7px; height: 7px;
+  border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle);
+  transform: rotate(-45deg); transition: transform .15s; flex-shrink: 0;
+}
+.lote-piezas-details[open] summary::before { transform: rotate(45deg); }
+.lote-piezas-list {
+  list-style: disc; margin: 8px 0 0 18px; padding: 0;
+  font-size: 13.5px; color: var(--text-subtle); line-height: 1.8;
+}
+.lote-piezas-list li { color: var(--text-white); }
+.lote-piezas-cant { color: var(--text-subtle); font-weight: 400; }
+
+.lote-progreso-general { margin-bottom: 16px; }
+.lote-progreso-general-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12.5px; color: #718096; margin-bottom: 6px;
+}
+.lote-progreso-general .progress-bar { height: 8px; }
+
+.lote-etapas-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.lote-etapas-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  padding-right: 4px;
+}
 
 /* ══════════════════════════════════════
    BANNERS — dentro de contenido oscuro
