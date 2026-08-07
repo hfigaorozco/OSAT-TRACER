@@ -11,6 +11,7 @@
   <div>
     <h1 class="page-title" style="font-family:monospace;">{{ orden.numero }}</h1>
     <p class="page-subtitle">{{ orden.proceso.nombre|default:"—" }} · {{ orden.linea_nombre }} · {{ orden.tipo_oblea_nombre }}</p>
+    <p class="page-subtitle">Creado por {{ orden.creado_por }} · {{ orden.fecha_creacion_display }}</p>
   </div>
   <div class="page-actions">
     {% if orden.estado == 'hold' %}
