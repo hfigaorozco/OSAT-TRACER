@@ -167,6 +167,40 @@ def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
     return creados, errores
 
 
+def _mensaje_sp(e):
+    """Extrae el texto de un SIGNAL SQLSTATE '45000' lanzado por un
+    procedimiento almacenado (MySQLdb lo entrega como args=(1644, 'texto'))
+    en vez de mostrarle al usuario la tupla de error cruda."""
+    args = getattr(e, 'args', None)
+    if args and len(args) > 1 and isinstance(args[1], str):
+        return args[1]
+    return str(e)
+
+
+def _enlazar_paso_a_proceso(proceso_pk, paso_pk, orden):
+    """Vincula un paso a una plantilla (proceso) vía sp_enlazarPasoAProceso
+    — la existencia de paso/proceso y el duplicado ya no se validan en
+    Python trayendo toda la lista de PasoProceso por REST, los valida el
+    procedimiento almacenado directo contra la BD. Devuelve (ok, error)."""
+    with connection.cursor() as cursor:
+        try:
+            cursor.callproc('sp_enlazarPasoAProceso', [proceso_pk, paso_pk, orden])
+            return True, None
+        except Exception as e:
+            return False, _mensaje_sp(e)
+
+
+def _asignar_pieza_a_plantilla(proceso_pk, pieza_pk, cantidad):
+    """Asigna una pieza a una plantilla (proceso) vía sp_asignarPiezaAPlantilla
+    — mismo reemplazo que _enlazar_paso_a_proceso pero para proceso-pieza."""
+    with connection.cursor() as cursor:
+        try:
+            cursor.callproc('sp_asignarPiezaAPlantilla', [proceso_pk, pieza_pk, cantidad])
+            return True, None
+        except Exception as e:
+            return False, _mensaje_sp(e)
+
+
 def _lotes_max_por_stock(proceso_pk, tipo_oblea_pk):
     """Cuántos lotes completos se pueden armar con el stock actual de
     inventario para un proceso y tipo de oblea dados — vía el procedimiento
@@ -734,7 +768,24 @@ def _generar_reporte_manual(request, orden_num, oblea_num=None, reportes_url_nam
         'generado_por': request.session.get('user_id'),
     })
     if ok:
-        ver_url = f"{reverse(reportes_url_name)}?tab=produccion"
+        # Calcula a qué página/sub-pestaña de Reportes le toca este reporte
+        # nuevo, con el mismo orden y el mismo PAGE_SIZE_REPORTES (=9) que usa
+        # BaseReportesView.get() en reportes/views.py — duplicado aquí (en vez
+        # de importado) porque reportes/views.py ya importa de este archivo
+        # (_generar_reporte_manual) y un import cruzado sería circular.
+        PAGE_SIZE_REPORTES = 9
+        reportes_prod = _get('/v1/list/reportes/', [])
+        reportes_prod = sorted(reportes_prod, key=lambda r: (r.get('fecha', ''), r.get('hora', '')), reverse=True)
+        es_lote = bool(oblea_num)
+        rows_subtab = [r for r in reportes_prod if bool(r.get('oblea')) == es_lote]
+        pagina = 1
+        for i, r in enumerate(rows_subtab):
+            if r.get('numero') == resp.get('numero'):
+                pagina = i // PAGE_SIZE_REPORTES + 1
+                break
+        subtab = 'lote' if es_lote else 'orden'
+        page_param = f'page_prod_{subtab}'
+        ver_url = f"{reverse(reportes_url_name)}?tab=produccion&subtab_prod={subtab}&{page_param}={pagina}"
         messages.success(request, 'Reporte generado correctamente.', extra_tags=ver_url)
     else:
         messages.error(request, f'Error al generar el reporte: {resp}')
@@ -858,8 +909,10 @@ def _calcular_yield_sp(lote_pk):
 def _estado_orden_display(edo_orden, lotes_de_orden):
     """
     Determina el estado visual de una orden y cuántos de sus lotes ya quedaron
-    resueltos (terminados o rechazados). Único punto de esta lógica — admin y
-    supervisor la comparten para no divergir entre sí.
+    resueltos (terminados o rechazados) — y por separado, cuántos de cada uno,
+    para que un lote rechazado nunca se cuente silenciosamente como
+    "completado". Único punto de esta lógica — admin y supervisor la
+    comparten para no divergir entre sí.
     Catálogo real: Estado_Orden abier/proce/cerra/enhol/recha. 'enhol' lo pone
     automáticamente el trigger t_scrap_excedente_del_permitido cuando el yield
     global de algún lote de la orden cae por debajo del 95%. 'recha' lo pone
@@ -873,8 +926,9 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     admite más cambios — ni sobre ella ni sobre sus lotes).
     """
     total = len(lotes_de_orden)
+    terminados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'termi')
     rechazados = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() == 'recha')
-    resueltos = sum(1 for ob in lotes_de_orden if str(ob.get('estado', '')).lower() in ('termi', 'recha'))
+    resueltos = terminados + rechazados
     pct = round(resueltos / total * 100) if total > 0 else 0
 
     edo = str(edo_orden or '').lower()
@@ -891,7 +945,12 @@ def _estado_orden_display(edo_orden, lotes_de_orden):
     else:
         edo_str = 'desconocido'
 
-    return edo_str, resueltos, pct
+    # resueltos (compatibilidad con las tablas de listado, que muestran
+    # "completados/total" junto a la barra de progreso — ahí "completado"
+    # históricamente significa "ya no está activo", terminado o rechazado)
+    # se sigue devolviendo igual; terminados y rechazados por separado son
+    # para las vistas de detalle, que si necesitan distinguirlos.
+    return edo_str, resueltos, pct, terminados, rechazados
 
 
 # ── Helper compartido para construir ordenes y lotes ─────────────────────────
@@ -943,7 +1002,8 @@ def _build_ordenes_lotes():
         num   = o.get('numero')
         obs   = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         total = len(obs)
-        edo_str, comp, pct = _estado_orden_display(o.get('estado'), obs)
+        en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
+        edo_str, comp, pct, terminados, rechazados = _estado_orden_display(o.get('estado'), obs)
 
         linea_pk = str(o.get('linea', '')) if o.get('linea') else ''
         tipo_pk  = str(o.get('tipoOblea', '')) if o.get('tipoOblea') else ''
@@ -965,6 +1025,9 @@ def _build_ordenes_lotes():
             'creado_por': (lambda e: f"{e.get('nombre','')} {e.get('primerApell','')}".strip() or '—')(empleados_map.get(str(o.get('empleado', '')), {})),
             'total_lotes': total,
             'completados': comp,
+            'lotes_terminados': terminados,
+            'lotes_rechazados': rechazados,
+            'en_proceso': en_proc,
             'pct': pct,
             'estado': edo_str,
             'estado_pk': str(o.get('estado', '')),
@@ -1428,13 +1491,9 @@ def admin_organizacion_plantilla_crear(request):
         # 2. Enlazar pasos (existentes + recién creados) en el orden en que se agregaron
         orden_codigos = [c.strip().lower() for c in request.POST.getlist('paso_orden_codigo') if c.strip()]
         for idx, pcod in enumerate(orden_codigos):
-            ok_pp, resp_pp = _post('/v1/create/PasoProceso/', {
-                'paso':    pcod,
-                'proceso': codigo,
-                'orden':   idx + 1,
-            })
+            ok_pp, err_pp = _enlazar_paso_a_proceso(codigo, pcod, idx + 1)
             if not ok_pp:
-                errores_post.append(f'Vincular paso {pcod}: {resp_pp}')
+                errores_post.append(f'Vincular paso {pcod}: {err_pp}')
 
         # 3. Piezas requeridas
         for i, zcod in enumerate(piezas_codigo):
@@ -1442,13 +1501,9 @@ def admin_organizacion_plantilla_crear(request):
             if not zcod:
                 continue
             cant = piezas_cantidad[i] if i < len(piezas_cantidad) else 0
-            ok_z, resp_z = _post('/v1/create/ProcesoPieza/', {
-                'proceso':    codigo,
-                'pieza':      zcod,
-                'cantPiezas': int(cant or 0),
-            })
+            ok_z, err_z = _asignar_pieza_a_plantilla(codigo, zcod, int(cant or 0))
             if not ok_z:
-                errores_post.append(f'Pieza {zcod}: {resp_z}')
+                errores_post.append(f'Pieza {zcod}: {err_z}')
 
         if errores_post:
             messages.error(request, 'Plantilla creada con errores: ' + '; '.join(errores_post))
@@ -1542,20 +1597,12 @@ def admin_organizacion_plantilla_paso_asignar(request, pk):
             paso_codigo = nuevo_codigo
 
         pasos_proceso = _get('/v1/list/PasoProceso/', [])
-        if any(str(pp.get('proceso')) == str(pk) and str(pp.get('paso', '')).lower() == paso_codigo for pp in pasos_proceso):
-            messages.error(request, 'Ese paso ya está asignado a esta plantilla.')
-            return _organizacion_redirect('plantillas', pk)
-
         orden = sum(1 for pp in pasos_proceso if str(pp.get('proceso')) == str(pk)) + 1
-        ok, resp = _post('/v1/create/PasoProceso/', {
-            'paso':    paso_codigo,
-            'proceso': pk,
-            'orden':   orden,
-        })
+        ok, err = _enlazar_paso_a_proceso(pk, paso_codigo, orden)
         if ok:
             messages.success(request, 'Paso agregado a la plantilla.')
         else:
-            messages.error(request, f'Error: {resp}')
+            messages.error(request, err)
     return _organizacion_redirect('plantillas', pk)
 
 
@@ -1575,31 +1622,18 @@ def admin_organizacion_plantilla_pieza_asignar(request, pk):
         pieza_codigo = request.POST.get('pieza', '').strip()
         cantidad = request.POST.get('cantidad', '').strip()
 
-        errores = []
         if not pieza_codigo:
-            errores.append('Selecciona una pieza.')
+            messages.error(request, 'Selecciona una pieza.')
+            return _organizacion_redirect('plantillas', pk)
         if not cantidad.isdigit() or int(cantidad or 0) < 1:
-            errores.append('La cantidad debe ser un número mayor a 0.')
-
-        if not errores:
-            piezas_rel = _get('/v1/list/ProcesoPieza/', [])
-            if any(str(pz.get('proceso')) == str(pk) and str(pz.get('pieza', '')) == pieza_codigo for pz in piezas_rel):
-                errores.append('Esa pieza ya está asignada a esta plantilla.')
-
-        if errores:
-            for e in errores:
-                messages.error(request, e)
+            messages.error(request, 'La cantidad debe ser un número mayor a 0.')
             return _organizacion_redirect('plantillas', pk)
 
-        ok, resp = _post('/v1/create/ProcesoPieza/', {
-            'proceso':    pk,
-            'pieza':      pieza_codigo,
-            'cantPiezas': int(cantidad),
-        })
+        ok, err = _asignar_pieza_a_plantilla(pk, pieza_codigo, int(cantidad))
         if ok:
             messages.success(request, 'Pieza asignada a la plantilla.')
         else:
-            messages.error(request, f'Error: {resp}')
+            messages.error(request, err)
     return _organizacion_redirect('plantillas', pk)
 
 
@@ -1935,7 +1969,7 @@ def supervisor_ordenes(request):
         obs   = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         total = len(obs)
         en_proc = sum(1 for ob in obs if str(ob.get('estado', '')).lower() == 'proce')
-        edo_str, comp, pct = _estado_orden_display(o.get('estado'), obs)
+        edo_str, comp, pct, terminados, rechazados = _estado_orden_display(o.get('estado'), obs)
 
         # proceso como FakeObj para que template acceda a orden.proceso.nombre
         proceso_codigo = str(o.get('proceso', ''))
@@ -1965,6 +1999,8 @@ def supervisor_ordenes(request):
             'creado_por':       creador_nombre,
             'total_lotes':      total,
             'lotes_completados': comp,
+            'lotes_terminados': terminados,
+            'lotes_rechazados': rechazados,
             'lotes_en_proceso': en_proc,
             'pct_completados':  pct,
             'estado':           edo_str,
@@ -2135,7 +2171,7 @@ def supervisor_orden_detalle(request, pk):
     tipo_pk = str(orden_data.get('tipoOblea', '')) if orden_data.get('tipoOblea') else ''
     tipo_data = next((t for t in tipos_oblea_bd if str(t.get('codigo')) == tipo_pk), {})
 
-    edo_str, comp, _pct = _estado_orden_display(orden_data.get('estado'), obs)
+    edo_str, comp, _pct, terminados, rechazados = _estado_orden_display(orden_data.get('estado'), obs)
 
     creador = next((e for e in empleados_bd if str(e.get('numero')) == str(orden_data.get('empleado', ''))), {})
     creador_nombre = f"{creador.get('nombre', '')} {creador.get('primerApell', '')}".strip() or '—'
@@ -2150,6 +2186,8 @@ def supervisor_orden_detalle(request, pk):
         'fecha_creacion_display': _fecha_display(orden_data.get('fecha', '')),
         'total_lotes':      total,
         'lotes_completados': comp,
+        'lotes_terminados': terminados,
+        'lotes_rechazados': rechazados,
         'lotes_en_proceso': en_proc,
         'estado':           edo_str,
         'estado_pk':        str(orden_data.get('estado', '')),

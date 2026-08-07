@@ -120,7 +120,7 @@
     <div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
         <h1 id="det-orden-titulo" class="page-title" style="margin:0;"></h1>
-        <span id="det-orden-badge" style="padding:2px 12px;border-radius:4px;font-size:13px;font-weight:600;"></span>
+        <span id="det-orden-badge"></span>
       </div>
       <p id="det-orden-meta" style="font-size:14px;color:var(--text-muted);"></p>
       <p id="det-orden-creador" style="font-size:14px;color:var(--text-muted);"></p>
@@ -135,32 +135,46 @@
       <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
     </div>
   </div>
+  <div class="kpi-plain-row">
+    <div class="kpi-plain">
+      <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--turquoise)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span class="kpi-plain-label">Total lotes</span>
+      <span class="kpi-plain-value" id="det-orden-total-lotes">0</span>
+    </div>
+    <div class="kpi-plain">
+      <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <span class="kpi-plain-label">Completados</span>
+      <span class="kpi-plain-value" id="det-orden-completados" style="color:#16A85E;">0</span>
+    </div>
+    <div class="kpi-plain">
+      <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="kpi-plain-label">En proceso</span>
+      <span class="kpi-plain-value" id="det-orden-en-proceso" style="color:#F5A623;">0</span>
+    </div>
+    <div class="kpi-plain">
+      <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <span class="kpi-plain-label">Rechazados</span>
+      <span class="kpi-plain-value" id="det-orden-rechazados" style="color:#EF5350;">0</span>
+    </div>
+  </div>
   <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#F5A623;color:#FFFFFF;font-size:14px;font-weight:600;">
     ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla o rechazarla.
   </div>
-  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <h3 style="font-weight:600;font-size:15px;margin:0;color:#1A202C;">Lotes de esta orden</h3>
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)" class="form-control">
+      <h3 style="font-weight:600;font-size:15px;margin:0;">Lotes de esta orden</h3>
+      <div style="position:relative;">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar lote por código..." id="search-lotes-orden" oninput="filterLotesOrden(this.value)"
+          class="form-control" style="height:38px;padding-left:32px;width:220px;">
       </div>
     </div>
-    <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
-      <thead style="background:#F7FAFC;">
-        <tr>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Folio</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Inicio</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fin</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Pasos</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Progreso</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-lotes-orden"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Folio QR</th><th>Número oblea</th><th>Dies buenos</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Acciones</th></tr></thead>
+        <tbody id="tbody-lotes-orden"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -775,18 +789,23 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   document.getElementById('det-orden-creador').textContent = ordenFull
     ? 'Creado por ' + (ordenFull.creado_por || '—') + ' · ' + (ordenFull.fecha_creacion_display || '—')
     : '';
+  document.getElementById('det-orden-total-lotes').textContent = ordenFull ? (ordenFull.total_lotes || 0) : 0;
+  document.getElementById('det-orden-completados').textContent = ordenFull ? (ordenFull.lotes_terminados || 0) : 0;
+  document.getElementById('det-orden-en-proceso').textContent = ordenFull ? (ordenFull.en_proceso || 0) : 0;
+  document.getElementById('det-orden-rechazados').textContent = ordenFull ? (ordenFull.lotes_rechazados || 0) : 0;
 
   var badgeMap = {
-    hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
-    en_proceso: ['#FFCA28','#1A202C','En proceso'],
-    cerrada:    ['#16A85E','#FFFFFF','Cerrada'],
-    rechazado:  ['#EF5350','#FFFFFF','Rechazada'],
-    pendiente:  ['#FFCA28','#1A202C','Pendiente'],
+    hold:       ['badge-hold',       '⏸ En Hold'],
+    en_proceso: ['badge-en-proceso', 'En proceso'],
+    cerrada:    ['badge-ok',         'Cerrada'],
+    rechazado:  ['badge-rechazado',  'Rechazada'],
+    pendiente:  ['badge-pendiente',  'Pendiente'],
   };
   var b = badgeMap[estado] || badgeMap.pendiente;
   var badge = document.getElementById('det-orden-badge');
-  badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+b[0]+';color:'+b[1]+';padding:3px 11px;border-radius:4px;font-size:13px;font-weight:600;';
-  badge.textContent = b[2];
+  badge.className = 'badge ' + b[0];
+  badge.removeAttribute('style');
+  badge.textContent = b[1];
 
   var enHold = estado === 'hold';
   document.getElementById('orden-hold-banner').style.display = enHold ? 'block' : 'none';
@@ -796,36 +815,37 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   var tbody = document.getElementById('tbody-lotes-orden');
   var lotesDeLaOrden = _lotes.filter(function(l){ return l.orden_pk === pk; });
   var ordenPausada = (estado === 'hold' || estado === 'rechazado');
+  var loteBadgeClaseMap = {
+    en_proceso: ['badge-en-proceso', 'En proceso'],
+    aprobado:   ['badge-aprobado',   'Terminada'],
+    rechazado:  ['badge-critico',    'Rechazada'],
+    hold:       ['badge-hold',       '⏸ En Hold'],
+    pendiente:  ['badge-pendiente',  'Pendiente'],
+  };
   tbody.innerHTML = lotesDeLaOrden.map(function(l) {
-    var pct = l.total_pasos > 0 ? Math.round((l.pasos_completados/l.total_pasos)*100) : 0;
-    var loteBadgeMap = {
-      en_proceso: ['#FFCA28','#1A202C','En proceso'],
-      aprobado:   ['#16A85E','#FFFFFF','Terminado'],
-      rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
-      hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
-      pendiente:  ['#FFCA28','#1A202C','Pendiente'],
-    };
-    var lb = loteBadgeMap[l.estado] || loteBadgeMap.pendiente;
+    var lb = loteBadgeClaseMap[l.estado] || loteBadgeClaseMap.pendiente;
     // El lote realmente rechazado (la causa del Hold/rechazo de la orden)
     // se ve completo; los demás se atenúan para dejar claro que no fueron
     // la causa y que quedaron pausados, no que también fallaron.
     var noEsLaCausa = ordenPausada && l.estado !== 'rechazado';
-    var badgeEdo = '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+lb[0]+';color:'+lb[1]+';padding:3px 11px;border-radius:4px;font-size:12px;font-weight:600;'+(noEsLaCausa ? 'opacity:.45;' : '')+'">'+lb[2]+'</span>';
-    var rowStyle = 'cursor:pointer;' + (noEsLaCausa ? 'opacity:.55;' : '');
-    return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="'+rowStyle+'" onclick="abrirLote('+l.pk+')">' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso_nombre+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.hora_inicio+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">'+l.hora_fin+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;text-align:center;color:#2D3748;">'+l.total_pasos+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;"><div style="height:100%;background:#16A85E;border-radius:999px;width:'+pct+'%;"></div></div><span style="font-size:13px;color:#718096;white-space:nowrap;">'+l.pasos_completados+'/'+l.total_pasos+'</span></div></td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">'+badgeEdo+'</td>' +
-      '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">' +
-        '<button onclick="event.stopPropagation();abrirLote('+l.pk+')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver trazabilidad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-        '<button onclick="event.stopPropagation();verQR('+l.pk+', \''+l.folio+'\')" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Ver / imprimir código QR"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg></button>' +
+    var badgeEdo = '<span class="badge '+lb[0]+'"'+(noEsLaCausa ? ' style="opacity:.45;"' : '')+'>'+lb[1]+'</span>';
+    var etapaEnCurso = (l.etapas || []).find(function(e) { return e.estado === 'en_curso'; });
+    var etapaActual = etapaEnCurso ? etapaEnCurso.nombre : '—';
+    var yieldColor = l.yield_pct >= 90 ? '#16A85E' : l.yield_pct >= 75 ? '#F5A623' : '#EF5350';
+    var rowStyle = ' style="cursor:pointer;' + (noEsLaCausa ? 'opacity:.55;' : '') + '"';
+    return '<tr class="lote-row"'+rowStyle+' data-folio="'+l.folio.toLowerCase()+'" onclick="abrirLote('+l.pk+')">' +
+      '<td style="font-family:monospace;font-weight:600;">'+l.folio+'</td>' +
+      '<td>'+l.pk+'</td>' +
+      '<td>'+l.dies_activos+'</td>' +
+      '<td>'+etapaActual+'</td>' +
+      '<td>'+badgeEdo+'</td>' +
+      '<td style="text-align:right;font-weight:600;color:'+yieldColor+';">'+(l.yield_pct != null ? l.yield_pct + '%' : '—')+'</td>' +
+      '<td class="table-actions">' +
+        '<button type="button" class="action-btn" onclick="event.stopPropagation();abrirLote('+l.pk+')" title="Ver trazabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+        '<button type="button" class="action-btn" onclick="event.stopPropagation();verQR('+l.pk+', \''+l.folio+'\')" title="Ver / imprimir código QR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg></button>' +
       '</td>' +
     '</tr>';
-  }).join('') || '<tr><td colspan="8" style="padding:48px;text-align:center;color:#718096;">No hay lotes en esta orden</td></tr>';
+  }).join('') || '<tr><td colspan="7" style="padding:48px;text-align:center;color:#718096;">No hay lotes en esta orden</td></tr>';
   document.getElementById('search-lotes-orden').value = '';
 
   document.getElementById('vista-ordenes').style.display = 'none';
@@ -861,16 +881,17 @@ function abrirLote(pk) {
     piezasDetails.style.display = 'none';
   }
   var loteEstadoBadgeMap = {
-    en_proceso: ['#FFCA28','#1A202C','En proceso'],
-    aprobado:   ['#16A85E','#FFFFFF','Terminado'],
-    rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
-    hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
-    pendiente:  ['#FFCA28','#1A202C','Pendiente'],
+    en_proceso: ['badge-en-proceso', 'En proceso'],
+    aprobado:   ['badge-ok',         'Terminado'],
+    rechazado:  ['badge-rechazado',  'Rechazado'],
+    hold:       ['badge-hold',       '⏸ En Hold'],
+    pendiente:  ['badge-pendiente',  'Pendiente'],
   };
   var leb = loteEstadoBadgeMap[lote.estado] || loteEstadoBadgeMap.pendiente;
   var loteEstadoBadgeEl = document.getElementById('lote-estado-badge');
-  loteEstadoBadgeEl.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+leb[0]+';color:'+leb[1]+';padding:3px 11px;border-radius:4px;font-size:13px;font-weight:700;';
-  loteEstadoBadgeEl.textContent = leb[2];
+  loteEstadoBadgeEl.className = 'badge ' + leb[0];
+  loteEstadoBadgeEl.removeAttribute('style');
+  loteEstadoBadgeEl.textContent = leb[1];
 
   var btnHold = document.getElementById('btn-hold-lote');
   if (lote.estado === 'rechazado' || lote.estado === 'aprobado') {

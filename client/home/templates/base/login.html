@@ -65,7 +65,11 @@
       </div>
     {% endif %}
 
-    <form method="post" action="{% url 'login' %}">
+    <div id="login-empty-error" class="banner banner-error" style="display:none;margin-bottom:1rem;">
+      Ingresa usuario y contraseña.
+    </div>
+
+    <form method="post" action="{% url 'login' %}" novalidate onsubmit="return validarLoginNoVacio(event)">
       {% csrf_token %}
 
       <div class="form-group">

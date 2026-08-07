@@ -52,7 +52,7 @@
           <td>{{ maq.linea_nombre|default:"—" }}</td>
           <td>
             {% if maq.estado_nombre == 'Activa' %}<span class="badge badge-activo">Activa</span>
-            {% elif maq.estado_nombre == 'Inactiva' %}<span class="badge badge-en-proceso">Inactiva</span>
+            {% elif maq.estado_nombre == 'Inactiva' %}<span class="badge badge-inactivo">Inactiva</span>
             {% else %}<span class="badge badge-inactivo">{{ maq.estado_nombre|default:"—" }}</span>{% endif %}
           </td>
           <td>

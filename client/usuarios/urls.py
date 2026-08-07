@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Admin dashboard
     path('admin/dash/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/dash/pasos-hoy/', views.admin_pasos_hoy_detalle, name='admin_pasos_hoy_detalle'),
 
     # Personal — tabla unificada
     path('admin/personal/', views.admin_personal, name='admin_personal'),
