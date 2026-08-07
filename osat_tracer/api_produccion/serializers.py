@@ -554,6 +554,14 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 'Libérala antes de continuar.'
             )
 
+        # Ni si la orden fue rechazada manualmente estando en Hold (ver
+        # client/produccion/views.py::_orden_rechazar) — es un estado final,
+        # igual de definitivo que Hold para efectos de completar etapas.
+        if oblea and oblea.orden_id and str(oblea.orden.estado_id).lower() == 'recha':
+            raise serializers.ValidationError(
+                'La orden de este lote fue rechazada. No se pueden completar más etapas.'
+            )
+
         # Rechazar una etapa es una decisión sobre el YIELD GLOBAL del lote, no
         # sobre el scrap de una sola etapa: solo se permite si, al aplicar este
         # scrap, el yield del lote completo (dies activos tras este paso /

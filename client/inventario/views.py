@@ -20,11 +20,16 @@ class AdminInventario(generic.View):
     url_base = 'http://localhost:8001/api/v1/list/piezas/'
     context = {}
     response = None
-    
+
     def get(self, request):
         self.request = requests.get(url=self.url_base).json()
-        self.context = {"piezas": self.request}
-        
+        procesos_bd, tipos_oblea_bd = _get_many('/v1/list/Proceso/', '/v1/list/TipoOblea/')
+        self.context = {
+            "piezas": self.request,
+            "procesos": procesos_bd,
+            "tipos_oblea": tipos_oblea_bd,
+        }
+
         return render(request, self.template_name, self.context)
     
 
@@ -168,6 +173,7 @@ def admin_inventario_movimiento(request):
 
 def supervisor_inventario(request):
     piezas_bd = _get('/v1/list/piezas/', [])
+    procesos_bd, tipos_oblea_bd = _get_many('/v1/list/Proceso/', '/v1/list/TipoOblea/')
     # unread_count/recent_notifications los pone home.context_processors.
     # notificaciones() para toda la app — no armarlos aquí a mano, porque
     # el contexto explícito de esta vista gana sobre el del context
@@ -199,6 +205,8 @@ def supervisor_inventario(request):
     ctx.update({
         'piezas_page': piezas_page,
         'inventario_extra_params': inventario_extra_params,
+        'procesos': procesos_bd,
+        'tipos_oblea': tipos_oblea_bd,
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Inventario', 'url': '/supervisor/inventario/'},

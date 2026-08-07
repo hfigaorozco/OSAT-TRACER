@@ -69,7 +69,7 @@ class Registro_Kpi(models.Model):
     oblea = models.ForeignKey("api_produccion.Oblea", on_delete=models.RESTRICT, related_name='registro_kpi')
     kpi = models.ForeignKey(Kpi, on_delete=models.RESTRICT, related_name='registro_kpi')
     semaforo = models.ForeignKey(Semaforo, on_delete=models.RESTRICT, related_name='registro_kpi')
-    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='registro_kpi')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='registro_kpi', null=True)
     
     class Meta:
         db_table = 'registro_kpi'

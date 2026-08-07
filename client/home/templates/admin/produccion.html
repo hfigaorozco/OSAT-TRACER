@@ -45,6 +45,7 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Línea</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tipo de oblea</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha de creación</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Inicio</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fin Estimado</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Lotes</th>
@@ -62,6 +63,7 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.proceso_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.linea_nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.tipo_oblea_nombre }}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.fecha_creacion_display }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.hora_inicio_display }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.hora_fin_display }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;text-align:center;">{{ orden.total_lotes }}</td>
@@ -121,9 +123,11 @@
         <span id="det-orden-badge" style="padding:2px 12px;border-radius:4px;font-size:13px;font-weight:600;"></span>
       </div>
       <p id="det-orden-meta" style="font-size:14px;color:var(--text-muted);"></p>
+      <p id="det-orden-creador" style="font-size:14px;color:var(--text-muted);"></p>
     </div>
     <div style="display:flex;gap:10px;">
-      <button id="btn-liberar-orden" class="btn btn-outline" style="display:none;border-color:#EF5350;color:#EF5350;" onclick="liberarOrdenActual()">⏸ Liberar orden</button>
+      <button id="btn-liberar-orden" class="btn btn-outline" style="display:none;border-color:#16A85E;color:#16A85E;" onclick="liberarOrdenActual()">⏸ Liberar orden</button>
+      <button id="btn-rechazar-orden" class="btn btn-outline" style="display:none;border-color:#EF5350;color:#EF5350;" onclick="rechazarOrdenActual()">✕ Rechazar orden</button>
       <button class="btn btn-primary" title="Generar reporte de esta orden" onclick="generarReporteOrden()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
         Generar reporte
@@ -131,8 +135,8 @@
       <button class="btn btn-primary" onclick="abrirModalAgregarLote()">+ Agregar Lote</button>
     </div>
   </div>
-  <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:14px;font-weight:600;">
-    ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla.
+  <div id="orden-hold-banner" style="display:none;margin-bottom:20px;padding:14px 18px;border-radius:9px;background:#F5A623;color:#FFFFFF;font-size:14px;font-weight:600;">
+    ⏸ Esta orden está en Hold: el yield global de uno de sus lotes cayó por debajo del 95% por exceso de scrap. No se pueden completar más etapas de sus lotes hasta liberarla o rechazarla.
   </div>
   <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -161,7 +165,7 @@
 </div>
 
 <!-- ═══ VISTA: DETALLE LOTE ═══ -->
-<div id="vista-detalle-lote" style="display:none;">
+<div id="vista-detalle-lote" class="lote-detalle-page" style="display:none;">
   <button onclick="volverAOrden()" title="Regresar a la orden"
           style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #E2E8F0;color:#4A5568;cursor:pointer;margin-bottom:14px;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -175,22 +179,19 @@
   </nav>
 
   <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-    <div>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
-        <h1 id="lote-titulo" class="page-title" style="margin:0;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;"></h1>
-        <span id="lote-estado-badge"></span>
-      </div>
-      <p id="lote-meta" style="font-size:14px;color:var(--text-muted);margin:0;"></p>
-    </div>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <h1 id="lote-titulo" class="page-title" style="margin:0;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:-.5px;"></h1>
+      <span id="lote-estado-badge"></span>
       <button type="button" onclick="verQR(_loteActual.pk, _loteActual.folio)" title="Ver / imprimir código QR"
-              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+              style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
       </button>
       <button type="button" onclick="generarReporteLote()" title="Generar reporte de este lote"
-              style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;border:1.5px solid #E2E8F0;color:#1A202C;cursor:pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       </button>
+    </div>
+    <div style="display:flex;gap:10px;">
       <button id="btn-hold-lote" onclick="onHoldButtonClick()"
               style="padding:12px 24px;background:#F5A623;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -199,30 +200,55 @@
     </div>
   </div>
 
-  <!-- KPI Stats -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
-    <div class="card" style="padding:16px;">
-      <div style="font-size:12px;color:#718096;margin-bottom:4px;">Dies iniciales</div>
-      <div id="lote-stat-ini" style="font-size:24px;font-weight:700;color:#1A202C;"></div>
-    </div>
-    <div class="card" style="padding:16px;">
-      <div style="font-size:12px;color:#718096;margin-bottom:4px;">Dies activos</div>
-      <div id="lote-stat-act" style="font-size:24px;font-weight:700;color:#1A202C;"></div>
-    </div>
-    <div class="card" style="padding:16px;">
-      <div style="font-size:12px;color:#718096;margin-bottom:4px;">Scrap total</div>
-      <div id="lote-stat-scrap" style="font-size:24px;font-weight:700;color:#EF5350;"></div>
-    </div>
-    <div class="card" style="padding:16px;">
-      <div style="font-size:12px;color:#718096;margin-bottom:4px;">Yield</div>
-      <div id="lote-stat-yield" style="font-size:24px;font-weight:700;"></div>
-    </div>
-  </div>
+  <div class="lote-detalle-layout">
+    <div class="lote-detalle-left">
 
-  <!-- Trazabilidad -->
-  <div class="card">
-    <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 16px;">Trazabilidad del lote</h2>
-    <div id="trazabilidad-container" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <!-- Datos del lote — sin card, texto sobre el fondo oscuro -->
+      <div class="lote-stats-row">
+        <div>
+          <div class="lote-stat-label">Dies iniciales</div>
+          <div id="lote-stat-ini" class="lote-stat-value"></div>
+        </div>
+        <div>
+          <div class="lote-stat-label">Dies activos</div>
+          <div id="lote-stat-act" class="lote-stat-value"></div>
+        </div>
+        <div>
+          <div class="lote-stat-label">Scrap total</div>
+          <div id="lote-stat-scrap" class="lote-stat-value"></div>
+        </div>
+        <div>
+          <div class="lote-stat-label">Yield</div>
+          <div id="lote-stat-yield" class="lote-stat-value"></div>
+        </div>
+      </div>
+
+      <!-- Proceso, línea, operador + piezas que usa -->
+      <p id="lote-meta" class="lote-proceso-piezas"></p>
+      <p id="lote-operador" class="lote-proceso-piezas"></p>
+      <details id="lote-piezas-details" class="lote-piezas-details" style="display:none;">
+        <summary id="lote-piezas-summary"></summary>
+        <ul id="lote-piezas-list" class="lote-piezas-list"></ul>
+      </details>
+
+    </div>
+
+    <div class="lote-detalle-right">
+      <div class="card lote-etapas-card">
+        <h2 style="font-size:16px;font-weight:600;color:#1A202C;margin:0 0 12px;">Trazabilidad del lote</h2>
+        <!-- Progreso general del lote (pasos completados) — arriba del módulo de pasos -->
+        <div class="lote-progreso-general">
+          <div class="lote-progreso-general-head">
+            <span>Progreso del lote</span>
+            <span id="lote-progreso-label"></span>
+          </div>
+          <div class="progress-bar"><div id="lote-progreso-fill" class="progress-fill" style="width:0%;"></div></div>
+        </div>
+        <div class="lote-etapas-scroll">
+          <div id="trazabilidad-container" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -231,7 +257,7 @@
 
 <!-- Modal nueva/editar orden -->
 <div class="modal-overlay" id="modal-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-orden')">
-  <div class="modal-card modal-md">
+  <div class="modal-card modal-lg">
     <div class="modal-header"><h2 id="orden-modal-title">Nueva orden de producción</h2><button class="modal-close" onclick="closeModal('modal-orden')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <form method="post" id="orden-form" action="{% url 'admin_orden_crear' %}">{% csrf_token %}
       <div class="modal-body">
@@ -248,19 +274,36 @@
         </div>
         <div class="form-group">
           <label class="form-label">Tipo de oblea <span class="required">*</span></label>
-          <select name="tipo_oblea" id="orden-tipo-oblea-input" class="form-control" required>
+          <select name="tipo_oblea" id="orden-tipo-oblea-input" class="form-control" required onchange="_actualizarLotesMaxStock()">
             <option value="">Seleccionar…</option>
             {% for t in tipos_oblea %}<option value="{{ t.pk }}">{{ t.nombre }}</option>{% endfor %}
           </select>
         </div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Hora de inicio <span class="required">*</span></label><input type="time" step="1" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Hora estimada de fin <span class="required">*</span></label><input type="time" step="1" name="hora_fin" id="orden-hora-fin-input" class="form-control" required></div>
+          <div class="form-group">
+            <label class="form-label">Hora de inicio <span class="required">*</span></label>
+            <div style="display:flex;gap:6px;">
+              <select id="orden-hora-inicio-h" class="form-control" required></select>
+              <select id="orden-hora-inicio-m" class="form-control" required></select>
+              <select id="orden-hora-inicio-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
+            </div>
+            <input type="hidden" name="hora_inicio" id="orden-hora-inicio-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora estimada de fin <span class="required">*</span></label>
+            <div style="display:flex;gap:6px;">
+              <select id="orden-hora-fin-h" class="form-control" required></select>
+              <select id="orden-hora-fin-m" class="form-control" required></select>
+              <select id="orden-hora-fin-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
+            </div>
+            <input type="hidden" name="hora_fin" id="orden-hora-fin-input">
+          </div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
           <label class="form-label">Cantidad de lotes a crear <span class="required">*</span></label>
           <input type="number" name="cantidad_lotes" id="orden-cantidad-crear-input" class="form-control" min="1" value="1" required>
           <div style="font-size:13px;color:#718096;margin-top:4px;">Todos los lotes de la orden usan el mismo tipo de oblea elegido arriba.</div>
+          <div id="orden-lotes-max-hint" style="font-size:13px;margin-top:4px;display:none;"></div>
         </div>
         <div class="form-group" id="orden-cantidad-extra-wrap" style="display:none;">
           <label class="form-label">Agregar lotes nuevos</label>
@@ -316,15 +359,46 @@
   </div>
 </div>
 
+<!-- Modal Liberar orden -->
+<div class="modal-overlay" id="modal-liberar-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-liberar-orden')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Liberar orden del Hold</h2><button class="modal-close" onclick="closeModal('modal-liberar-orden')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#4A5568;margin:0;">¿Liberar esta orden del Hold? Se podrán volver a completar etapas de sus lotes.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-liberar-orden')">Cancelar</button>
+      <button type="button" class="btn" style="background:#16A85E;color:#fff;" onclick="_confirmarLiberarOrden()">⏸ Liberar orden</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rechazar orden -->
+<div class="modal-overlay" id="modal-rechazar-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-rechazar-orden')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Rechazar orden</h2><button class="modal-close" onclick="closeModal('modal-rechazar-orden')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#4A5568;margin:0 0 14px;">Esta acción no se puede deshacer.</p>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Motivo del rechazo</label>
+        <textarea id="rechazar-orden-motivo" class="form-control" rows="3" placeholder="Describe el motivo (opcional)…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-rechazar-orden')">Cancelar</button>
+      <button type="button" class="btn" style="background:#EF5350;color:#fff;" onclick="_confirmarRechazarOrden()">✕ Rechazar orden</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal agregar lotes -->
 <div class="modal-overlay" id="modal-agregar-lote" style="display:none;" onclick="if(event.target===this)closeModal('modal-agregar-lote')">
   <div class="modal-card modal-md">
     <div class="modal-header"><h2>Agregar lotes</h2><button class="modal-close" onclick="closeModal('modal-agregar-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">Orden de producción <span class="required">*</span></label>
-        <select id="p2-orden" class="form-control" onchange="_actualizarTipoObleaAgregarLote()">
-          {% for orden in ordenes %}<option value="{{ orden.pk }}" data-tipo="{{ orden.tipo_oblea_nombre }}">{{ orden.numero }}</option>{% endfor %}
-        </select>
+      <div class="form-group"><label class="form-label">Orden de producción</label>
+        <input type="text" id="p2-orden-display" class="form-control" readonly disabled style="background:#F4F6F9;color:#718096;">
+        <input type="hidden" id="p2-orden">
       </div>
       <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:14px;color:#4A5568;">
         Tipo de oblea de la orden: <strong id="p2-tipo-oblea-display" style="color:#1A202C;">—</strong>
@@ -414,18 +488,41 @@
       <button class="modal-close" onclick="closeModal('modal-completar-etapa')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Unidades con defecto en esta etapa</label>
+        <input type="number" id="comp-scrap" class="form-control" min="0" value="0" oninput="calcularYieldPreviewComp();compActualizarRechazoDisponible();" style="max-width:180px;">
+      </div>
+
+      <!-- Yield del lote — actual, proyectado y umbral, siempre visible -->
+      <div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Yield actual</div>
+            <div id="comp-yield-actual" style="font-size:20px;font-weight:700;color:#1A202C;">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Proyectado con este scrap</div>
+            <div id="yield-preview-comp" style="font-size:20px;font-weight:700;">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:.03em;">Umbral mínimo</div>
+            <div style="font-size:20px;font-weight:700;color:#4A5568;">95%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aviso — aparece ANTES de enviar, no después -->
+      <div id="comp-aviso-umbral" style="display:none;background:#FFF3CD;border:1px solid #FBBF24;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13.5px;color:#92400E;gap:8px;align-items:flex-start;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Con este scrap el yield cae por debajo del umbral: la orden completa entrará en Hold automáticamente al confirmar, y ya puedes marcar esta etapa como <strong>Rechazado</strong> si corresponde.</span>
+      </div>
+
       <div class="form-group" style="margin-bottom:20px;">
         <label class="form-label">Resultado <span class="required">*</span></label>
         <div style="display:flex;gap:10px;margin-top:6px;">
           <div id="btn-res-aprobado" onclick="selectResultadoComp('aprobado')" style="flex:1;border:1.5px solid #16A85E;border-radius:8px;padding:12px;text-align:center;background:#16A85E;color:#FFFFFF;font-weight:600;font-size:14px;cursor:pointer;">✓ Aprobado</div>
           <div id="btn-res-rechazado" onclick="selectResultadoComp('rechazado')" style="flex:1;border:1.5px solid #CBD5E0;border-radius:8px;padding:12px;text-align:center;background:#F7FAFC;color:#A0AEC0;font-weight:600;font-size:14px;cursor:not-allowed;">✕ Rechazado</div>
         </div>
-        <div style="font-size:12px;color:#A0AEC0;margin-top:6px;">"Rechazado" se habilita cuando el yield global del lote caería por debajo del 95% (scrap mayor a <span id="comp-rechazo-umbral">0</span>).</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Unidades con defecto en esta etapa</label>
-        <input type="number" id="comp-scrap" class="form-control" min="0" value="0" oninput="calcularYieldPreviewComp();compActualizarRechazoDisponible();" style="max-width:180px;">
-        <div id="yield-preview-comp" style="margin-top:8px;font-size:13px;color:#718096;"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Defectos detectados</label>
@@ -439,9 +536,16 @@
         <textarea id="comp-comentarios" class="form-control" rows="3" placeholder="Observaciones sobre esta etapa…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline" onclick="closeModal('modal-completar-etapa')">Cancelar</button>
-      <button type="button" class="btn btn-primary" style="min-width:160px;" onclick="submitCompletarEtapa()">✓ Confirmar</button>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button type="button" onclick="closeModal('modal-completar-etapa');openModal('modal-hold');"
+              style="padding:10px 18px;background:none;color:#F5A623;border:1.5px solid #F5A623;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        Poner en Hold en su lugar
+      </button>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-completar-etapa')">Cancelar</button>
+        <button type="button" class="btn btn-primary" style="min-width:160px;" onclick="submitCompletarEtapa()">✓ Confirmar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -465,10 +569,12 @@ var _compPasoCodigo = null;
 var URL_LOTE_HOLD        = "{% url 'admin_lote_hold' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTE_LIBERAR     = "{% url 'admin_lote_liberar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_LIBERAR    = "{% url 'admin_orden_liberar' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_ORDEN_RECHAZAR   = "{% url 'admin_orden_rechazar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_REPORTE    = "{% url 'admin_orden_generar_reporte' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTE_REPORTE     = "{% url 'admin_lote_generar_reporte' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ETAPA_COMPLETAR  = "{% url 'admin_etapa_completar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_ORDEN_EDITAR     = "{% url 'admin_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
+var URL_LOTES_MAX_STOCK  = "{% url 'admin_lotes_max_stock' %}";
 
 function _csrfToken() {
   var existing = document.querySelector('input[name=csrfmiddlewaretoken]');
@@ -496,11 +602,80 @@ function verQR(pk, folio) {
   openModal('modal-qr');
 }
 
+// ── Selector de hora de 12h (HH/MM/AM-PM) sin segundos ──
+// El <input type="time"> nativo depende del locale del sistema operativo
+// para mostrar AM/PM (en muchos equipos con locale 24h no lo muestra
+// nunca) — este selector lo garantiza siempre, sin importar el SO. El
+// input oculto sigue mandando 'HH:MM' en 24h, que es lo que ya espera
+// _normalizar_hora() en produccion/views.py.
+function _horaPickerPoblar(prefix) {
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  if (h.options.length) return;
+  h.appendChild(new Option('HH', ''));
+  for (var i = 1; i <= 12; i++) { var v = String(i).padStart(2, '0'); h.appendChild(new Option(v, v)); }
+  m.appendChild(new Option('MM', ''));
+  for (var j = 0; j < 60; j++) { var v2 = String(j).padStart(2, '0'); m.appendChild(new Option(v2, v2)); }
+}
+function _horaPickerInit(prefix) {
+  _horaPickerPoblar(prefix);
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  var ap = document.getElementById(prefix + '-ap');
+  var sync = function () {
+    var hidden = document.getElementById(prefix + '-input');
+    if (!h.value || !m.value) { hidden.value = ''; return; }
+    var hh = parseInt(h.value, 10) % 12;
+    if (ap.value === 'PM') hh += 12;
+    hidden.value = String(hh).padStart(2, '0') + ':' + m.value;
+  };
+  h.onchange = sync; m.onchange = sync; ap.onchange = sync;
+}
+function _horaPickerSet(prefix, value24) {
+  _horaPickerPoblar(prefix);
+  var h = document.getElementById(prefix + '-h');
+  var m = document.getElementById(prefix + '-m');
+  var ap = document.getElementById(prefix + '-ap');
+  var hidden = document.getElementById(prefix + '-input');
+  if (!value24) { h.value = ''; m.value = ''; ap.value = 'AM'; hidden.value = ''; return; }
+  var partes = value24.split(':');
+  var hh = parseInt(partes[0], 10);
+  var mm = partes[1];
+  ap.value = hh >= 12 ? 'PM' : 'AM';
+  var h12 = hh % 12; if (h12 === 0) h12 = 12;
+  h.value = String(h12).padStart(2, '0');
+  m.value = mm;
+  hidden.value = String(hh).padStart(2, '0') + ':' + mm;
+}
+document.addEventListener('DOMContentLoaded', function () {
+  _horaPickerInit('orden-hora-inicio');
+  _horaPickerInit('orden-hora-fin');
+});
+
 // ── Crear / editar orden ──
 function actualizarProcesoOrden() {
   var sel = document.getElementById('orden-linea-input');
   var opt = sel.options[sel.selectedIndex];
   document.getElementById('orden-proceso-display').value = opt ? (opt.getAttribute('data-proceso') || '') : '';
+  _actualizarLotesMaxStock();
+}
+
+// Avisa, antes de guardar, cuántos lotes alcanza a producir el stock actual
+// de inventario (sp_lotestotalesXstock vía admin_lotes_max_stock).
+function _actualizarLotesMaxStock() {
+  var hint = document.getElementById('orden-lotes-max-hint');
+  var linea = document.getElementById('orden-linea-input').value;
+  var tipoOblea = document.getElementById('orden-tipo-oblea-input').value;
+  if (!linea || !tipoOblea) { hint.style.display = 'none'; return; }
+  fetch(URL_LOTES_MAX_STOCK + '?linea=' + encodeURIComponent(linea) + '&tipo_oblea=' + encodeURIComponent(tipoOblea))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.lotes_max === null || data.lotes_max === undefined) { hint.style.display = 'none'; return; }
+      hint.style.display = '';
+      hint.style.color = data.lotes_max > 0 ? '#718096' : '#EF5350';
+      hint.textContent = 'Stock disponible alcanza para máximo ' + data.lotes_max + ' lote(s).';
+    })
+    .catch(function () { hint.style.display = 'none'; });
 }
 
 function openNuevaOrden() {
@@ -508,11 +683,12 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  document.getElementById('orden-hora-inicio-input').value = '';
-  document.getElementById('orden-hora-fin-input').value = '';
+  _horaPickerSet('orden-hora-inicio', '');
+  _horaPickerSet('orden-hora-fin', '');
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
+  document.getElementById('orden-lotes-max-hint').style.display = 'none';
   document.getElementById('orden-cantidad-extra-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-extra-input').value = 0;
   document.getElementById('orden-estado-wrap').style.display = 'none';
@@ -527,8 +703,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio;
-  document.getElementById('orden-hora-fin-input').value = o.hora_fin;
+  _horaPickerSet('orden-hora-inicio', o.hora_inicio);
+  _horaPickerSet('orden-hora-fin', o.hora_fin);
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';
@@ -541,16 +717,14 @@ function openEditarOrden(pk) {
 }
 
 function _actualizarTipoObleaAgregarLote() {
-  var sel = document.getElementById('p2-orden');
-  var opt = sel.options[sel.selectedIndex];
-  document.getElementById('p2-tipo-oblea-display').textContent = opt ? (opt.getAttribute('data-tipo') || '—') : '—';
+  var ordenFull = _ordenActual ? _ordenes.find(function (x) { return String(x.pk) === String(_ordenActual.pk); }) : null;
+  document.getElementById('p2-tipo-oblea-display').textContent = ordenFull ? (ordenFull.tipo_oblea_nombre || '—') : '—';
 }
 
 function abrirModalAgregarLote() {
-  if (_ordenActual) {
-    var sel = document.getElementById('p2-orden');
-    if (sel) sel.value = _ordenActual.pk;
-  }
+  if (!_ordenActual) return;
+  document.getElementById('p2-orden').value = _ordenActual.pk;
+  document.getElementById('p2-orden-display').value = _ordenActual.numero;
   document.getElementById('p2-cantidad').value = 1;
   _actualizarTipoObleaAgregarLote();
   openModal('modal-agregar-lote');
@@ -597,12 +771,16 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   document.getElementById('det-orden-breadcrumb').textContent = numero;
   document.getElementById('det-orden-titulo').textContent = numero;
   document.getElementById('det-orden-meta').textContent = proceso + ' · ' + fi + ' → ' + ff;
+  var ordenFull = _ordenes.find(function(x){ return String(x.pk) === String(pk); });
+  document.getElementById('det-orden-creador').textContent = ordenFull
+    ? 'Creado por ' + (ordenFull.creado_por || '—') + ' · ' + (ordenFull.fecha_creacion_display || '—')
+    : '';
 
   var badgeMap = {
-    hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+    hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
     en_proceso: ['#FFCA28','#1A202C','En proceso'],
     cerrada:    ['#16A85E','#FFFFFF','Cerrada'],
-    rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
+    rechazado:  ['#EF5350','#FFFFFF','Rechazada'],
     pendiente:  ['#FFCA28','#1A202C','Pendiente'],
   };
   var b = badgeMap[estado] || badgeMap.pendiente;
@@ -613,21 +791,28 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   var enHold = estado === 'hold';
   document.getElementById('orden-hold-banner').style.display = enHold ? 'block' : 'none';
   document.getElementById('btn-liberar-orden').style.display = enHold ? 'inline-flex' : 'none';
+  document.getElementById('btn-rechazar-orden').style.display = enHold ? 'inline-flex' : 'none';
 
   var tbody = document.getElementById('tbody-lotes-orden');
   var lotesDeLaOrden = _lotes.filter(function(l){ return l.orden_pk === pk; });
+  var ordenPausada = (estado === 'hold' || estado === 'rechazado');
   tbody.innerHTML = lotesDeLaOrden.map(function(l) {
     var pct = l.total_pasos > 0 ? Math.round((l.pasos_completados/l.total_pasos)*100) : 0;
     var loteBadgeMap = {
       en_proceso: ['#FFCA28','#1A202C','En proceso'],
       aprobado:   ['#16A85E','#FFFFFF','Terminado'],
       rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
-      hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+      hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
       pendiente:  ['#FFCA28','#1A202C','Pendiente'],
     };
     var lb = loteBadgeMap[l.estado] || loteBadgeMap.pendiente;
-    var badgeEdo = '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+lb[0]+';color:'+lb[1]+';padding:3px 11px;border-radius:4px;font-size:12px;font-weight:600;">'+lb[2]+'</span>';
-    return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="cursor:pointer;" onclick="abrirLote('+l.pk+')">' +
+    // El lote realmente rechazado (la causa del Hold/rechazo de la orden)
+    // se ve completo; los demás se atenúan para dejar claro que no fueron
+    // la causa y que quedaron pausados, no que también fallaron.
+    var noEsLaCausa = ordenPausada && l.estado !== 'rechazado';
+    var badgeEdo = '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:96px;text-align:center;background:'+lb[0]+';color:'+lb[1]+';padding:3px 11px;border-radius:4px;font-size:12px;font-weight:600;'+(noEsLaCausa ? 'opacity:.45;' : '')+'">'+lb[2]+'</span>';
+    var rowStyle = 'cursor:pointer;' + (noEsLaCausa ? 'opacity:.55;' : '');
+    return '<tr class="lote-row" data-folio="'+l.folio.toLowerCase()+'" style="'+rowStyle+'" onclick="abrirLote('+l.pk+')">' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">'+l.folio+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.proceso_nombre+'</td>' +
       '<td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">'+l.hora_inicio+'</td>' +
@@ -663,12 +848,23 @@ function abrirLote(pk) {
   document.getElementById('lote-bread-orden').textContent = _ordenActual ? _ordenActual.numero : 'Orden';
   document.getElementById('lote-bread-lote').textContent  = lote.folio;
   document.getElementById('lote-titulo').textContent      = lote.folio;
-  document.getElementById('lote-meta').textContent        = lote.proceso_nombre;
+  document.getElementById('lote-meta').innerHTML = 'Proceso: <strong>' + lote.proceso_nombre + '</strong> &nbsp;·&nbsp;Línea: <strong>' + (lote.linea_nombre || '—') + '</strong>';
+  document.getElementById('lote-operador').innerHTML = 'Operador asignado: <strong>' + (lote.operador_nombre || '—') + '</strong>';
+  var piezasDetails = document.getElementById('lote-piezas-details');
+  if (lote.piezas && lote.piezas.length) {
+    document.getElementById('lote-piezas-summary').textContent = 'Piezas (' + lote.piezas.length + ')';
+    document.getElementById('lote-piezas-list').innerHTML = lote.piezas.map(function(z){
+      return '<li>' + z.nombre + ' <span class="lote-piezas-cant">× ' + z.cantidad + '</span></li>';
+    }).join('');
+    piezasDetails.style.display = '';
+  } else {
+    piezasDetails.style.display = 'none';
+  }
   var loteEstadoBadgeMap = {
     en_proceso: ['#FFCA28','#1A202C','En proceso'],
     aprobado:   ['#16A85E','#FFFFFF','Terminado'],
     rechazado:  ['#EF5350','#FFFFFF','Rechazado'],
-    hold:       ['#EF5350','#FFFFFF','⏸ En Hold'],
+    hold:       ['#F5A623','#FFFFFF','⏸ En Hold'],
     pendiente:  ['#FFCA28','#1A202C','Pendiente'],
   };
   var leb = loteEstadoBadgeMap[lote.estado] || loteEstadoBadgeMap.pendiente;
@@ -691,10 +887,16 @@ function abrirLote(pk) {
 
   document.getElementById('lote-stat-ini').textContent   = lote.dies_iniciales;
   document.getElementById('lote-stat-act').textContent   = lote.dies_activos;
-  document.getElementById('lote-stat-scrap').textContent = lote.scrap;
+  var scrapEl = document.getElementById('lote-stat-scrap');
+  scrapEl.textContent = lote.scrap;
+  scrapEl.style.color = lote.scrap ? '#EF5350' : 'var(--text-white)';
   var yieldEl = document.getElementById('lote-stat-yield');
   yieldEl.textContent = lote.yield_pct + '%';
   yieldEl.style.color = lote.yield_pct >= 95 ? '#16A85E' : lote.yield_pct >= 75 ? '#F5A623' : '#EF5350';
+
+  var pctLote = lote.total_pasos > 0 ? Math.round((lote.pasos_completados / lote.total_pasos) * 100) : 0;
+  document.getElementById('lote-progreso-label').textContent = lote.pasos_completados + '/' + lote.total_pasos + ' pasos · ' + pctLote + '%';
+  document.getElementById('lote-progreso-fill').style.width = pctLote + '%';
 
   var etapaActiva = lote.etapas.find(function(e){ return e.estado === 'en_curso'; });
   document.getElementById('hold-folio').textContent = lote.folio;
@@ -704,7 +906,7 @@ function abrirLote(pk) {
 
   document.getElementById('vista-ordenes').style.display = 'none';
   document.getElementById('vista-detalle-orden').style.display = 'none';
-  document.getElementById('vista-detalle-lote').style.display = 'block';
+  document.getElementById('vista-detalle-lote').style.display = 'flex';
 }
 
 // ── Renderizar trazabilidad con barra de progreso ──
@@ -733,11 +935,11 @@ function renderTrazabilidad(lote) {
       : 'background:#E2E8F0;color:#718096;';
 
     var badgeHtml = isCompleted
-      ? '<span style="background:#16A85E;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">Aprobado</span>'
+      ? '<span style="background:#16A85E;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Aprobado</span>'
       : isRejected
-        ? '<span style="background:#EF5350;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">Rechazado</span>'
+        ? '<span style="background:#EF5350;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">Rechazado</span>'
         : isActive
-          ? '<span style="background:#009EAF;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-left:8px;">En curso</span>'
+          ? '<span style="background:#009EAF;color:#FFFFFF;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;">En curso</span>'
           : '';
 
     var metaHtml = etapa.meta
@@ -765,14 +967,19 @@ function renderTrazabilidad(lote) {
     }
 
     // Botón completar etapa — SOLO en el paso activo, ancho completo dentro del paso.
-    // Si el lote ya está en Hold o Rechazado, o si la ORDEN completa quedó en
-    // Hold por exceso de scrap, no se puede seguir avanzando.
+    // Si el lote ya está en Hold, Rechazado o Terminado (aprobado), o si la
+    // ORDEN completa quedó en Hold por exceso de scrap, no se puede seguir
+    // avanzando. Esto se valida ANTES de mostrar el botón — el backend
+    // también lo valida al recibir el POST, pero no debe ser la única
+    // barrera, o el usuario llena el form completo para nada.
     var completarBtn = '';
-    if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado' || lote.orden_en_hold)) {
+    if (isActive && (lote.estado === 'hold' || lote.estado === 'rechazado' || lote.estado === 'aprobado' || lote.orden_en_hold || lote.orden_rechazada)) {
       completarBtn = '<div style="margin-top:14px;padding:12px;border-radius:9px;background:#EF5350;color:#FFFFFF;font-size:13px;text-align:center;font-weight:600;">'+
         (lote.estado === 'hold' ? 'Este lote está en Hold. No se pueden completar etapas.' :
           lote.estado === 'rechazado' ? 'Este lote fue rechazado y ya no puede continuar con más etapas.' :
-          'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.')+
+          lote.estado === 'aprobado' ? 'Este lote ya está terminado y no puede continuar con más etapas.' :
+          lote.orden_en_hold ? 'La orden de este lote está en Hold por exceso de scrap. Libérala antes de continuar.' :
+          'La orden de este lote fue rechazada. No se pueden completar más etapas.')+
         '</div>';
     } else if (isActive) {
       completarBtn = '<button onclick="event.stopPropagation();abrirCompletarEtapa(\''+etapa.nombre+'\',\''+lote.folio+'\','+lote.dies_activos+',\''+etapa.codigo+'\','+lote.dies_iniciales+')" '+
@@ -813,16 +1020,14 @@ function renderTrazabilidad(lote) {
                 : (i+1)) +
           '</div>' +
           '<div style="flex:1;">' +
-            '<div style="display:flex;align-items:center;flex-wrap:wrap;">' +
-              '<span style="font-size:15px;font-weight:'+(isActive?'600':'400')+';color:'+(isPending?'#A0AEC0':'#1A202C')+';">'+etapa.nombre+'</span>' +
-              badgeHtml +
-            '</div>' +
+            '<span style="font-size:15px;font-weight:'+(isActive?'600':'400')+';color:'+(isPending?'#A0AEC0':'#1A202C')+';">'+etapa.nombre+'</span>' +
             metaHtml +
             progressHtml +
             completarBtn +
           '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
+          badgeHtml +
           chevron +
         '</div>' +
       '</div>' +
@@ -897,10 +1102,10 @@ function abrirCompletarEtapa(nombreEtapa, loteFolio, diesActivos, pasoCodigo, di
   document.getElementById('defectos-comp-list').innerHTML = '';
   document.getElementById('comp-scrap').value = 0;
   document.getElementById('comp-comentarios').value = '';
-  document.getElementById('yield-preview-comp').textContent = '';
   selectResultadoComp('aprobado');
   document.getElementById('comp-modal-titulo').textContent = 'Completar — ' + nombreEtapa;
   document.getElementById('comp-modal-sub').textContent    = loteFolio + ' · ' + diesActivos + ' dies activos';
+  calcularYieldPreviewComp();
   compActualizarRechazoDisponible();
   openModal('modal-completar-etapa');
 }
@@ -928,11 +1133,8 @@ function compActualizarRechazoDisponible() {
     btn.style.color = '#718096';
   }
 
-  var umbral = document.getElementById('comp-rechazo-umbral');
-  if (umbral) {
-    var scrapUmbral = Math.max(0, _compDiesActivos - 0.95 * _compDiesIniciales);
-    umbral.textContent = Math.floor(scrapUmbral) + ' unidades';
-  }
+  var aviso = document.getElementById('comp-aviso-umbral');
+  if (aviso) aviso.style.display = _compRechazoHabilitado ? 'flex' : 'none';
 }
 
 function selectResultadoComp(val) {
@@ -959,16 +1161,23 @@ function selectResultadoComp(val) {
 }
 
 function calcularYieldPreviewComp() {
-  var sub   = document.getElementById('comp-modal-sub').textContent;
-  var match = sub.match(/(\d+)\s*dies/);
-  var total = match ? parseInt(match[1]) : 0;
+  // El yield siempre se calcula sobre dies_iniciales (fijo, del Tipo_Oblea),
+  // no sobre dies_activos actuales — mismo criterio que usa el backend en
+  // _etapa_completar / _calcular_yield, para que este preview nunca se
+  // desalinee del resultado real al confirmar.
   var scrap = parseInt(document.getElementById('comp-scrap').value) || 0;
-  var el    = document.getElementById('yield-preview-comp');
-  if (total > 0 && scrap <= total) {
-    var y = (((total-scrap)/total)*100).toFixed(1);
-    el.style.color = y >= 90 ? '#16A85E' : y >= 75 ? '#F5A623' : '#EF5350';
-    el.textContent = 'Yield estimado: ' + y + '%';
-  } else { el.textContent = ''; }
+  var actualEl = document.getElementById('comp-yield-actual');
+  var proyEl   = document.getElementById('yield-preview-comp');
+  if (_compDiesIniciales > 0) {
+    var yActual = (_compDiesActivos / _compDiesIniciales * 100).toFixed(1);
+    actualEl.textContent = yActual + '%';
+    var yProy = ((_compDiesActivos - scrap) / _compDiesIniciales * 100).toFixed(1);
+    proyEl.style.color = yProy >= 95 ? '#16A85E' : yProy >= 90 ? '#F5A623' : '#EF5350';
+    proyEl.textContent = yProy + '%';
+  } else {
+    actualEl.textContent = '—';
+    proyEl.textContent = '—';
+  }
 }
 
 function agregarDefectoComp() {
@@ -1034,8 +1243,24 @@ function volverAOrden() {
 
 function liberarOrdenActual() {
   if (!_ordenActual) return;
-  if (!confirm('¿Liberar esta orden del Hold? Se podrán volver a completar etapas de sus lotes.')) return;
+  openModal('modal-liberar-orden');
+}
+function _confirmarLiberarOrden() {
+  if (!_ordenActual) return;
+  closeModal('modal-liberar-orden');
   _submitForm(URL_ORDEN_LIBERAR.replace('__PK__', _ordenActual.pk), {});
+}
+
+function rechazarOrdenActual() {
+  if (!_ordenActual) return;
+  document.getElementById('rechazar-orden-motivo').value = '';
+  openModal('modal-rechazar-orden');
+}
+function _confirmarRechazarOrden() {
+  if (!_ordenActual) return;
+  var motivo = document.getElementById('rechazar-orden-motivo').value.trim();
+  closeModal('modal-rechazar-orden');
+  _submitForm(URL_ORDEN_RECHAZAR.replace('__PK__', _ordenActual.pk), {motivo: motivo});
 }
 
 function generarReporteOrden() {

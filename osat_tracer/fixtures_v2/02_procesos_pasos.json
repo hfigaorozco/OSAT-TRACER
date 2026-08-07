@@ -18,7 +18,7 @@
     "fields": {
       "codigo": "ens-1",
       "nombre": "Ensamblado QFN Std",
-      "descripcion": "Proceso de ensamblado OSAT para empaque QFN estándar (12 pasos)"
+      "descripcion": "Proceso de ensamblado OSAT para empaque QFN estándar"
     }
   },
   {
@@ -26,7 +26,7 @@
     "fields": {
       "codigo": "ens-2",
       "nombre": "Ensamblado BGA HD",
-      "descripcion": "Proceso de ensamblado OSAT para empaque BGA de alta densidad (12 pasos)"
+      "descripcion": "Proceso de ensamblado OSAT para empaque BGA de alta densidad"
     }
   },
   {
