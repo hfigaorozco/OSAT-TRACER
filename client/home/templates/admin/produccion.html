@@ -17,27 +17,26 @@
   </div>
 
   <div class="filter-bar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Buscar..." id="search-ordenes" oninput="filterOrdenes(this.value)" class="form-control">
-    </div>
-    <select id="filter-estado-orden" onchange="filterOrdenes()" class="form-control" style="width:180px;">
-      <option value="">Todos los estados</option>
-      <option value="abierta">Abierta</option>
-      <option value="en_proceso">En proceso</option>
-      <option value="hold">En Hold</option>
-      <option value="cerrada">Cerrada</option>
-      <option value="rechazado">Rechazado</option>
-    </select>
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="q" placeholder="Buscar..." value="{{ q }}" class="form-control" onkeydown="if(event.key==='Enter'){this.form.submit();}">
+      </div>
+      <select name="estado" class="form-control" style="width:180px;" onchange="this.form.submit()">
+        <option value="">Todos los estados</option>
+        <option value="abierta" {% if estado_filtro == "abierta" %}selected{% endif %}>Abierta</option>
+        <option value="en_proceso" {% if estado_filtro == "en_proceso" %}selected{% endif %}>En proceso</option>
+        <option value="hold" {% if estado_filtro == "hold" %}selected{% endif %}>En Hold</option>
+        <option value="cerrada" {% if estado_filtro == "cerrada" %}selected{% endif %}>Cerrada</option>
+        <option value="rechazado" {% if estado_filtro == "rechazado" %}selected{% endif %}>Rechazado</option>
+      </select>
+      {% if q or estado_filtro %}
+        <a href="{% url 'admin_produccion' %}" class="btn btn-outline">Limpiar filtros</a>
+      {% endif %}
+    </form>
   </div>
 
   <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
-    <div style="padding:10px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:flex-end;">
-      <div class="pager-controls" id="pager-ordenes">
-        <button type="button" class="pager-btn" id="pager-ordenes-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button type="button" class="pager-btn" id="pager-ordenes-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
-    </div>
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;" id="tabla-ordenes">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -55,8 +54,8 @@
         </tr>
       </thead>
       <tbody id="tbody-ordenes">
-        {% for orden in ordenes %}
-        <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}" style="transition:background .12s;">
+        {% for orden in ordenes_page %}
+        <tr class="orden-row" style="transition:background .12s;">
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">
             {% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}{{ orden.numero }}
           </td>
@@ -102,6 +101,7 @@
       </tbody>
     </table>
   </div>
+  {% include "components/pagination.html" with page_obj=ordenes_page extra_params=produccion_extra_params %}
 </div>
 
 
@@ -745,17 +745,10 @@ function abrirModalAgregarLote() {
 }
 
 // ── Restaurar contexto de navegación tras un postback (?orden=&lote=) ──
+// El filtro de estado ya llega pre-seleccionado desde el servidor
+// (estado_filtro en la URL), no hace falta reaplicarlo aquí.
 document.addEventListener('DOMContentLoaded', function () {
-  _ordenesPager = initRowPager({tbody: '#tbody-ordenes', rowSelector: '.orden-row', pageSize: 10,
-    prevId: 'pager-ordenes-prev', nextId: 'pager-ordenes-next', controlsId: 'pager-ordenes'});
-
   var params = new URLSearchParams(window.location.search);
-
-  var estado = params.get('estado');
-  if (estado) {
-    var selEstado = document.getElementById('filter-estado-orden');
-    if (selEstado) { selEstado.value = estado; filterOrdenes(); }
-  }
 
   var ordenPk = params.get('orden');
   var lotePk  = params.get('lote');
@@ -765,19 +758,6 @@ document.addEventListener('DOMContentLoaded', function () {
   abrirOrden(o.pk, o.numero, o.proceso_nombre, o.hora_inicio_display, o.hora_fin_display, o.estado);
   if (lotePk) abrirLote(parseInt(lotePk, 10));
 });
-
-// ── Filtros ──
-var _ordenesPager = null;
-function filterOrdenes(q) {
-  q = (q || '').toLowerCase();
-  var estado = document.getElementById('filter-estado-orden').value;
-  document.querySelectorAll('.orden-row').forEach(function(row) {
-    var matchQ = !q || (row.dataset.numero || '').includes(q);
-    var matchE = !estado || row.dataset.estado === estado;
-    row.dataset.filteredOut = (matchQ && matchE) ? '' : 'true';
-  });
-  if (_ordenesPager) _ordenesPager.reset();
-}
 
 // ── Navegación ──
 function abrirOrden(pk, numero, proceso, fi, ff, estado) {

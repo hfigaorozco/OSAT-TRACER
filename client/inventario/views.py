@@ -10,27 +10,38 @@ from home.views import _base_ctx, _get, _get_many, _post, _patch, _post_file
 import requests
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
-PAGE_SIZE_INVENTARIO = 10
+PAGE_SIZE_INVENTARIO = 7
 
 
 # ADMIN — INVENTARIO
 
 class AdminInventario(generic.View):
     template_name = 'admin/inventario.html'
-    url_base = 'http://localhost:8001/api/v1/list/piezas/'
-    context = {}
-    response = None
 
     def get(self, request):
-        self.request = requests.get(url=self.url_base).json()
+        piezas = _get('/v1/list/piezas/', [])
         procesos_bd, tipos_oblea_bd = _get_many('/v1/list/Proceso/', '/v1/list/TipoOblea/')
-        self.context = {
-            "piezas": self.request,
+
+        q = request.GET.get('q', '').strip().lower()
+        if q:
+            piezas = [p for p in piezas if q in p.get('nombre', '').lower()]
+
+        # Mismo patrón de paginación server-side + componente numerado que
+        # el resto de la app (Personal/Maquinaria/Reportes/Organización/
+        # Inventario de supervisor) — antes esta vista mandaba la lista
+        # completa sin paginar y el "avance" era solo un pager de flechas
+        # en JS dentro del encabezado de la tabla.
+        piezas_page = Paginator(piezas, PAGE_SIZE_INVENTARIO).get_page(request.GET.get('page', 1))
+        inventario_extra_params = (urlencode({'q': q}) + '&') if q else ''
+
+        context = {
+            "piezas_page": piezas_page,
+            "inventario_extra_params": inventario_extra_params,
             "procesos": procesos_bd,
             "tipos_oblea": tipos_oblea_bd,
         }
 
-        return render(request, self.template_name, self.context)
+        return render(request, self.template_name, context)
     
 
 class AdminInventarioDetail(generic.View):

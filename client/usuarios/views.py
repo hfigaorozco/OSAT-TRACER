@@ -10,7 +10,7 @@ from produccion.views import _estado_orden_display, _calcular_yield_sp
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 
-PAGE_SIZE_PERSONAL = 9
+PAGE_SIZE_PERSONAL = 7
 
 _RFC_RE = re.compile(r'^[A-Z0-9]{13}$')
 _USERNAME_RE = re.compile(r'^[a-z0-9._-]+$')
