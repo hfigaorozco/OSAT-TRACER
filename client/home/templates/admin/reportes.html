@@ -269,8 +269,14 @@ function switchReportTab(id, btn) {
     });
     document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    const params = {'tab-produccion': 'produccion', 'tab-inventario': 'inventario', 'tab-kpi': 'kpi'};
-    history.replaceState(null, '', '?tab=' + params[id]);
+    const tabNames = {'tab-produccion': 'produccion', 'tab-inventario': 'inventario', 'tab-kpi': 'kpi'};
+    // Preserva subtab_prod/page_* que ya traiga la URL (ej. al llegar desde
+    // el botón "Ver" de una notificación) — antes esto reemplazaba la
+    // query string entera por solo "?tab=...", borrando esos params antes
+    // de que el segundo IIFE de abajo alcanzara a leerlos.
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', tabNames[id]);
+    history.replaceState(null, '', '?' + params.toString());
 }
 (function () {
     const params = new URLSearchParams(window.location.search);
@@ -295,6 +301,11 @@ function switchProdSubTab(id, btn) {
 }
 (function () {
     const params = new URLSearchParams(window.location.search);
+    // Antes esto corría siempre, sin importar qué pestaña de arriba estaba
+    // activa — switchProdSubTab() fuerza tab=produccion en la URL, así que
+    // al llegar con ?tab=inventario o ?tab=kpi (ej. desde el botón "Ver" de
+    // una notificación) esto pisaba silenciosamente la pestaña correcta.
+    if ((params.get('tab') || 'produccion') !== 'produccion') return;
     const sub = params.get('subtab_prod') || 'orden';
     const btn = document.getElementById(sub === 'lote' ? 'subbtn-prod-lote' : 'subbtn-prod-orden');
     if (btn) switchProdSubTab(sub === 'lote' ? 'lote' : 'orden', btn);

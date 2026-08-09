@@ -6,70 +6,93 @@
   <div><h1 class="page-title">Órdenes de producción</h1><p class="page-subtitle">Gestión y seguimiento de órdenes</p></div>
   <div class="page-actions"><button class="btn btn-primary" onclick="openNuevaOrden()">+ Nueva orden</button></div>
 </div>
-<div class="card-table">
-  <div style="padding:25px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <h3 style="font-weight:600;font-size:15px;margin:0;">Todas las órdenes</h3>
-    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-      <div style="position:relative;">
-        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Buscar por número" id="search-ordenes" oninput="filterOrdenes(this.value)"
-          class="form-control" style="height:38px;padding-left:32px;width:220px;">
-      </div>
-      <div style="position:relative;">
-        <label style="position:absolute;top:-18px;left:0;font-size:12px;color:var(--text-muted);">Estado</label>
-        <select id="filter-estado-orden" onchange="filterOrdenes()" class="form-control" style="height:38px;width:170px;">
-          <option value="">Todos</option>
-          <option value="abierta">Abierta</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="hold">En Hold</option>
-          <option value="cerrada">Cerrada</option>
-          <option value="rechazado">Rechazado</option>
-        </select>
-      </div>
-      <div class="pager-controls" id="pager-ordenes">
-        <button type="button" class="pager-btn" id="pager-ordenes-prev" title="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button type="button" class="pager-btn" id="pager-ordenes-next" title="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
+<div class="filter-bar">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" placeholder="Buscar..." value="{{ q }}" class="form-control" onkeydown="if(event.key==='Enter'){this.form.submit();}">
     </div>
-  </div>
-  <div class="table-wrap">
-    <table class="data-table">
-      <thead><tr><th>Número</th><th>Proceso</th><th>Línea</th><th>Tipo de oblea</th><th>Fecha de creación</th><th>Fecha inicio</th><th>Fecha fin</th><th>Lotes</th><th>Progreso</th><th>Estado</th><th>Acciones</th></tr></thead>
-      <tbody id="tbody-ordenes">
-        {% for orden in ordenes %}
-        <tr class="orden-row" data-numero="{{ orden.numero|lower }}" data-estado="{{ orden.estado }}">
-          <td>{% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}<a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="font-weight:600;color:#16A85E;font-family:monospace;">{{ orden.numero }}</a></td>
-          <td>{{ orden.proceso.nombre|default:"—" }}</td>
-          <td>{{ orden.linea_nombre }}</td>
-          <td>{{ orden.tipo_oblea_nombre }}</td>
-          <td>{{ orden.fecha_creacion_display }}</td>
-          <td>{{ orden.fecha_inicio_display }}</td>
-          <td>{{ orden.fecha_fin_display }}</td>
-          <td style="text-align:center;">{{ orden.total_lotes|default:"0" }}</td>
-          <td style="min-width:120px;">
-            {% with pct=orden.pct_completados|default:0 %}
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="progress-bar"><div class="progress-fill" style="width:{{ pct }}%;"></div></div>
-              <span style="font-size:12px;color:#718096;white-space:nowrap;">{{ orden.lotes_completados|default:"0" }}/{{ orden.total_lotes|default:"0" }}</span>
-            </div>
-            {% endwith %}
-          </td>
-          <td>{% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>{% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>{% elif orden.estado == 'abierta' %}<span class="badge badge-abierta">Abierta</span>{% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>{% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>{% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}</td>
-          <td class="table-actions">
-            <a href="{% url 'supervisor_orden_detalle' orden.pk %}" class="action-btn" title="Ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
-            <button class="action-btn" title="Editar" onclick="openEditarOrden('{{ orden.pk }}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <a href="{{ backend_url }}/v1/orden/{{ orden.pk }}/etiquetas/QR/" target="_blank" class="action-btn" title="Ver / imprimir códigos QR de los lotes">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
-            </a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="10"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>No hay órdenes de producción</p><button class="btn btn-primary btn-sm" onclick="openNuevaOrden()">Crear primera orden</button></div></td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    <select name="estado" class="form-control" style="width:180px;" onchange="this.form.submit()">
+      <option value="">Todos los estados</option>
+      <option value="abierta" {% if estado_filtro == "abierta" %}selected{% endif %}>Abierta</option>
+      <option value="en_proceso" {% if estado_filtro == "en_proceso" %}selected{% endif %}>En proceso</option>
+      <option value="hold" {% if estado_filtro == "hold" %}selected{% endif %}>En Hold</option>
+      <option value="cerrada" {% if estado_filtro == "cerrada" %}selected{% endif %}>Cerrada</option>
+      <option value="rechazado" {% if estado_filtro == "rechazado" %}selected{% endif %}>Rechazado</option>
+    </select>
+    {% if q or estado_filtro %}
+      <a href="{% url 'supervisor_ordenes' %}" class="btn btn-outline">Limpiar filtros</a>
+    {% endif %}
+  </form>
 </div>
+
+<div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
+  <table style="width:100%;border-collapse:collapse;font-size:14.5px;" id="tabla-ordenes">
+    <thead style="background:#F7FAFC;">
+      <tr>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Número</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Proceso</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Línea</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tipo de oblea</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fecha de creación</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Inicio</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Fin Estimado</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Lotes</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Completados</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-ordenes">
+      {% for orden in ordenes_page %}
+      <tr class="orden-row" style="transition:background .12s;">
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;font-family:monospace;font-weight:600;color:#009EAF;">
+          {% if orden.tiene_hold %}<span title="Tiene lote(s) en Hold" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#F5A623;margin-right:6px;vertical-align:middle;"></span>{% endif %}{{ orden.numero }}
+        </td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.proceso.nombre|default:"—" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.linea_nombre }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.tipo_oblea_nombre }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.fecha_creacion_display }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ orden.hora_inicio }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#009EAF;">{{ orden.hora_fin }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;text-align:center;">{{ orden.total_lotes|default:"0" }}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden;min-width:60px;">
+              <div style="height:100%;border-radius:999px;background:#16A85E;width:{{ orden.pct_completados|default:0 }}%;"></div>
+            </div>
+            <span style="font-size:13px;color:#718096;white-space:nowrap;">{{ orden.lotes_completados|default:"0" }}/{{ orden.total_lotes|default:"0" }}</span>
+          </div>
+        </td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
+          {% if orden.estado == 'hold' %}<span class="badge badge-hold">⏸ En Hold</span>
+          {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En Proceso</span>
+          {% elif orden.estado == 'abierta' %}<span class="badge badge-abierta">Abierta</span>
+          {% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>
+          {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
+          {% else %}<span class="badge badge-pendiente">Pendiente</span>{% endif %}
+        </td>
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
+          <a href="{% url 'supervisor_orden_detalle' orden.pk %}" style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;display:inline-flex;" title="Ver detalle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </a>
+          <button onclick="event.stopPropagation();openEditarOrden('{{ orden.pk }}')"
+                  style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;" title="Editar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <a href="{{ backend_url }}/v1/orden/{{ orden.pk }}/etiquetas/QR/" target="_blank" onclick="event.stopPropagation();"
+             style="color:#718096;background:none;border:none;cursor:pointer;padding:6px;display:inline-flex;" title="Ver / imprimir códigos QR de los lotes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="14" y1="20.5" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="21" x2="21" y2="21"/></svg>
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="11" style="padding:48px;text-align:center;color:#718096;">No hay órdenes de producción</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" with page_obj=ordenes_page extra_params=produccion_extra_params %}
 
 <div class="modal-overlay" id="modal-orden" style="display:none;" onclick="if(event.target===this)closeModal('modal-orden')">
   <div class="modal-card modal-lg">
@@ -176,30 +199,6 @@
 var ORDENES_DATA = JSON.parse(document.getElementById('ordenes-data').textContent);
 var URL_ORDEN_EDITAR = "{% url 'supervisor_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTES_MAX_STOCK = "{% url 'supervisor_lotes_max_stock' %}";
-
-// ── Filtros ──
-var _ordenesPager = null;
-function filterOrdenes(q) {
-  q = (q || '').toLowerCase();
-  var estado = document.getElementById('filter-estado-orden').value;
-  document.querySelectorAll('.orden-row').forEach(function(row) {
-    var matchQ = !q || (row.dataset.numero || '').includes(q);
-    var matchE = !estado || row.dataset.estado === estado;
-    row.dataset.filteredOut = (matchQ && matchE) ? '' : 'true';
-  });
-  if (_ordenesPager) _ordenesPager.reset();
-}
-
-// ── Restaurar filtro de estado tras venir de un enlace (?estado=) ──
-document.addEventListener('DOMContentLoaded', function () {
-  _ordenesPager = initRowPager({tbody: '#tbody-ordenes', rowSelector: '.orden-row', pageSize: 10,
-    prevId: 'pager-ordenes-prev', nextId: 'pager-ordenes-next', controlsId: 'pager-ordenes'});
-
-  var estado = new URLSearchParams(window.location.search).get('estado');
-  if (!estado) return;
-  var selEstado = document.getElementById('filter-estado-orden');
-  if (selEstado) { selEstado.value = estado; filterOrdenes(); }
-});
 
 // ── Selector de hora de 12h (HH/MM/AM-PM) sin segundos ──
 // El <input type="time"> nativo depende del locale del sistema operativo

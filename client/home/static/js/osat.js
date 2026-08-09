@@ -20,20 +20,73 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ── Modal ── */
+// El contenido de la página no hace scroll en <body> (el layout fija
+// .app-shell a 100vh con overflow:hidden) sino en .main-content, que tiene
+// su propio overflow-y:auto — bloquear solo document.body.style.overflow no
+// evita que .main-content siga siendo scrolleable detrás del modal. Eso
+// dejaba que listas con paginación (ej. Maquinaria) se pudieran desplazar
+// por debajo del overlay mientras el modal seguía abierto, terminando
+// superpuestas visualmente con él.
+function _modalScrollContainer() {
+  return document.querySelector('.main-content') || document.body;
+}
 function openModal(id) {
   var m = document.getElementById(id);
-  if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  if (m) { m.style.display = 'flex'; _modalScrollContainer().style.overflow = 'hidden'; }
 }
 function closeModal(id) {
   var m = document.getElementById(id);
-  if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+  if (m) { m.style.display = 'none'; _modalScrollContainer().style.overflow = ''; }
 }
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.style.display = 'none';
-    document.body.style.overflow = '';
+    _modalScrollContainer().style.overflow = '';
   }
 });
+
+/* ── Auto-refresh de dashboard ── Los dashboards de admin/supervisor son
+   páginas renderizadas por Django (sin polling ni websockets), así que
+   antes se quedaban "congeladas" hasta que alguien recargaba a mano —
+   aunque los datos que muestran (semáforo KPI, órdenes activas, pasos
+   completados hoy) sí se recalculan en vivo en cada request.
+
+   Antes esto hacía location.reload() cada N segundos — funcionaba pero
+   se notaba: toda la página parpadeaba/rebotaba visiblemente cada vez,
+   como si se "reiniciara sola". Ahora se pide de fondo el HTML fresco vía
+   fetch() y solo se reemplaza el innerHTML de los bloques que sí cambian
+   (kpi-plain-row, semáforo, órdenes activas, alertas activas) — nada de
+   navegación real, así que no hay parpadeo ni se pierde el scroll. Como
+   los botones de paginación quedan dentro de esos bloques, al
+   reemplazarlos quedan nodos nuevos sin listeners viejos pegados; por
+   eso el caller debe volver a llamar sus init de paginación (onRefresh)
+   después de cada actualización. Se salta la actualización si la pestaña
+   no está visible o si hay un modal abierto, para no interrumpir al
+   usuario a media acción. */
+var DASHBOARD_SOFT_REFRESH_IDS = [
+  'kpi-plain-row', 'card-semaforo', 'card-ordenes-activas', 'card-alertas-activas'
+];
+
+function iniciarAutoRefreshDashboard(opts) {
+  opts = opts || {};
+  var intervaloMs = opts.intervaloMs || 30000;
+  setInterval(function () {
+    if (document.visibilityState !== 'visible') return;
+    if (document.querySelector('.modal-overlay[style*="flex"]')) return;
+    fetch(location.href)
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var fresh = new DOMParser().parseFromString(html, 'text/html');
+        DASHBOARD_SOFT_REFRESH_IDS.forEach(function (id) {
+          var actual = document.getElementById(id);
+          var nuevo = fresh.getElementById(id);
+          if (actual && nuevo) actual.innerHTML = nuevo.innerHTML;
+        });
+        if (typeof opts.onRefresh === 'function') opts.onRefresh();
+      })
+      .catch(function () {});
+  }, intervaloMs);
+}
 
 /* ── Tabs ── */
 function switchTab(tabId, btn, paneSelector) {
@@ -95,6 +148,21 @@ function showReportNotification(message, url, type) {
     '<button onclick="this.closest(\'.report-notif\').remove()" style="color:#A0AEC0;background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;">&#10005;</button>';
   _notifStack().appendChild(notif);
   setTimeout(function(){ if (notif.parentNode) notif.remove(); }, NOTIF_DURATION_MS);
+}
+
+/* ── Login: no dejar mandar el form con usuario o contraseña vacíos ──
+   El form de login trae novalidate (para no depender del globo nativo del
+   navegador, que no está en español ni sigue el diseño de la app) y este
+   validador la reemplaza mostrando el mismo banner-error que ya se usa
+   para los mensajes que manda el servidor. */
+function validarLoginNoVacio(evt) {
+  var usuario = document.getElementById('id_username');
+  var password = document.getElementById('id_password');
+  var aviso = document.getElementById('login-empty-error');
+  var vacio = !usuario.value.trim() || !password.value.trim();
+  if (aviso) aviso.style.display = vacio ? 'flex' : 'none';
+  if (vacio && evt) evt.preventDefault();
+  return !vacio;
 }
 
 /* ── Password toggle ── */

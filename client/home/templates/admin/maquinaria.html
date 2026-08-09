@@ -52,7 +52,7 @@
           <td>{{ maq.linea_nombre|default:"—" }}</td>
           <td>
             {% if maq.estado_nombre == 'Activa' %}<span class="badge badge-activo">Activa</span>
-            {% elif maq.estado_nombre == 'Inactiva' %}<span class="badge badge-en-proceso">Inactiva</span>
+            {% elif maq.estado_nombre == 'Inactiva' %}<span class="badge badge-inactivo">Inactiva</span>
             {% else %}<span class="badge badge-inactivo">{{ maq.estado_nombre|default:"—" }}</span>{% endif %}
           </td>
           <td>
@@ -80,9 +80,9 @@
       </tbody>
     </table>
   </div>
-
-  {% include "components/pagination.html" with page_obj=maquinas_page extra_params=maquinaria_extra_params %}
 </div>
+
+{% include "components/pagination.html" with page_obj=maquinas_page extra_params=maquinaria_extra_params %}
 
 <!-- Modal nueva / editar máquina -->
 <div class="modal-overlay" id="modal-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-maquina')">

@@ -691,6 +691,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
     """
     etapas = serializers.SerializerMethodField()
     orden_numero = serializers.SerializerMethodField()
+    orden_estado = serializers.SerializerMethodField()
     dies_iniciales = serializers.SerializerMethodField()
     dies_activos = serializers.SerializerMethodField()
 
@@ -703,6 +704,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
             "dies_activos",
             "orden",
             "orden_numero",
+            "orden_estado",
             "estado",
             "codigoQR",
             "etapas",
@@ -710,6 +712,13 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
 
     def get_orden_numero(self, obj):
         return obj.orden.numero if obj.orden else None
+
+    def get_orden_estado(self, obj):
+        """Estado de la ORDEN (no del lote): la app móvil necesita saberlo
+        para bloquear "Completar etapa" cuando la orden completa está en
+        Hold o fue rechazada aunque este lote individual siga 'proce'
+        (ver client/produccion/views.py::_completar_etapa, mismo chequeo)."""
+        return obj.orden.estado_id if obj.orden else None
 
     def get_dies_iniciales(self, obj):
         """Fijo: cantidadDies del Tipo_Oblea de la orden. A diferencia de
