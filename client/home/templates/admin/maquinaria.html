@@ -80,9 +80,9 @@
       </tbody>
     </table>
   </div>
-
-  {% include "components/pagination.html" with page_obj=maquinas_page extra_params=maquinaria_extra_params %}
 </div>
+
+{% include "components/pagination.html" with page_obj=maquinas_page extra_params=maquinaria_extra_params %}
 
 <!-- Modal nueva / editar máquina -->
 <div class="modal-overlay" id="modal-maquina" style="display:none;" onclick="if(event.target===this)closeModal('modal-maquina')">

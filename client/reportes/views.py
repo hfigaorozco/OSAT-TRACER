@@ -7,7 +7,7 @@ from django.views import View
 from home.views import _get, _get_many, _post, BACKEND_URL
 from produccion.views import _generar_reporte_manual
 
-PAGE_SIZE_REPORTES = 9
+PAGE_SIZE_REPORTES = 7
 
 MESES = {
     1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio',

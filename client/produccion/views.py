@@ -2,6 +2,7 @@ import json
 import re
 import uuid
 from datetime import date, timedelta
+from urllib.parse import urlencode
 from django.db import connection
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -10,7 +11,8 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _delete, _FakeObj, BACKEND_URL
 
-PAGE_SIZE_ORGANIZACION = 9
+PAGE_SIZE_ORGANIZACION = 7
+PAGE_SIZE_PRODUCCION = 7
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
 _HORA_RE = re.compile(r'^\d{2}:\d{2}:\d{2}$')
@@ -769,11 +771,11 @@ def _generar_reporte_manual(request, orden_num, oblea_num=None, reportes_url_nam
     })
     if ok:
         # Calcula a qué página/sub-pestaña de Reportes le toca este reporte
-        # nuevo, con el mismo orden y el mismo PAGE_SIZE_REPORTES (=9) que usa
+        # nuevo, con el mismo orden y el mismo PAGE_SIZE_REPORTES (=7) que usa
         # BaseReportesView.get() en reportes/views.py — duplicado aquí (en vez
         # de importado) porque reportes/views.py ya importa de este archivo
         # (_generar_reporte_manual) y un import cruzado sería circular.
-        PAGE_SIZE_REPORTES = 9
+        PAGE_SIZE_REPORTES = 7
         reportes_prod = _get('/v1/list/reportes/', [])
         reportes_prod = sorted(reportes_prod, key=lambda r: (r.get('fecha', ''), r.get('hora', '')), reverse=True)
         es_lote = bool(oblea_num)
@@ -1124,6 +1126,23 @@ def admin_produccion(request):
         'breadcrumbs': [],
     }
 
+    # Filtro + paginación server-side de la tabla de órdenes — mismo patrón
+    # que Personal/Maquinaria/Reportes/Organización/Inventario (numerado,
+    # abajo de la tabla). "ordenes" (sin filtrar) se conserva completo para
+    # ordenes_json, que el JS usa para abrir el detalle de CUALQUIER orden
+    # sin importar en qué página de la tabla esté.
+    q = request.GET.get('q', '').strip().lower()
+    estado_filtro = request.GET.get('estado', '').strip()
+    ordenes_filtradas = ordenes
+    if q:
+        ordenes_filtradas = [o for o in ordenes_filtradas if q in str(o.get('numero', '')).lower()]
+    if estado_filtro:
+        ordenes_filtradas = [o for o in ordenes_filtradas if o.get('estado') == estado_filtro]
+    ordenes_page = Paginator(ordenes_filtradas, PAGE_SIZE_PRODUCCION).get_page(request.GET.get('page', 1))
+    produccion_extra_params = urlencode({k: v for k, v in {'q': q, 'estado': estado_filtro}.items() if v})
+    if produccion_extra_params:
+        produccion_extra_params += '&'
+
     defectos_bd, paso_defecto_bd = _get_many('/v1/list/Defecto/', '/v1/list/PasoDefecto/')
     defectos_map = {str(d.get('codigo')): d for d in defectos_bd if d.get('activo', True)}
     defectos_por_paso = {}
@@ -1135,7 +1154,10 @@ def admin_produccion(request):
             )
 
     ctx.update({
-        'ordenes':              ordenes,
+        'ordenes_page':         ordenes_page,
+        'produccion_extra_params': produccion_extra_params,
+        'q':                    q,
+        'estado_filtro':        estado_filtro,
         'lotes':                lotes,
         'plantillas':           plantillas,
         'lineas':               lineas,
@@ -2034,8 +2056,26 @@ def supervisor_ordenes(request):
         for o in ordenes
     ]
 
+    # Filtro + paginación server-side (mismo patrón que admin_produccion) —
+    # "ordenes" completo se conserva para ordenes_json_data, que el JS usa
+    # para abrir el detalle de cualquier orden sin importar la página.
+    q = request.GET.get('q', '').strip().lower()
+    estado_filtro = request.GET.get('estado', '').strip()
+    ordenes_filtradas = ordenes
+    if q:
+        ordenes_filtradas = [o for o in ordenes_filtradas if q in str(o.get('numero', '')).lower()]
+    if estado_filtro:
+        ordenes_filtradas = [o for o in ordenes_filtradas if o.get('estado') == estado_filtro]
+    ordenes_page = Paginator(ordenes_filtradas, PAGE_SIZE_PRODUCCION).get_page(request.GET.get('page', 1))
+    produccion_extra_params = urlencode({k: v for k, v in {'q': q, 'estado': estado_filtro}.items() if v})
+    if produccion_extra_params:
+        produccion_extra_params += '&'
+
     ctx.update({
-        'ordenes':           ordenes,
+        'ordenes_page':      ordenes_page,
+        'produccion_extra_params': produccion_extra_params,
+        'q':                 q,
+        'estado_filtro':     estado_filtro,
         'ordenes_json_data': ordenes_json_data,
         'lineas':            lineas_activas,
         'tipos_oblea':       tipos_oblea_activos,

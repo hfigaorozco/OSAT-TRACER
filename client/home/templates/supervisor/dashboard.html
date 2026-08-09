@@ -5,7 +5,7 @@
 {% block content %}
 
 <!-- KPI SUMMARY — solo texto, pegado a la derecha -->
-<div class="kpi-plain-row">
+<div class="kpi-plain-row" id="kpi-plain-row">
 
   <div class="kpi-plain">
     <svg class="kpi-plain-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 17.01"/></svg>
@@ -39,7 +39,7 @@
 
 <!-- SEMÁFORO KPI — ancho completo -->
 <div style="margin-bottom:20px;">
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" id="card-semaforo" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Semáforo KPI por línea de producción</div>
       <div style="display:flex;gap:12px;align-items:center;">
@@ -87,7 +87,7 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
 
   <!-- Órdenes activas -->
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" id="card-ordenes-activas" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Órdenes activas</div>
       <div class="pager-controls" id="pager-ordenes-activas">
@@ -122,7 +122,7 @@
             {% elif orden.estado == 'en_proceso' %}<span class="badge badge-en-proceso">En proceso</span>
             {% elif orden.estado == 'cerrada' %}<span class="badge badge-aprobado">Cerrada</span>
             {% elif orden.estado == 'rechazado' %}<span class="badge badge-rechazado">Rechazada</span>
-            {% else %}<span class="badge badge-pendiente">Pendiente</span>
+            {% else %}<span class="badge badge-abierta">Abierta</span>
             {% endif %}
           </td>
         </tr>
@@ -134,7 +134,7 @@
   </div>
 
   <!-- Alertas activas -->
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" id="card-alertas-activas" style="padding:0;overflow:hidden;">
     <div style="padding:14px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:15px;font-weight:700;color:#1A202C;text-transform:uppercase;letter-spacing:.04em;">Alertas activas</div>
       <div style="display:flex;align-items:center;gap:10px;">
@@ -204,14 +204,18 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+function _initDashboardPagers() {
   initRowPager({tbody: '#tbody-ordenes-activas', rowSelector: 'tr', pageSize: 5,
     prevId: 'pager-ordenes-prev', nextId: 'pager-ordenes-next', controlsId: 'pager-ordenes-activas'});
   initRowPager({tbody: '#tbody-alertas-activas', rowSelector: 'tr', pageSize: 5,
     prevId: 'pager-alertas-prev', nextId: 'pager-alertas-next', controlsId: 'pager-alertas-activas'});
   initSemaforoPager({table: '#tabla-semaforo-kpi', pageSize: 4,
     prevId: 'pager-semaforo-prev', nextId: 'pager-semaforo-next'});
-  iniciarAutoRefreshDashboard();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  _initDashboardPagers();
+  iniciarAutoRefreshDashboard({onRefresh: _initDashboardPagers});
 });
 </script>
 {% endblock %}

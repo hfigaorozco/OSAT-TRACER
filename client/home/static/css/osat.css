@@ -439,7 +439,9 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    claramente sin dejar de leerse como "amarillo". */
 .badge-en-proceso{ background: #FFEB3B; color: #1A202C; }
 .badge-pendiente { background: #FFCA28; color: #1A202C; }
-.badge-abierta   { background: #FFCA28; color: #1A202C; }
+/* Abierta = todavía no arranca ningún lote — no es una advertencia (no
+   amarillo), es un estado neutro: gris claro. */
+.badge-abierta   { background: #CBD5E0; color: #2D3748; }
 .badge-hold      { background: var(--gold); color: #FFFFFF; }
 .badge-ok        { background: #16A85E; color: #FFFFFF; }
 .badge-bajo      { background: #FFCA28; color: #1A202C; }

@@ -49,18 +49,42 @@ document.addEventListener('click', function(e) {
    páginas renderizadas por Django (sin polling ni websockets), así que
    antes se quedaban "congeladas" hasta que alguien recargaba a mano —
    aunque los datos que muestran (semáforo KPI, órdenes activas, pasos
-   completados hoy) sí se recalculan en vivo en cada request. Se recarga
-   la página completa a intervalos en vez de hacer un refresco parcial vía
-   AJAX porque son varias secciones independientes (kpis, semáforo, órdenes,
-   alertas) y esta app no tiene un patrón de partial-render ya establecido
-   para reutilizar. Se salta la recarga si la pestaña no está visible o si
-   hay un modal abierto, para no interrumpir al usuario a media acción. */
-function iniciarAutoRefreshDashboard(intervaloMs) {
-  intervaloMs = intervaloMs || 30000;
+   completados hoy) sí se recalculan en vivo en cada request.
+
+   Antes esto hacía location.reload() cada N segundos — funcionaba pero
+   se notaba: toda la página parpadeaba/rebotaba visiblemente cada vez,
+   como si se "reiniciara sola". Ahora se pide de fondo el HTML fresco vía
+   fetch() y solo se reemplaza el innerHTML de los bloques que sí cambian
+   (kpi-plain-row, semáforo, órdenes activas, alertas activas) — nada de
+   navegación real, así que no hay parpadeo ni se pierde el scroll. Como
+   los botones de paginación quedan dentro de esos bloques, al
+   reemplazarlos quedan nodos nuevos sin listeners viejos pegados; por
+   eso el caller debe volver a llamar sus init de paginación (onRefresh)
+   después de cada actualización. Se salta la actualización si la pestaña
+   no está visible o si hay un modal abierto, para no interrumpir al
+   usuario a media acción. */
+var DASHBOARD_SOFT_REFRESH_IDS = [
+  'kpi-plain-row', 'card-semaforo', 'card-ordenes-activas', 'card-alertas-activas'
+];
+
+function iniciarAutoRefreshDashboard(opts) {
+  opts = opts || {};
+  var intervaloMs = opts.intervaloMs || 30000;
   setInterval(function () {
     if (document.visibilityState !== 'visible') return;
     if (document.querySelector('.modal-overlay[style*="flex"]')) return;
-    location.reload();
+    fetch(location.href)
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var fresh = new DOMParser().parseFromString(html, 'text/html');
+        DASHBOARD_SOFT_REFRESH_IDS.forEach(function (id) {
+          var actual = document.getElementById(id);
+          var nuevo = fresh.getElementById(id);
+          if (actual && nuevo) actual.innerHTML = nuevo.innerHTML;
+        });
+        if (typeof opts.onRefresh === 'function') opts.onRefresh();
+      })
+      .catch(function () {});
   }, intervaloMs);
 }
 

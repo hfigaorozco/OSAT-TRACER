@@ -108,9 +108,10 @@
     <tr><td colspan="6"><div class="empty-state"><p>No se encontraron materiales</p></div></td></tr>
     {% endfor %}
   </tbody>
+  </table>
   </div>
-  {% include "components/pagination.html" with page_obj=piezas_page extra_params=inventario_extra_params %}
 </div>
+{% include "components/pagination.html" with page_obj=piezas_page extra_params=inventario_extra_params %}
 
 <div class="modal-overlay" id="modal-entrada-sup" style="display:none;" onclick="if(event.target===this)closeModal('modal-entrada-sup')">
   <div class="modal-card modal-md">
