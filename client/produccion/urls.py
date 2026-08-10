@@ -15,6 +15,7 @@ urlpatterns = [
     path('admin/produccion/lote/registrar/', views.admin_lote_registrar, name='admin_lote_registrar'),
     path('admin/produccion/lote/<int:pk>/hold/', views.admin_lote_hold, name='admin_lote_hold'),
     path('admin/produccion/lote/<int:pk>/liberar/', views.admin_lote_liberar, name='admin_lote_liberar'),
+    path('admin/produccion/lote/<int:pk>/rechazar-liberando-orden/', views.admin_lote_rechazar_liberando_orden, name='admin_lote_rechazar_liberando_orden'),
     path('admin/produccion/lote/<int:pk>/reporte/', views.admin_lote_generar_reporte, name='admin_lote_generar_reporte'),
     path('admin/produccion/lote/<int:pk>/completar/', views.admin_etapa_completar, name='admin_etapa_completar'),
 
@@ -51,6 +52,7 @@ urlpatterns = [
     path('supervisor/lotes/<int:pk>/', views.supervisor_lote_detalle, name='supervisor_lote_detalle'),
     path('supervisor/lotes/<int:pk>/hold/', views.supervisor_lote_hold, name='supervisor_lote_hold'),
     path('supervisor/lotes/<int:pk>/liberar/', views.supervisor_lote_liberar, name='supervisor_lote_liberar'),
+    path('supervisor/lotes/<int:pk>/rechazar-liberando-orden/', views.supervisor_lote_rechazar_liberando_orden, name='supervisor_lote_rechazar_liberando_orden'),
     path('supervisor/lotes/<int:pk>/reporte/', views.supervisor_lote_generar_reporte, name='supervisor_lote_generar_reporte'),
     path('supervisor/lotes/<int:pk>/scrap/', views.supervisor_lote_scrap, name='supervisor_lote_scrap'),
     path('supervisor/lotes/registrar/', views.supervisor_lote_registrar, name='supervisor_lote_registrar'),
