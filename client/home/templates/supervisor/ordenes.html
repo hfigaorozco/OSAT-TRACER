@@ -120,21 +120,13 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label class="form-label">Hora de inicio <span class="required">*</span></label>
-            <div style="display:flex;gap:6px;">
-              <select id="orden-hora-inicio-h" class="form-control" required></select>
-              <select id="orden-hora-inicio-m" class="form-control" required></select>
-              <select id="orden-hora-inicio-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
-            </div>
-            <input type="hidden" name="hora_inicio" id="orden-hora-inicio-input">
+            <input type="time" name="hora_inicio" id="orden-hora-inicio-input" class="form-control" required>
+            <div style="font-size:12px;color:#718096;margin-top:4px;">Formato 24 horas (ej. 6:00 pm = 18:00)</div>
           </div>
           <div class="form-group">
             <label class="form-label">Hora estimada de fin <span class="required">*</span></label>
-            <div style="display:flex;gap:6px;">
-              <select id="orden-hora-fin-h" class="form-control" required></select>
-              <select id="orden-hora-fin-m" class="form-control" required></select>
-              <select id="orden-hora-fin-ap" class="form-control" required><option value="AM">AM</option><option value="PM">PM</option></select>
-            </div>
-            <input type="hidden" name="hora_fin" id="orden-hora-fin-input">
+            <input type="time" name="hora_fin" id="orden-hora-fin-input" class="form-control" required>
+            <div style="font-size:12px;color:#718096;margin-top:4px;">Formato 24 horas (ej. 6:00 pm = 18:00)</div>
           </div>
         </div>
         <div class="form-group" id="orden-cantidad-crear-wrap">
@@ -200,56 +192,6 @@ var ORDENES_DATA = JSON.parse(document.getElementById('ordenes-data').textConten
 var URL_ORDEN_EDITAR = "{% url 'supervisor_orden_editar' pk=0 %}".replace('/0/', '/__PK__/');
 var URL_LOTES_MAX_STOCK = "{% url 'supervisor_lotes_max_stock' %}";
 
-// ── Selector de hora de 12h (HH/MM/AM-PM) sin segundos ──
-// El <input type="time"> nativo depende del locale del sistema operativo
-// para mostrar AM/PM (en muchos equipos con locale 24h no lo muestra
-// nunca) — este selector lo garantiza siempre, sin importar el SO. El
-// input oculto sigue mandando 'HH:MM' en 24h, que es lo que ya espera
-// _normalizar_hora() en produccion/views.py.
-function _horaPickerPoblar(prefix) {
-  var h = document.getElementById(prefix + '-h');
-  var m = document.getElementById(prefix + '-m');
-  if (h.options.length) return;
-  h.appendChild(new Option('HH', ''));
-  for (var i = 1; i <= 12; i++) { var v = String(i).padStart(2, '0'); h.appendChild(new Option(v, v)); }
-  m.appendChild(new Option('MM', ''));
-  for (var j = 0; j < 60; j++) { var v2 = String(j).padStart(2, '0'); m.appendChild(new Option(v2, v2)); }
-}
-function _horaPickerInit(prefix) {
-  _horaPickerPoblar(prefix);
-  var h = document.getElementById(prefix + '-h');
-  var m = document.getElementById(prefix + '-m');
-  var ap = document.getElementById(prefix + '-ap');
-  var sync = function () {
-    var hidden = document.getElementById(prefix + '-input');
-    if (!h.value || !m.value) { hidden.value = ''; return; }
-    var hh = parseInt(h.value, 10) % 12;
-    if (ap.value === 'PM') hh += 12;
-    hidden.value = String(hh).padStart(2, '0') + ':' + m.value;
-  };
-  h.onchange = sync; m.onchange = sync; ap.onchange = sync;
-}
-function _horaPickerSet(prefix, value24) {
-  _horaPickerPoblar(prefix);
-  var h = document.getElementById(prefix + '-h');
-  var m = document.getElementById(prefix + '-m');
-  var ap = document.getElementById(prefix + '-ap');
-  var hidden = document.getElementById(prefix + '-input');
-  if (!value24) { h.value = ''; m.value = ''; ap.value = 'AM'; hidden.value = ''; return; }
-  var partes = value24.split(':');
-  var hh = parseInt(partes[0], 10);
-  var mm = partes[1];
-  ap.value = hh >= 12 ? 'PM' : 'AM';
-  var h12 = hh % 12; if (h12 === 0) h12 = 12;
-  h.value = String(h12).padStart(2, '0');
-  m.value = mm;
-  hidden.value = String(hh).padStart(2, '0') + ':' + mm;
-}
-document.addEventListener('DOMContentLoaded', function () {
-  _horaPickerInit('orden-hora-inicio');
-  _horaPickerInit('orden-hora-fin');
-});
-
 function actualizarProcesoOrden() {
   var sel = document.getElementById('orden-linea-input');
   var opt = sel.options[sel.selectedIndex];
@@ -280,8 +222,8 @@ function openNuevaOrden() {
   document.getElementById('orden-linea-input').value = '';
   document.getElementById('orden-proceso-display').value = '';
   document.getElementById('orden-tipo-oblea-input').value = '';
-  _horaPickerSet('orden-hora-inicio', '');
-  _horaPickerSet('orden-hora-fin', '');
+  document.getElementById('orden-hora-inicio-input').value = '';
+  document.getElementById('orden-hora-fin-input').value = '';
   document.getElementById('orden-cantidad-crear-input').value = 1;
   document.getElementById('orden-cantidad-crear-wrap').style.display = '';
   document.getElementById('orden-cantidad-crear-input').required = true;
@@ -304,8 +246,8 @@ function openEditarOrden(pk) {
   document.getElementById('orden-linea-input').value = o.linea_pk;
   actualizarProcesoOrden();
   document.getElementById('orden-tipo-oblea-input').value = o.tipo_oblea_pk;
-  _horaPickerSet('orden-hora-inicio', o.hora_inicio);
-  _horaPickerSet('orden-hora-fin', o.hora_fin);
+  document.getElementById('orden-hora-inicio-input').value = o.hora_inicio || '';
+  document.getElementById('orden-hora-fin-input').value = o.hora_fin || '';
   document.getElementById('orden-cantidad-crear-wrap').style.display = 'none';
   document.getElementById('orden-cantidad-crear-input').required = false;
   document.getElementById('orden-cantidad-extra-wrap').style.display = '';

@@ -7,7 +7,7 @@ from reportlab.pdfgen import canvas
 
 from api_produccion.models import Orden, Oblea, Paso_Realizado, Historial_Defectos
 from .pdf_utils import (
-    COLOR_GREEN, COLOR_TURQUOISE, COLOR_GOLD, COLOR_RED,
+    COLOR_GREEN, COLOR_TURQUOISE, COLOR_GOLD, COLOR_RED, COLOR_TEXT, COLOR_MUTED,
     _new_page, _draw_metric, _draw_section_title, _draw_table,
 )
 
@@ -19,7 +19,7 @@ def computar_snapshot_orden_o_lote(orden_num, oblea_num=None):
     de la app: dies_iniciales = Tipo_Oblea.cantidadDies (fijo), dies_activos
     = Oblea.diesGenerados (el trigger ya lo mantiene al día)."""
     orden = Orden.objects.select_related('proceso', 'linea', 'tipoOblea', 'empleado').get(pk=orden_num)
-    obleas_qs = Oblea.objects.filter(orden=orden)
+    obleas_qs = Oblea.objects.filter(orden=orden).select_related('estado')
     if oblea_num:
         obleas_qs = obleas_qs.filter(pk=oblea_num)
     obleas = list(obleas_qs.order_by('numero'))
@@ -39,7 +39,7 @@ def computar_snapshot_orden_o_lote(orden_num, oblea_num=None):
             'dies_iniciales': cantidad_dies_fija,
             'dies_activos': ob.diesGenerados,
             'yield_pct': yield_pct,
-            'estado': ob.estado_id,
+            'estado': ob.estado.descripcion if ob.estado else ob.estado_id,
         })
         pasos = (Paso_Realizado.objects
                  .filter(oblea=ob).select_related('paso', 'estado')
@@ -72,6 +72,9 @@ def computar_snapshot_orden_o_lote(orden_num, oblea_num=None):
         'linea_nombre': orden.linea.nombre if orden.linea else '—',
         'tipo_oblea_nombre': orden.tipoOblea.descripcion if orden.tipoOblea else '—',
         'empleado_nombre': empleado_nombre,
+        'orden_estado': orden.estado.descripcion if orden.estado else '—',
+        'orden_hora_inicio': orden.horaIni.strftime('%Y-%m-%d %H:%M') if orden.horaIni else '—',
+        'orden_hora_fin': orden.horaFin.strftime('%Y-%m-%d %H:%M') if orden.horaFin else '—',
         'dies_iniciales_total': dies_iniciales_total,
         'dies_activos_total': dies_activos_total,
         'yield_global': yield_global,
@@ -87,7 +90,7 @@ def computar_snapshot_produccion_mensual(anio, mes):
     aquí es simplemente el mes completo)."""
     ordenes = list(
         Orden.objects.filter(fecha__year=anio, fecha__month=mes)
-        .select_related('tipoOblea', 'proceso')
+        .select_related('tipoOblea', 'proceso', 'estado')
     )
     ordenes_rows = []
     dies_iniciales_total = 0
@@ -107,7 +110,7 @@ def computar_snapshot_produccion_mensual(anio, mes):
             'orden': f'ORD-{orden.numero:04d}',
             'proceso': orden.proceso.nombre if orden.proceso else '—',
             'lotes': len(obleas),
-            'estado': orden.estado_id,
+            'estado': orden.estado.descripcion if orden.estado else orden.estado_id,
         })
 
     scrap_total = sum(
@@ -138,6 +141,33 @@ def dibujar_pdf_reporte_produccion(snapshot):
     pdf.setTitle(f'{titulo} - {subtitulo}')
     page_number = 1
     y = _new_page(pdf, width, height, page_number, titulo, subtitulo)
+
+    info_izq = [
+        ('Proceso', snapshot['proceso_nombre']),
+        ('Línea', snapshot['linea_nombre']),
+        ('Tipo de oblea', snapshot['tipo_oblea_nombre']),
+        ('Creado por', snapshot['empleado_nombre']),
+    ]
+    info_der = [
+        ('Estado de la orden', snapshot.get('orden_estado', '—')),
+        ('Inicio → Fin estimado', f"{snapshot.get('orden_hora_inicio', '—')} → {snapshot.get('orden_hora_fin', '—')}"),
+        ('Generado por', snapshot.get('generado_por', 'Sistema')),
+        ('Generado el', snapshot.get('generado_el', '—')),
+    ]
+    pdf.setFont('Helvetica', 8)
+    for i, (label, value) in enumerate(info_izq):
+        fila_y = y - 4 * mm - i * 4.5 * mm
+        pdf.setFillColor(COLOR_MUTED)
+        pdf.drawString(15 * mm, fila_y, f'{label}:')
+        pdf.setFillColor(COLOR_TEXT)
+        pdf.drawString(48 * mm, fila_y, str(value))
+    for i, (label, value) in enumerate(info_der):
+        fila_y = y - 4 * mm - i * 4.5 * mm
+        pdf.setFillColor(COLOR_MUTED)
+        pdf.drawString(110 * mm, fila_y, f'{label}:')
+        pdf.setFillColor(COLOR_TEXT)
+        pdf.drawString(145 * mm, fila_y, str(value))
+    y -= 22 * mm
 
     metric_w = (width - 40 * mm) / 4
     _draw_metric(pdf, 15 * mm, y - 23 * mm, metric_w, 'Dies iniciales', snapshot['dies_iniciales_total'], COLOR_TURQUOISE)

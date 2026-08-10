@@ -45,6 +45,11 @@ class PdfReporteAPIView(APIView):
     def get(self, request, pk):
         reporte = get_object_or_404(models.Reporte, pk=pk)
         snapshot = computar_snapshot_orden_o_lote(reporte.orden_id, reporte.oblea_id)
+        snapshot['generado_por'] = (
+            f'{reporte.generado_por.nombre} {reporte.generado_por.primerApell}'
+            if reporte.generado_por else 'Sistema'
+        )
+        snapshot['generado_el'] = f'{reporte.fecha} {reporte.hora}'.strip()
         pdf = dibujar_pdf_reporte_produccion(snapshot)
         return FileResponse(pdf, content_type='application/pdf', filename=f'reporte_{reporte.numero}.pdf')
 
