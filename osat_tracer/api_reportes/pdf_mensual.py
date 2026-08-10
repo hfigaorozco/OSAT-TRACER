@@ -10,6 +10,7 @@ from .pdf_utils import (
     _new_page, _draw_metric, _draw_section_title, _draw_table,
 )
 from api_inventario.services import ESTADO_COLOR
+from .pdf_kpi import _color_semaforo
 
 
 def dibujar_pdf_reporte_mensual(snapshot_produccion, snapshot_inventario, snapshot_kpi):
@@ -81,6 +82,9 @@ def dibujar_pdf_reporte_mensual(snapshot_produccion, snapshot_inventario, snapsh
         for i, celda in enumerate(fila.get('celdas', [])):
             valor = celda.get('valor')
             row[f'col{i}'] = valor if valor is not None else '—'
+            color = _color_semaforo(valor, fila.get('umbralVerde'), fila.get('umbralAmarillo'))
+            if color is not None:
+                row[f'col{i}_color'] = color
         rows.append(row)
     _draw_section_title(pdf, 15 * mm, y, 'KPI por línea de producción')
     y -= 6 * mm

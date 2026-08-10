@@ -22,14 +22,16 @@ def _ordenes_activas_reales(ordenes_bd, obleas_bd, procesos_map, limit=5):
     al entrar a Producción/Órdenes). Reusa _estado_orden_display —el mismo
     cálculo de estado/progreso que ya usa esa página— en vez de tener una
     segunda fórmula que se pueda desalinear con el tiempo.
-    'Activa' = la orden todavía no quedó cerrada (aprobada o rechazada).
+    'Activa' = la orden ya tiene trazado en curso: en proceso o en hold —
+    ni 'abierta' (creada pero sin ningún paso registrado todavía) ni
+    'cerrada'/'rechazado' (ya no admiten más cambios) cuentan como activas.
     """
     activas = []
     for o in ordenes_bd:
         num = o.get('numero')
         obs = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
         edo_str, comp, pct, _term, _rech = _estado_orden_display(o.get('estado'), obs)
-        if edo_str in ('aprobado', 'rechazado'):
+        if edo_str not in ('en_proceso', 'hold'):
             continue
         proceso_codigo = str(o.get('proceso', ''))
         activas.append({
