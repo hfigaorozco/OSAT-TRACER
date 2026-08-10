@@ -87,8 +87,8 @@
       <thead><tr><th>Folio QR</th><th>Número oblea</th><th>Dies buenos</th><th>Etapa actual</th><th>Estado</th><th style="text-align:right;">Yield %</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for lote in lotes %}
-        {% comment %}El lote realmente rechazado (la causa del Hold/rechazo de la orden) se ve completo; los demás se atenúan para dejar claro que no fueron la causa y que quedaron pausados.{% endcomment %}
-        <tr class="lote-row" data-folio="{{ lote.folio|lower }}"{% if orden.estado == 'hold' or orden.estado == 'rechazado' %}{% if lote.estado.nombre != 'Rechazada' %} style="opacity:.55;"{% endif %}{% endif %}>
+        {% comment %}El lote responsable (rechazado, o en Hold igual que la orden por su propio exceso de scrap) se ve completo; los demás se atenúan para dejar claro que no fueron la causa y que quedaron pausados.{% endcomment %}
+        <tr class="lote-row" data-folio="{{ lote.folio|lower }}"{% if orden.estado == 'hold' or orden.estado == 'rechazado' %}{% if lote.estado.nombre != 'Rechazada' and lote.estado.nombre != 'En Hold' %} style="opacity:.55;"{% endif %}{% endif %}>
           <td style="font-family:monospace;font-weight:600;">{{ lote.folio }}</td>
           <td>{{ lote.numero_oblea|default:"—" }}</td>
           <td>{{ lote.dies_buenos|default:"—" }}</td>
