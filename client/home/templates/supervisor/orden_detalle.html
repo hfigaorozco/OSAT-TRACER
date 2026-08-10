@@ -19,6 +19,12 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       Liberar orden
     </button>
+    {% if lotes_candidatos_liberar %}
+    <button type="button" class="btn" style="background:#F5A623;color:#fff;border:none;display:flex;align-items:center;gap:8px;" onclick="abrirModalLiberarRechazandoLote()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Liberar rechazando lote
+    </button>
+    {% endif %}
     <button type="button" class="btn" style="background:#EF5350;color:#fff;border:none;display:flex;align-items:center;gap:8px;" onclick="openModal('modal-rechazar-orden')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       Rechazar orden
@@ -136,6 +142,33 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-liberar-rechazando-lote" style="display:none;" onclick="if(event.target===this)closeModal('modal-liberar-rechazando-lote')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Liberar orden rechazando lote</h2><button class="modal-close" onclick="closeModal('modal-liberar-rechazando-lote')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form method="post" id="form-liberar-rechazando-lote" action="">{% csrf_token %}
+      <div class="modal-body">
+        <p style="font-size:14px;color:#4A5568;margin:0 0 14px;">Se rechazará el lote seleccionado (por exceso de scrap) y la orden volverá a "En proceso". Los demás lotes no se ven afectados. Esta acción no se puede deshacer.</p>
+        <div class="form-group">
+          <label class="form-label">Lote a rechazar</label>
+          <select id="liberar-rechazando-lote-select" class="form-control" onchange="document.getElementById('form-liberar-rechazando-lote').action=this.options[this.selectedIndex].dataset.url;">
+            {% for l in lotes_candidatos_liberar %}
+            <option value="{{ l.pk }}" data-url="{% url 'supervisor_orden_liberar_rechazando_lote' orden.pk l.pk %}">{{ l.folio }} — yield {{ l.yield_pct|floatformat:1 }}%</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Motivo</label>
+          <textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo (opcional)…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-liberar-rechazando-lote')">Cancelar</button>
+        <button type="submit" class="btn" style="background:#F5A623;color:#fff;">⏸ Liberar rechazando lote</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-registrar-lote" style="display:none;" onclick="if(event.target===this)closeModal('modal-registrar-lote')">
   <div class="modal-card modal-md">
     <div class="modal-header"><h2>Agregar lotes</h2><button class="modal-close" onclick="closeModal('modal-registrar-lote')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
@@ -185,6 +218,16 @@ function filterLotes(q) {
   document.querySelectorAll('.lote-row').forEach(function(row) {
     row.style.display = !q || (row.dataset.folio || '').includes(q) ? '' : 'none';
   });
+}
+
+function abrirModalLiberarRechazandoLote() {
+  var select = document.getElementById('liberar-rechazando-lote-select');
+  var form = document.getElementById('form-liberar-rechazando-lote');
+  if (select.options.length) {
+    select.selectedIndex = 0;
+    form.action = select.options[0].dataset.url;
+  }
+  openModal('modal-liberar-rechazando-lote');
 }
 
 function verQR(pk, folio) {
