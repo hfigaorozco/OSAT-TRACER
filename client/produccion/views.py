@@ -557,6 +557,68 @@ def _orden_rechazar(request, pk):
         messages.error(request, f'Error: {resp}')
 
 
+def _orden_liberar_rechazando_lote(request, pk, lote_pk):
+    """Libera una orden en Hold rechazando específicamente el lote cuyo
+    scrap excedió el límite permitido — a diferencia de _orden_liberar
+    (reanuda la orden sin tocar el lote, que se queda tal cual con el
+    mismo yield bajo el 95% que causó el Hold) y de _orden_rechazar (da
+    por perdida TODA la orden), esta opción sacrifica solo el lote
+    responsable y deja que el resto de los lotes sigan en proceso."""
+    orden_data = _get(f'/v1/detail/Orden/{pk}/') or {}
+    estado_orden = str(orden_data.get('estado', '')).lower()
+    if estado_orden == 'cerra':
+        messages.error(request, _MENSAJE_ORDEN_CERRADA)
+        return
+    if estado_orden != 'enhol':
+        messages.error(request, 'Esta orden no está en hold.')
+        return
+
+    lote_data = _get(f'/v1/detail/Oblea/{lote_pk}/') or {}
+    if not lote_data or str(lote_data.get('orden')) != str(pk):
+        messages.error(request, 'Ese lote no pertenece a esta orden.')
+        return
+    edo_lote = str(lote_data.get('estado', '')).lower()
+    if edo_lote in ('termi', 'recha'):
+        messages.error(request, 'Ese lote ya está en un estado final.')
+        return
+
+    motivo = request.POST.get('motivo', '').strip()
+
+    ok, resp = _patch(f'/v1/update/Oblea/{lote_pk}/', {'estado': 'recha'})
+    if not ok:
+        messages.error(request, f'Error al rechazar el lote: {resp}')
+        return
+    # KPI final del lote rechazado — mismo criterio que cualquier otro lote
+    # que llega a un estado final (ver _avanzar_estado_lote_y_orden).
+    _post(f'/v1/kpi/registrar_por_lote/{lote_pk}/', {})
+
+    ok2, resp2 = _patch(f'/v1/update/Orden/{pk}/', {'estado': 'proce'})
+    if not ok2:
+        messages.error(request, f'El lote se rechazó, pero no se pudo liberar la orden: {resp2}')
+        return
+
+    folio = f'LOT-{int(lote_pk):04d}' if str(lote_pk).isdigit() else str(lote_pk)
+    descripcion = f'{folio} rechazado para liberar la Orden #{pk} del Hold'
+    if motivo:
+        descripcion += f': {motivo}'
+    _post('/v1/create/alerta/', {'descripcion': descripcion, 'estadoAlerta': 'sinre'})
+
+    # Si con este lote ya quedaron TODOS los lotes de la orden en estado
+    # final, la orden debe cerrarse igual que en el flujo normal (ver
+    # _avanzar_estado_lote_y_orden) en vez de quedarse en 'proce' sin más.
+    obleas_bd = _get('/v1/list/Oblea/', [])
+    obleas_de_orden = [o for o in obleas_bd if str(o.get('orden')) == str(pk)]
+    for o in obleas_de_orden:
+        if str(o.get('numero')) == str(lote_pk):
+            o['estado'] = 'recha'
+    if obleas_de_orden and all(str(o.get('estado', '')).lower() in ('termi', 'recha') for o in obleas_de_orden):
+        _patch(f'/v1/update/Orden/{pk}/', {'estado': 'cerra'})
+        _generar_reporte_orden(pk)
+        messages.success(request, f'{folio} rechazado. Era el último lote pendiente, así que la orden se cerró.')
+    else:
+        messages.success(request, f'{folio} rechazado y orden liberada del Hold.')
+
+
 def _lote_scrap(request, pk):
     ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
     edo = str(ob.get('estado', '')).lower()
@@ -1246,6 +1308,11 @@ def admin_orden_liberar(request, pk):
 def admin_orden_rechazar(request, pk):
     if request.method == 'POST':
         _orden_rechazar(request, pk)
+    return _admin_produccion_redirect(orden_pk=pk)
+
+def admin_orden_liberar_rechazando_lote(request, pk, lote_pk):
+    if request.method == 'POST':
+        _orden_liberar_rechazando_lote(request, pk, lote_pk)
     return _admin_produccion_redirect(orden_pk=pk)
 
 
@@ -2141,6 +2208,11 @@ def supervisor_orden_rechazar(request, pk):
         _orden_rechazar(request, pk)
     return redirect('supervisor_orden_detalle', pk=pk)
 
+def supervisor_orden_liberar_rechazando_lote(request, pk, lote_pk):
+    if request.method == 'POST':
+        _orden_liberar_rechazando_lote(request, pk, lote_pk)
+    return redirect('supervisor_orden_detalle', pk=pk)
+
 
 def supervisor_orden_generar_reporte(request, pk):
     if request.method == 'POST':
@@ -2234,6 +2306,7 @@ def supervisor_orden_detalle(request, pk):
     }
 
     lotes = []
+    lotes_candidatos_liberar = []
     for ob in obs:
         ob_num = ob.get('numero')
         edo_ob = str(ob.get('estado', '')).lower()
@@ -2249,9 +2322,10 @@ def supervisor_orden_detalle(request, pk):
         dies_activos, scrap_total, yield_pct = _calcular_yield(
             ob_num, pasos_realizados_bd, dies_iniciales, ob.get('diesGenerados', 0)
         )
+        folio = f'LOT-{ob_num:04d}' if isinstance(ob_num, int) else str(ob_num)
         lotes.append({
             'pk':            ob_num,
-            'folio':         f'LOT-{ob_num:04d}' if isinstance(ob_num, int) else str(ob_num),
+            'folio':         folio,
             'numero_oblea':  ob_num,
             'dies_buenos':   dies_iniciales,
             'dies_activos':  dies_activos,
@@ -2260,10 +2334,13 @@ def supervisor_orden_detalle(request, pk):
             'estado':        _FakeObj(nombre=ESTADOS_OBLEA_LABEL.get(edo_ob, edo_ob.capitalize())),
             'yield_pct':     yield_pct,
         })
+        if edo_ob == 'proce' and yield_pct is not None and yield_pct < 95:
+            lotes_candidatos_liberar.append({'pk': ob_num, 'folio': folio, 'yield_pct': yield_pct})
 
     ctx.update({
         'orden': orden,
         'lotes': lotes,
+        'lotes_candidatos_liberar': lotes_candidatos_liberar if orden['estado_pk'] == 'enhol' else [],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Órdenes',   'url': '/supervisor/ordenes/'},

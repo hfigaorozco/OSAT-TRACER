@@ -7,7 +7,24 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .pdf_utils import COLOR_TURQUOISE, _new_page, _draw_metric, _draw_section_title, _draw_table
+from .pdf_utils import (
+    COLOR_TURQUOISE, COLOR_GREEN, COLOR_GOLD, COLOR_RED,
+    _new_page, _draw_metric, _draw_section_title, _draw_table,
+)
+
+
+def _color_semaforo(valor, umbral_verde, umbral_amarillo):
+    """Mismo criterio que api_kpi.services._semaforo_de (más alto es mejor),
+    reimplementado aquí sobre los umbrales ya planos del snapshot en vez de
+    un objeto Kpi, para poder pintar cada celda del PDF congelado igual que
+    el semáforo en vivo del dashboard."""
+    if valor is None:
+        return None
+    if valor >= umbral_verde:
+        return COLOR_GREEN
+    if valor >= umbral_amarillo:
+        return COLOR_GOLD
+    return COLOR_RED
 
 
 def dibujar_pdf_reporte_kpi(snapshot):
@@ -37,6 +54,9 @@ def dibujar_pdf_reporte_kpi(snapshot):
         for i, celda in enumerate(fila.get('celdas', [])):
             valor = celda.get('valor')
             row[f'col{i}'] = valor if valor is not None else '—'
+            color = _color_semaforo(valor, fila.get('umbralVerde'), fila.get('umbralAmarillo'))
+            if color is not None:
+                row[f'col{i}_color'] = color
         rows.append(row)
 
     _draw_section_title(pdf, 15 * mm, y, 'KPI por línea de producción')
