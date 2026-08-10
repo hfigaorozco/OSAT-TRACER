@@ -11,7 +11,7 @@ python manage.py flush --no-input
 ```powershell
 cd OSAT-TRACER\osat_tracer
 
-# PASO 1 — Genera los empleados con contraseña real primero
+# PASO 1 — Genera los empleados con contraseña real primeroo
 python manage.py shell -c "exec(open('fixtures_v2/00_generar_empleados.py').read())"
 
 # PASO 2 — Carga los fixturess
