@@ -48,5 +48,7 @@ class AccesoPorRol:
 
         if 'admin' in request.path and 'administrador' not in usuario_rol:
             return redirect('supervisor_dashboard')
+        
+        
 
         return self.get_response(request)

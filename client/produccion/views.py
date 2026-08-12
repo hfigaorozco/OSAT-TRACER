@@ -143,17 +143,6 @@ def _asignar_proceso_a_linea(linea_pk, proceso_pk):
 
 
 def _crear_lotes_para_orden(orden_pk, tipo_oblea_pk, cantidad):
-    """Crea `cantidad` lotes/obleas para una orden llamando al procedimiento
-    almacenado sp_agregar_lotesAorden una vez por lote (diesGenerados sale
-    de TipoOblea.cantidadDies dentro del procedimiento — tipo_oblea_pk ya no
-    se usa aquí, se deja en la firma para no tocar los 3 call sites).
-
-    codigoQR es solo un valor único temporal: la imagen QR real (el PNG que
-    se imprime/escanea) se genera después, la primera vez que alguien la
-    pide, en api_produccion/services.py::asegurar_qr — esa función
-    sobreescribe codigoQR con la ruta real basada en el número de lote ya
-    asignado por MySQL (auto_increment), que no existe todavía en el
-    momento de este INSERT. Este valor solo evita dejar el campo vacío."""
     if cantidad <= 0:
         return 0, []
     errores = []
@@ -180,10 +169,6 @@ def _mensaje_sp(e):
 
 
 def _enlazar_paso_a_proceso(proceso_pk, paso_pk, orden):
-    """Vincula un paso a una plantilla (proceso) vía sp_enlazarPasoAProceso
-    — la existencia de paso/proceso y el duplicado ya no se validan en
-    Python trayendo toda la lista de PasoProceso por REST, los valida el
-    procedimiento almacenado directo contra la BD. Devuelve (ok, error)."""
     with connection.cursor() as cursor:
         try:
             cursor.callproc('sp_enlazarPasoAProceso', [proceso_pk, paso_pk, orden])
@@ -193,8 +178,6 @@ def _enlazar_paso_a_proceso(proceso_pk, paso_pk, orden):
 
 
 def _asignar_pieza_a_plantilla(proceso_pk, pieza_pk, cantidad):
-    """Asigna una pieza a una plantilla (proceso) vía sp_asignarPiezaAPlantilla
-    — mismo reemplazo que _enlazar_paso_a_proceso pero para proceso-pieza."""
     with connection.cursor() as cursor:
         try:
             cursor.callproc('sp_asignarPiezaAPlantilla', [proceso_pk, pieza_pk, cantidad])
@@ -204,12 +187,6 @@ def _asignar_pieza_a_plantilla(proceso_pk, pieza_pk, cantidad):
 
 
 def _lotes_max_por_stock(proceso_pk, tipo_oblea_pk):
-    """Cuántos lotes completos se pueden armar con el stock actual de
-    inventario para un proceso y tipo de oblea dados — vía el procedimiento
-    almacenado sp_lotestotalesXstock. Se usa en el modal de Nueva Orden para
-    avisar, antes de guardar, cuántos lotes alcanza a producir el stock
-    disponible (la pieza más escasa entre las que requiere el proceso es la
-    que limita el máximo)."""
     if not proceso_pk or not tipo_oblea_pk:
         return None
     with connection.cursor() as cursor:
@@ -220,16 +197,6 @@ def _lotes_max_por_stock(proceso_pk, tipo_oblea_pk):
 
 
 def _descontar_stock_lotes(proceso_pk, tipo_oblea_pk, cantidad_lotes):
-    """Descuenta del stock de piezas lo que consumen `cantidad_lotes` lotes
-    de este proceso + tipo de oblea — misma fórmula que usa el trigger
-    t_alerta_stock_insuficiente (cantidadDies del tipo de oblea x
-    cantPiezas del proceso). Ese trigger solo corre UNA vez, al INSERT de
-    la orden, y solo contempla su primer lote — nunca los adicionales que
-    _crear_lotes_para_orden agrega después (ni al crear la orden con
-    cantidad_lotes > 1, ni al agregar lotes a una orden ya existente, que
-    ni siquiera pasan por un INSERT en la tabla orden). Sin este descuento
-    el stock quedaba con lecturas infladas después de cualquier orden
-    multi-lote, y sp_lotestotalesXstock empezaba a mentir."""
     if cantidad_lotes <= 0 or not proceso_pk or not tipo_oblea_pk:
         return
     with connection.cursor() as cursor:
@@ -1019,13 +986,6 @@ def _calcular_yield(oblea_num, pasos_realizados_bd, dies_iniciales, dies_activos
 
 
 def _calcular_yield_sp(lote_pk):
-    """Yield de un lote vía el procedimiento almacenado sp_calcularYieldLote
-    — solo hace falta mandar el número de lote, el procedimiento hace el
-    join contra tipo_oblea internamente. Se usa en la vista de detalle de UN
-    solo lote (supervisor_lote_detalle); los listados con muchos lotes a la
-    vez (admin_produccion, supervisor_ordenes) siguen usando _calcular_yield
-    en Python puro sobre datos ya traídos en bloque por REST, para no
-    convertir cada carga de esas páginas en una llamada a MySQL por lote."""
     with connection.cursor() as cursor:
         cursor.callproc('sp_calcularYieldLote', [lote_pk, 0])
         cursor.execute('SELECT @_sp_calcularYieldLote_1')
