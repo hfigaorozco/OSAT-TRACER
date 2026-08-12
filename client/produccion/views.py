@@ -732,8 +732,14 @@ def _etapa_completar(request, pk):
         messages.error(request, f'Error al completar: {resp}')
         return
 
-    messages.success(request, 'Etapa completada correctamente.')
-    _avanzar_estado_lote_y_orden(pk)
+    puso_en_hold = _avanzar_estado_lote_y_orden(pk)
+    if puso_en_hold:
+        # No fue un cierre exitoso de la etapa — el scrap de este paso hizo
+        # caer el yield del lote por debajo del 95% y puso el lote/orden en
+        # Hold, así que no corresponde decir "correctamente".
+        messages.success(request, 'Etapa completada.')
+    else:
+        messages.success(request, 'Etapa completada correctamente.')
 
 
 def _avanzar_estado_lote_y_orden(oblea_pk):
@@ -744,14 +750,18 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
     orden, avanza el estado de la orden (abier -> proce -> cerra), siguiendo
     el catálogo real: Estado_Orden abier/proce/cerra, Estado_Oblea proce/termi/recha/enhol.
     No toca lotes en Hold (enhol) — esos requieren resolverse aparte.
+
+    Devuelve True si esta llamada puso el lote/orden en Hold por exceso de
+    scrap (para que el llamador pueda avisar que la etapa no cerró como un
+    éxito limpio), False/None en cualquier otro caso.
     """
     ob = _get(f'/v1/detail/Oblea/{oblea_pk}/')
     if not ob:
-        return
+        return False
     orden_num = ob.get('orden')
     orden = _get(f'/v1/detail/Orden/{orden_num}/')
     if not orden:
-        return
+        return False
     proceso_codigo = str(orden.get('proceso', ''))
 
     pasos_bd, pasos_realizados_bd, obleas_bd = _get_many(
@@ -801,6 +811,7 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
             'descripcion': f'Orden #{orden_num} puesta en Hold: {folio} excedió el límite de scrap permitido (yield < 95%).',
             'estadoAlerta': 'sinre',
         })
+        return True
 
     if edo_orden_actual == 'proce' and nuevo_estado_lote:
         obleas_de_orden = [o for o in obleas_bd if str(o.get('orden')) == str(orden_num)]
@@ -810,6 +821,8 @@ def _avanzar_estado_lote_y_orden(oblea_pk):
         if obleas_de_orden and all(str(o.get('estado', '')).lower() in ('termi', 'recha') for o in obleas_de_orden):
             _patch(f'/v1/update/Orden/{orden_num}/', {'estado': 'cerra'})
             _generar_reporte_orden(orden_num)
+
+    return False
     
 
 def _generar_reporte_orden(orden_num):
@@ -2307,7 +2320,14 @@ def supervisor_orden_detalle(request, pk):
 
     orden_data = next((o for o in ordenes_bd if str(o.get('numero')) == str(pk)), {})
     if not orden_data:
-        return redirect('supervisor_ordenes')
+        # _get_many pudo haber fallado en ESTA lista puntual (timeout,
+        # hipo de red) sin que las demás fallaran — antes de asumir que la
+        # orden no existe y mandar al usuario a la lista (interrumpiendo un
+        # simple refresh de la página), dar una segunda oportunidad con una
+        # consulta directa al registro.
+        orden_data = _get(f'/v1/detail/Orden/{pk}/') or {}
+        if not orden_data:
+            return redirect('supervisor_ordenes')
 
     num    = orden_data.get('numero')
     obs    = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
@@ -2428,7 +2448,11 @@ def supervisor_lote_detalle(request, pk):
 
     ob = next((o for o in obleas_bd if str(o.get('numero')) == str(pk)), {})
     if not ob:
-        return redirect('supervisor_ordenes')
+        # Mismo caso que supervisor_orden_detalle: dar una segunda
+        # oportunidad con una consulta directa antes de mandar a la lista.
+        ob = _get(f'/v1/detail/Oblea/{pk}/') or {}
+        if not ob:
+            return redirect('supervisor_ordenes')
 
     num       = ob.get('numero')
     orden_num = ob.get('orden')

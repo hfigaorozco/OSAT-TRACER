@@ -239,10 +239,12 @@
 
             <!-- Bloque modo CREACIÓN (staged en JS, sin persistir hasta guardar la plantilla) -->
             <div id="plantilla-pasos-create-block">
+              <div style="font-size:12px;color:#718096;margin-bottom:8px;">Los 12 pasos estándar del proceso OSAT vienen marcados por defecto — desmarca los que no apliquen a esta plantilla.</div>
+              <div id="plantilla-pasos-estandar-checklist" style="display:flex;flex-direction:column;gap:2px;margin-bottom:10px;"></div>
               <div id="plantilla-pasos-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
               <div style="display:flex;gap:8px;margin-bottom:6px;">
                 <select id="plantilla-paso-select-create" class="form-control" style="flex:1;">
-                  <option value="">Seleccionar paso del banco...</option>
+                  <option value="">Agregar otro paso del banco...</option>
                   {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
                 </select>
                 <button type="button" class="btn btn-outline btn-sm" onclick="agregarPasoExistenteCreate()">Agregar</button>
@@ -496,6 +498,34 @@ var _plantillaEditPk = null;
 var _plantillaPasosCreate = [];
 var _plantillaPiezasCreate = [];
 
+// ── Checklist de los 12 pasos estándar del proceso OSAT ──
+// El orden es fijo (Wafer Backgriding -> ... -> Tape and Reel), igual al que
+// ya usan Ensamblado QFN Std / Ensamblado BGA HD. Los nombres se toman del
+// catálogo real (pasos_activos) para no duplicar texto que pueda cambiar.
+var _PASOS_ESTANDAR_ORDEN = ['bgr','dic','dia','wir','ovc','mol','mar','dtf','sin','plt','tst','pak'];
+var _pasosCatalogoMap = {
+  {% for p in pasos_activos %}'{{ p.codigo }}': '{{ p.nombre|escapejs }}',{% endfor %}
+};
+var _pasosEstandarChecked = {};
+
+function renderPasosEstandarChecklist() {
+  var wrap = document.getElementById('plantilla-pasos-estandar-checklist');
+  wrap.innerHTML = '';
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) {
+    var nombre = _pasosCatalogoMap[codigo];
+    if (!nombre) return; // el paso estándar no existe (o fue desactivado) en el catálogo
+    var label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:14px;color:#2D3748;cursor:pointer;';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = _pasosEstandarChecked[codigo] !== false;
+    cb.onchange = function() { _pasosEstandarChecked[codigo] = cb.checked; renderPlantillaPasosCreate(); };
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(nombre));
+    wrap.appendChild(label);
+  });
+}
+
 function openNuevaPlantilla() {
   _plantillaEditPk = null;
   document.getElementById('plantilla-modal-title').textContent = 'Nueva plantilla';
@@ -507,8 +537,19 @@ function openNuevaPlantilla() {
 
   _plantillaPasosCreate = [];
   _plantillaPiezasCreate = [];
+  _pasosEstandarChecked = {};
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) { _pasosEstandarChecked[codigo] = true; });
+  renderPasosEstandarChecklist();
   renderPlantillaPasosCreate();
   renderPlantillaPiezasCreate();
+
+  // El dropdown "Agregar otro paso del banco" es solo para pasos NO
+  // estándar — los 12 estándar ya se controlan con el checklist de arriba,
+  // así que se ocultan aquí para no poder agregarlos dos veces.
+  var selCreate = document.getElementById('plantilla-paso-select-create');
+  Array.prototype.forEach.call(selCreate.options, function(opt) {
+    if (_PASOS_ESTANDAR_ORDEN.indexOf(opt.value) !== -1) opt.style.display = 'none';
+  });
 
   document.getElementById('plantilla-pasos-create-block').style.display = '';
   document.getElementById('plantilla-pasos-edit-block').style.display = 'none';
@@ -563,6 +604,14 @@ function renderPlantillaPasosCreate() {
 
   var hiddenWrap = document.getElementById('plantilla-pasos-hidden-inputs');
   hiddenWrap.innerHTML = '';
+  // Los pasos estándar marcados van primero, en su orden fijo del proceso
+  // OSAT; los pasos extra agregados a mano van después, en el orden en que
+  // se agregaron.
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) {
+    if (_pasosEstandarChecked[codigo] !== false && _pasosCatalogoMap[codigo]) {
+      hiddenWrap.appendChild(_hidden('paso_orden_codigo', codigo, 'plantilla-form'));
+    }
+  });
   _plantillaPasosCreate.forEach(function(row) {
     hiddenWrap.appendChild(_hidden('paso_orden_codigo', row.codigo, 'plantilla-form'));
     if (row.nuevo) {
