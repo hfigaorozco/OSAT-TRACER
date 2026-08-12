@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -153,7 +154,18 @@ class RegistrarKpiPorLoteAPIView(APIView):
 ### estar en el backend, se hace con consultas directas — es la MISMA
 ### regla (kpi si hay Registro_Kpi ligado, produccion si hay Paso_Realizado
 ### ligado, si no stock) para no divergir entre web y móvil.
-_PRIORIDAD_TIPO = {'produccion': 3, 'kpi': 2, 'stock': 1}
+_PRIORIDAD_TIPO = {'hold': 4, 'produccion': 3, 'kpi': 2, 'stock': 1}
+
+# Las alertas de Hold (manual desde _lote_hold via UpdateObleaSerializer, o
+# automática desde t_scrap_excedente_del_permitido via
+# _avanzar_estado_lote_y_orden) se crean como Alerta suelta, sin FK a
+# Oblea/Paso_Realizado/Registro_Kpi — así que no hay forma de clasificarlas
+# por relación como al resto. Se reconocen por el texto fijo de descripcion
+# (folio LOT-XXXX siempre presente en ambos formatos) para poder resolver
+# oblea_id/línea igual que las demás y que el móvil pueda mostrar un
+# pop-up bloqueante específico para Hold.
+_RE_HOLD_LOTE = re.compile(r'LOT-(\d+)')
+_RE_HOLD_DESC = re.compile(r'puest[oa] en Hold')
 
 
 def _empleado_linea_codigo(empleado_numero):
@@ -211,6 +223,10 @@ class AlertasOperadorAPIView(APIView):
             elif a.numero in oblea_por_paso:
                 tipo = 'produccion'
                 oblea_id = oblea_por_paso[a.numero]
+            elif _RE_HOLD_DESC.search(a.descripcion or ''):
+                m = _RE_HOLD_LOTE.search(a.descripcion or '')
+                tipo = 'hold'
+                oblea_id = int(m.group(1)) if m else None
             else:
                 tipo = 'stock'
                 oblea_id = None
@@ -241,9 +257,9 @@ class AlertasOperadorAPIView(APIView):
                 'linea_nombre': lineas_map.get(linea_codigo),
                 'es_mi_linea': es_mi_linea if mi_linea else None,
                 'prioridad': prioridad,
-                # Solo tipo/produccion tienen lote asociado — 'stock' siempre
-                # llega en None, el cliente lo usa para saber si hay a dónde
-                # navegar al tocar el detalle de la alerta.
+                # 'kpi'/'produccion'/'hold' tienen lote asociado — 'stock'
+                # siempre llega en None, el cliente lo usa para saber si hay
+                # a dónde navegar al tocar el detalle de la alerta.
                 'oblea_id': oblea_id,
             })
 
