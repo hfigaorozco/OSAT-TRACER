@@ -823,6 +823,11 @@ function abrirOrden(pk, numero, proceso, fi, ff, estado) {
   document.getElementById('vista-ordenes').style.display = 'none';
   document.getElementById('vista-detalle-orden').style.display = 'block';
   document.getElementById('vista-detalle-lote').style.display = 'none';
+
+  // Deja el deep-link en la URL para que un refresh (F5) reabra esta misma
+  // orden en vez de caer al default (la lista) — ver el bloque
+  // DOMContentLoaded más abajo, que ya sabe leer ?orden=&lote=.
+  history.replaceState(null, '', '?orden=' + pk);
 }
 
 function filterLotesOrden(q) {
@@ -906,6 +911,10 @@ function abrirLote(pk) {
   document.getElementById('vista-ordenes').style.display = 'none';
   document.getElementById('vista-detalle-orden').style.display = 'none';
   document.getElementById('vista-detalle-lote').style.display = 'flex';
+
+  // Mismo motivo que en abrirOrden(): que un refresh reabra este lote en
+  // vez de caer a la lista de órdenes.
+  if (_ordenActual) history.replaceState(null, '', '?orden=' + _ordenActual.pk + '&lote=' + pk);
 }
 
 // ── Renderizar trazabilidad con barra de progreso ──
@@ -1235,6 +1244,7 @@ function volverAOrdenes() {
   document.getElementById('vista-detalle-orden').style.display = 'none';
   document.getElementById('vista-detalle-lote').style.display = 'none';
   _ordenActual = null; _loteActual = null;
+  history.replaceState(null, '', window.location.pathname);
 }
 function volverAOrden() {
   if (_ordenActual) abrirOrden(_ordenActual.pk, _ordenActual.numero, _ordenActual.proceso, _ordenActual.fi, _ordenActual.ff, _ordenActual.estado);

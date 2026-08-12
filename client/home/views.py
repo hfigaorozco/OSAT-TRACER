@@ -238,7 +238,6 @@ def login_view(request):
                         cookie_name,
                         cookie_value,
                         httponly=True,
-                        domain='127.0.0.1'
                     )
                 return response_redirect
             elif response.status_code == 401:
@@ -255,7 +254,7 @@ def logout_view(request):
     request.session.flush()
     response_redirect = redirect('login')
 
-    response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
+    response_redirect.delete_cookie('sesionid')
 
     return response_redirect
 
