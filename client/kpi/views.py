@@ -10,7 +10,10 @@ from core.models import HorarioSistema, ConfiguracionMovil
 from django.core.cache import cache
 from datetime import datetime
 
-# ── Catálogo de colores/íconos por tipo de alerta ─────────────────────────────
+# ── Catálogo de colores/íconos/etiquetas por tipo de alerta ──────────────────
+# 'hold' usa el mismo naranja/gold que .badge-hold en osat.css — es el color
+# que ya representa "Hold" en toda la app (órdenes, lotes), para no inventar
+# un código de color nuevo que el usuario tenga que aprender aparte.
 
 _COLOR_MAP = {
     'stock': {
@@ -22,12 +25,13 @@ _COLOR_MAP = {
     'kpi': {
         'bg': '#F3E8FD', 'borde': '#8E44AD', 'icon': '#8E44AD',
     },
+    'hold': {
+        'bg': '#FEF3E2', 'borde': '#F5A623', 'icon': '#F5A623',
+    },
 }
 
-_ACCION_LABEL = {
-    'stock':      'Ver inventario',
-    'produccion': 'Ver producción',
-    'kpi':        'Ver reporte',
+_TIPO_LABEL = {
+    'stock': 'Stock', 'produccion': 'Producción', 'kpi': 'KPI', 'hold': 'Hold',
 }
 
 # Códigos fijos del catálogo Estado_Alerta (ver models.EstadoAlerta)
@@ -50,13 +54,27 @@ def _estados_alerta_info():
     return estados_map, codigo_resuelto
 
 
-def _accion_url(role, tipo):
-    if role == 'Administrador':
-        mapa = {'stock': 'admin_inventario', 'produccion': 'admin_produccion', 'kpi': 'admin_reportes'}
-    else:
-        mapa = {'stock': 'supervisor_inventario', 'produccion': 'supervisor_ordenes', 'kpi': 'supervisor_reportes'}
+def _detalle_url(role, tipo, oblea_id, orden_numero):
+    """Deep-link real al lote/orden que originó la alerta — antes esto
+    siempre mandaba a la lista genérica del tipo (ver historial), sin
+    importar qué lote/orden específico estuviera involucrado."""
     try:
-        return reverse(mapa.get(tipo, mapa['produccion']))
+        if role == 'Administrador':
+            if oblea_id or orden_numero:
+                url = reverse('admin_produccion')
+                params = []
+                if orden_numero:
+                    params.append(f'orden={orden_numero}')
+                if oblea_id:
+                    params.append(f'lote={oblea_id}')
+                return url + '?' + '&'.join(params)
+            return reverse('admin_inventario') if tipo == 'stock' else reverse('admin_reportes')
+        else:
+            if oblea_id:
+                return reverse('supervisor_lote_detalle', args=[oblea_id])
+            if orden_numero:
+                return reverse('supervisor_orden_detalle', args=[orden_numero])
+            return reverse('supervisor_inventario') if tipo == 'stock' else reverse('supervisor_reportes')
     except Exception:
         return '#'
 
@@ -72,100 +90,52 @@ def _marcar_leida_url(role, pk):
 # ── Construcción de la lista de alertas (usada por admin y supervisor) ───────
 
 def _build_alertas(role):
-    # El tipo de una alerta se deriva de en qué tabla quedó registrada (ver MR):
-    #   - Registro_Kpi.alerta   -> tipo "kpi"
-    #   - Paso_Realizado.alerta -> tipo "produccion"
-    #   - en ninguna de las dos -> tipo "stock" (inventario)
-    alertas_bd, registros_kpi_bd, pasos_realizados_bd, kpis_bd = _get_many(
-        '/v1/list/alertas/',
-        '/v1/list/registros_kpi/',
-        '/v1/list/PasoRealizado/',
-        '/v1/list/kpis/',
-    )
-    estados_map, _codigo_resuelto = _estados_alerta_info()
-    kpis_map = {str(k.get('clave')): k for k in kpis_bd}
-
-    registros_por_alerta = {}
-    for r in registros_kpi_bd:
-        registros_por_alerta.setdefault(str(r.get('alerta')), []).append(r)
-
-    pasos_por_alerta = {}
-    for p in pasos_realizados_bd:
-        pasos_por_alerta.setdefault(str(p.get('alerta')), []).append(p)
+    # La clasificación (tipo/lote/orden/línea/kpi/paso/defectos/operador) ya
+    # viene resuelta desde el backend (osat_tracer/api_kpi/views.py::
+    # _construir_alertas_base) — misma fuente que usa la app móvil, así que
+    # ambas coinciden siempre. El backend ya la entrega ordenada por más
+    # reciente primero (numero descendente).
+    alertas_bd = _get('/v1/list/alertas/', [])
 
     alertas = []
     for a in alertas_bd:
         num = a.get('numero')
-        registros_de_esta = registros_por_alerta.get(str(num), [])
-        pasos_de_esta = pasos_por_alerta.get(str(num), [])
-
-        if registros_de_esta:
-            tipo = 'kpi'
-        elif pasos_de_esta:
-            tipo = 'produccion'
-        elif str(a.get('descripcion', '')).startswith('Orden #'):
-            # Alertas de rechazo manual de orden (ver _orden_rechazar): no
-            # quedan ligadas a Registro_Kpi ni a Paso_Realizado porque no
-            # nacen de un paso, así que sin este caso caían en 'stock' y
-            # apuntaban al ícono/acción de inventario, que no tiene sentido.
-            tipo = 'produccion'
-        else:
-            tipo = 'stock'
-
-        edo_codigo = str(a.get('estadoAlerta', ''))
-        leida = edo_codigo == _CODIGO_RESUELTO
-
-        tiempo = f"{a.get('fecha', '—')} {str(a.get('hora', ''))[:5]}"
-        ref_label = 'Alerta'
-        ref_valor = str(num)
-        cuerpo = a.get('descripcion', '')
-
-        if tipo == 'kpi':
-            # Nos quedamos con el registro más reciente si hay varios
-            reg = sorted(
-                registros_de_esta,
-                key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))
-            )[-1]
-            kpi_data = kpis_map.get(str(reg.get('kpi')), {})
-            ref_label = 'Oblea'
-            ref_valor = str(reg.get('oblea', '—'))
-            if kpi_data:
-                cuerpo = f"{cuerpo} (KPI: {kpi_data.get('nombre', '—')}, valor registrado: {reg.get('valor', '—')})"
-
-        elif tipo == 'produccion' and pasos_de_esta:
-            # OJO: tipo puede ser 'produccion' sin pasos_de_esta (alertas de
-            # rechazo manual de orden, ver arriba) — sin este segundo check
-            # el sorted([])[-1] de abajo truena con IndexError.
-            paso_reg = sorted(
-                pasos_de_esta,
-                key=lambda x: (str(x.get('fecha', '')), str(x.get('hora', '')))
-            )[-1]
-            ref_label = 'Oblea'
-            ref_valor = str(paso_reg.get('oblea', '—'))
-            cuerpo = f"{cuerpo} (Paso: {paso_reg.get('paso', '—')}, scrap: {paso_reg.get('scrap', 0)})"
+        tipo = a.get('tipo', 'stock')
+        leida = bool(a.get('leida'))
+        oblea_id = a.get('oblea_id')
+        orden_numero = a.get('orden_numero')
 
         colores = _COLOR_MAP.get(tipo, _COLOR_MAP['stock'])
         alertas.append({
             'pk': num,
             'tipo': tipo,
+            'tipo_label': _TIPO_LABEL.get(tipo, tipo.capitalize()),
             'leida': leida,
             'titulo': a.get('descripcion', ''),
-            'cuerpo': cuerpo,
-            'tiempo': tiempo,
+            'tiempo': f"{a.get('fecha', '—')} {str(a.get('hora', ''))[:5]}",
             'color_bg': colores['bg'],
             'color_borde': colores['borde'],
             'color_icon': colores['icon'],
-            'badge_label': 'Resuelta' if leida else 'No leída',
+            'badge_label': 'Resuelta' if leida else 'Sin resolver',
             'badge_color': '#155724' if leida else '#B71C1C',
-            'ref_label': ref_label,
-            'ref_valor': ref_valor,
-            'accion_label': _ACCION_LABEL.get(tipo, 'Ver detalle'),
-            'accion_url': _accion_url(role, tipo),
+            'folio_lote': a.get('folio_lote'),
+            'folio_orden': a.get('folio_orden'),
+            'linea_nombre': a.get('linea_nombre'),
+            'empleado_nombre': a.get('empleado_nombre'),
+            'kpi_nombre': a.get('kpi_nombre'),
+            'kpi_valor': a.get('kpi_valor'),
+            'kpi_umbral_verde': a.get('kpi_umbral_verde'),
+            'kpi_umbral_amarillo': a.get('kpi_umbral_amarillo'),
+            'kpi_umbral_rojo': a.get('kpi_umbral_rojo'),
+            'kpi_semaforo': a.get('kpi_semaforo'),
+            'paso_nombre': a.get('paso_nombre'),
+            'paso_scrap': a.get('paso_scrap'),
+            'defectos': a.get('defectos') or [],
+            'tiene_detalle': bool(oblea_id or orden_numero),
+            'detalle_url': _detalle_url(role, tipo, oblea_id, orden_numero),
             'marcar_url': _marcar_leida_url(role, num),
         })
 
-    # No leídas primero
-    alertas.sort(key=lambda x: x['leida'])
     return alertas
 
 
