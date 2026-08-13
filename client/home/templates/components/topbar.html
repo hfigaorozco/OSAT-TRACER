@@ -72,8 +72,10 @@
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 {% elif notif.tipo == 'kpi' %}
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                {% elif notif.tipo == 'hold' %}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="9" x2="10" y2="15"/><line x1="14" y1="9" x2="14" y2="15"/></svg>
                 {% else %}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ notif.color_icon }}" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 {% endif %}
               </div>
               <div style="flex:1;min-width:0;">
