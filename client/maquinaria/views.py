@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.views import View
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj
 
-PAGE_SIZE_MAQUINARIA = 9
+PAGE_SIZE_MAQUINARIA = 7
 
 _NUM_SERIE_RE = re.compile(r'^[A-Za-z0-9]+$')
 
@@ -17,6 +17,42 @@ def _parse_fecha(valor):
         return date.fromisoformat(str(valor)[:10])
     except (TypeError, ValueError):
         return None
+
+
+def _lineas_por_maquina(lineas_map):
+    """numSerie -> lista de líneas (dicts {pk, nombre}) a las que pertenece
+    la máquina, derivado de a qué Pasos está ligada: MaquinaPaso -> Paso ->
+    PasoProceso -> Proceso -> LineaProceso -> Linea. Ya no se elige a mano
+    en el form de crear/editar máquina — una máquina puede terminar ligada
+    a más de una línea si sus pasos participan en procesos de líneas
+    distintas, o a ninguna todavía si no se ha asignado a ningún paso."""
+    maquina_paso_bd, pasos_proceso_bd, linea_proceso_bd = _get_many(
+        '/v1/list/MaquinaPaso/', '/v1/list/PasoProceso/', '/v1/list/LineaProceso/',
+    )
+    procesos_por_paso = {}
+    for pp in pasos_proceso_bd:
+        procesos_por_paso.setdefault(str(pp.get('paso', '')), set()).add(str(pp.get('proceso', '')))
+    lineas_por_proceso = {}
+    for lp in linea_proceso_bd:
+        lineas_por_proceso.setdefault(str(lp.get('proceso', '')), set()).add(str(lp.get('linea', '')))
+
+    resultado = {}
+    for mp in maquina_paso_bd:
+        num_serie = str(mp.get('maquina', ''))
+        procesos = procesos_por_paso.get(str(mp.get('paso', '')), set())
+        lineas_pk = set()
+        for proc in procesos:
+            lineas_pk |= lineas_por_proceso.get(proc, set())
+        if not lineas_pk:
+            continue
+        existentes = {l['pk'] for l in resultado.get(num_serie, [])}
+        for pk in lineas_pk:
+            if pk in existentes:
+                continue
+            resultado.setdefault(num_serie, []).append(
+                {'pk': pk, 'nombre': lineas_map.get(pk, {}).get('nombre', pk)}
+            )
+    return resultado
 
 
 class AdminMaquinaria(View):
@@ -50,14 +86,15 @@ class AdminMaquinaria(View):
         estados_map = {str(e.get('codigo', '')): e for e in estados_maquina_bd}
         lineas_map = {str(l.get('codigo', '')): l for l in lineas_bd}
         empleados_map = {str(e.get('numero', '')): e for e in empleados_bd}
+        lineas_por_maquina = _lineas_por_maquina(lineas_map)
 
         maquinas = []
         for m in maquinas_bd:
             tipo_pk = str(m.get('tipoMaquina', '')) if m.get('tipoMaquina') else ''
             estado_pk = str(m.get('estado', '')) if m.get('estado') else ''
-            linea_pk = str(m.get('linea', '')) if m.get('linea') else ''
             empleado_pk = str(m.get('empleado', '')) if m.get('empleado') else ''
             emp = empleados_map.get(empleado_pk, {})
+            lineas_maquina = lineas_por_maquina.get(str(m.get('numSerie', '')), [])
             maquinas.append({
                 'pk': m.get('numSerie'),
                 'nombre': m.get('nombre', ''),
@@ -65,8 +102,8 @@ class AdminMaquinaria(View):
                 'tipo_nombre': tipos_map.get(tipo_pk, {}).get('descripcion', tipo_pk or '—'),
                 'estado_pk': estado_pk,
                 'estado_nombre': estados_map.get(estado_pk, {}).get('descripcion', estado_pk or '—'),
-                'linea_pk': linea_pk,
-                'linea_nombre': lineas_map.get(linea_pk, {}).get('nombre') if linea_pk else None,
+                'lineas_pk': [l['pk'] for l in lineas_maquina],
+                'linea_nombre': ', '.join(l['nombre'] for l in lineas_maquina) if lineas_maquina else None,
                 'empleado_pk': empleado_pk,
                 'empleado_nombre': f"{emp.get('nombre', '')} {emp.get('primerApell', '')}".strip() if emp else None,
                 'fecha_reg': _parse_fecha(m.get('fechaReg')),
@@ -82,7 +119,7 @@ class AdminMaquinaria(View):
         if estado_filtro:
             maquinas_filtradas = [m for m in maquinas_filtradas if m['estado_pk'] == estado_filtro]
         if linea_filtro:
-            maquinas_filtradas = [m for m in maquinas_filtradas if m['linea_pk'] == linea_filtro]
+            maquinas_filtradas = [m for m in maquinas_filtradas if linea_filtro in m['lineas_pk']]
 
         maquinas_page = Paginator(maquinas_filtradas, PAGE_SIZE_MAQUINARIA).get_page(request.GET.get('page', 1))
 
@@ -123,7 +160,6 @@ class AdminMaquinariaCrear(View):
         num_serie = request.POST.get('num_serie', '').strip().upper()
         nombre = request.POST.get('nombre', '').strip()
         tipo = request.POST.get('tipo', '').strip()
-        linea = request.POST.get('linea', '').strip()
         estado = request.POST.get('estado', '').strip()
         empleado = request.POST.get('empleado', '').strip()
 
@@ -142,8 +178,6 @@ class AdminMaquinariaCrear(View):
 
         if not tipo:
             errores.append('Selecciona el tipo de máquina.')
-        if not linea:
-            errores.append('Selecciona la línea de producción.')
         if not estado:
             errores.append('Selecciona el estado.')
         if not empleado:
@@ -167,7 +201,6 @@ class AdminMaquinariaCrear(View):
             'tipoMaquina': tipo,
             'estado': estado,
             'empleado': empleado,
-            'linea': linea,
         })
         if ok:
             messages.success(request, 'Máquina registrada')
@@ -178,13 +211,10 @@ class AdminMaquinariaCrear(View):
 
 class AdminMaquinariaEditar(View):
     def post(self, request, pk):
-        linea = request.POST.get('linea', '').strip()
         estado = request.POST.get('estado', '').strip()
         empleado = request.POST.get('empleado', '').strip()
 
         errores = []
-        if not linea:
-            errores.append('Selecciona la línea de producción.')
         if not estado:
             errores.append('Selecciona el estado.')
         if not empleado:
@@ -198,7 +228,6 @@ class AdminMaquinariaEditar(View):
         ok, resp = _patch(f'/v1/update/maquinaria/{pk}/', {
             'estado': estado,
             'empleado': empleado,
-            'linea': linea,
         })
         if ok:
             messages.success(request, 'Máquina actualizada.')

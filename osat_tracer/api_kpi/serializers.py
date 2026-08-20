@@ -106,6 +106,7 @@ class UpdateKpiSerializer(serializers.ModelSerializer):
 
 ## SERIALIZER Alerta
 # CREATE
+# 'fecha' y 'hora' NO se incluyen: el modelo las genera solas (auto_now_add=True),
 class CreateAlertaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Alerta
@@ -119,7 +120,10 @@ class ListAlertaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Alerta
         fields = [
+            'numero',
             'descripcion',
+            'fecha',
+            'hora',
             'estadoAlerta'
         ]
 
@@ -130,6 +134,8 @@ class DetailAlertaSerializer(serializers.ModelSerializer):
         fields = [
             'numero',
             'descripcion',
+            'fecha',
+            'hora',
             'estadoAlerta'
         ]
 
@@ -148,24 +154,27 @@ class CreateRegistroKpiSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Registro_Kpi
         fields = [
-            'codigo',
             'valor',
             'oblea',
             'kpi',
-            'semaforo'
+            'semaforo',
+            'alerta'
         ]
 
 # LIST
+# Se agrega 'alerta' para poder ver, desde el listado, qué registros dispararon una alerta
 class ListRegistroKpiSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Registro_Kpi
         fields = [
+            'numero',
             'fecha',
             'hora',
             'valor',
             'oblea',
             'kpi',
-            'semaforo'
+            'semaforo',
+            'alerta'
         ]
 
 # DETAIL
@@ -174,25 +183,3 @@ class DetailRegistroKpiSerializer(serializers.ModelSerializer):
         model = models.Registro_Kpi
         fields = '__all__'
 
-
-## SERIALIZER Historial_alertas
-# CREATE
-class CreateHistorialAlertasSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Historial_Alertas
-        fields = [
-            'registro_kpi',
-            'alerta'
-        ]
-
-# LIST
-class ListHistorialAlertasSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Historial_Alertas
-        fields = '__all__'
-
-# DETAIL
-class DetailHistorialAlertasSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Historial_Alertas
-        fields = '__all__'

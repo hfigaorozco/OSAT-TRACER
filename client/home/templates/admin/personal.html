@@ -23,11 +23,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" name="q" class="form-control" placeholder="Buscar empleado" value="{{ q }}" onkeydown="if(event.key==='Enter'){this.form.submit();}">
     </div>
-    <select name="rol" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
+    <select name="rol" class="form-control" style="width:180px;" onchange="this.form.submit()">
       <option value="">Todos los roles</option>
       {% for rol in roles_list %}<option value="{{ rol.pk }}" {% if rol_filtro == rol.pk %}selected{% endif %}>{{ rol.nombre }}</option>{% endfor %}
     </select>
-    <select name="estado" class="form-control" style="width:180px;background:var(--bg-app);color:var(--text-subtle);" onchange="this.form.submit()">
+    <select name="estado" class="form-control" style="width:180px;" onchange="this.form.submit()">
       <option value="">Todos los estados</option>
       {% for est in estados_empleado %}<option value="{{ est.pk }}" {% if estado_filtro == est.pk %}selected{% endif %}>{{ est.nombre }}</option>{% endfor %}
     </select>
@@ -38,7 +38,7 @@
 </div>
 
 <!-- Tabla unificada -->
-<div class="card" style="padding:0;">
+<div class="card-table">
   <div class="table-wrap">
     <table class="data-table" id="tabla-personal">
       <thead>
@@ -86,11 +86,11 @@
 
           <td>
             {% if emp.rol.nombre == 'Administrador' %}
-              <span class="badge" style="background:#EFBF04;color:#000000;">{{ emp.rol.nombre }}</span>
+              <span class="badge" style="background:#F5A623;color:#1A202C;">{{ emp.rol.nombre }}</span>
             {% elif emp.rol.nombre == 'Supervisor' %}
-              <span class="badge" style="background:#D4EDDA;color:#155724;">{{ emp.rol.nombre }}</span>
+              <span class="badge" style="background:#16A85E;color:#FFFFFF;">{{ emp.rol.nombre }}</span>
             {% elif emp.rol.nombre == 'Operador' %}
-              <span class="badge" style="background:#BEE3F8;color:#2B6CB0;">{{ emp.rol.nombre }}</span>
+              <span class="badge" style="background:#009EAF;color:#FFFFFF;">{{ emp.rol.nombre }}</span>
             {% else %}
               <span class="badge badge-activo">{{ emp.rol.nombre|default:"—" }}</span>
             {% endif %}

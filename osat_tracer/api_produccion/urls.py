@@ -56,6 +56,7 @@ urlpatterns = [
     path('v1/list/LineaProceso/', views.ListLineaProcesoAPIView.as_view(), name='list_LineaProcesos'),
     path('v1/create/LineaProceso/', views.CreateLineaProcesoAPIView.as_view(), name='create_LineaProceso'),
     path('v1/detail/LineaProceso/<str:pk>/', views.DetailLineaProcesoAPIView.as_view(), name='detail_LineaProceso'),
+    path('v1/delete/LineaProceso/<int:pk>/', views.DeleteLineaProcesoAPIView.as_view(), name='delete_LineaProceso'),
     #PasoProceso
     path('v1/list/PasoProceso/', views.ListPasoProcesoAPIView.as_view(), name='list_PasoProcesos'),
     path('v1/create/PasoProceso/', views.CreatePasoProcesoAPIView.as_view(), name='create_PasoProceso'),
@@ -71,6 +72,7 @@ urlpatterns = [
     #MaquinaPaso
     path('v1/list/MaquinaPaso/', views.ListMaquinaPasoAPIView.as_view(), name='list_MaquinaPasos'),
     path('v1/create/MaquinaPaso/', views.CreateMaquinaPasoAPIView.as_view(), name='create_MaquinaPaso'),
+    path('v1/delete/MaquinaPaso/<int:pk>/', views.DeleteMaquinaPasoAPIView.as_view(), name='delete_MaquinaPaso'),
     #PasoRealizado
     path('v1/list/PasoRealizado/', views.ListPasoRealizadoAPIView.as_view(), name='list_PasoRealizados'),
     path('v1/create/PasoRealizado/', views.CreatePasoRealizadoAPIView.as_view(), name='create_PasoRealizado'),

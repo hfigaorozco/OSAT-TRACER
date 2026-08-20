@@ -168,8 +168,7 @@ class CreateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #LIST
 class ListLineaSerializer(serializers.ModelSerializer):
@@ -177,8 +176,7 @@ class ListLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #DETAIL
 class DetailLineaSerializer(serializers.ModelSerializer):
@@ -186,8 +184,7 @@ class DetailLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             "codigo",
-            "nombre",
-            "proceso"
+            "nombre"
         ]
 #UPDATE
 class UpdateLineaSerializer(serializers.ModelSerializer):
@@ -195,7 +192,6 @@ class UpdateLineaSerializer(serializers.ModelSerializer):
         model = models.Linea
         fields = [
             'nombre',
-            'proceso',
         ]
 
 
@@ -405,9 +401,10 @@ class ListLineaProcesoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.LineaProceso
         fields = [
+           "id",
            "linea",
-           "proceso",  
-        ] 
+           "proceso",
+        ]
 #DETAIL
 #UPDATE
 
@@ -505,9 +502,10 @@ class ListMaquinaPasoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.MaquinaPaso
         fields = [
+            "id",
             "maquina",
-            "paso",   
-        ] 
+            "paso",
+        ]
 #DETAIL
 #UPDATE
 
@@ -554,6 +552,14 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'La orden de este lote está en Hold por exceso de scrap. '
                 'Libérala antes de continuar.'
+            )
+
+        # Ni si la orden fue rechazada manualmente estando en Hold (ver
+        # client/produccion/views.py::_orden_rechazar) — es un estado final,
+        # igual de definitivo que Hold para efectos de completar etapas.
+        if oblea and oblea.orden_id and str(oblea.orden.estado_id).lower() == 'recha':
+            raise serializers.ValidationError(
+                'La orden de este lote fue rechazada. No se pueden completar más etapas.'
             )
 
         # Rechazar una etapa es una decisión sobre el YIELD GLOBAL del lote, no
@@ -621,12 +627,21 @@ class CreatePasoRealizadoSerializer(serializers.ModelSerializer):
                 continue
 
         # Rechazar una etapa rechaza el lote completo de una vez — ya no
-        # espera a que se completen las etapas restantes.
+        # espera a que se completen las etapas restantes. Esto SÍ deja al
+        # lote en un estado terminal aquí mismo (a diferencia del caso
+        # "todas las etapas aprobadas", que el cliente decide aparte en
+        # _avanzar_estado_lote_y_orden) — se registra el KPI final ya mismo.
         if oblea and estado_codigo == 'nocom':
             try:
                 oblea.estado = models.Estado_Oblea.objects.get(pk='recha')
                 oblea.save(update_fields=['estado'])
+                from api_kpi.services import registrar_kpis_de_lote
+                registrar_kpis_de_lote(oblea)
             except models.Estado_Oblea.DoesNotExist:
+                pass
+            except Exception:
+                # El KPI es un extra — no debe tumbar la respuesta si falla,
+                # completar la etapa ya se guardó y es lo importante.
                 pass
 
         return paso_realizado
@@ -676,6 +691,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
     """
     etapas = serializers.SerializerMethodField()
     orden_numero = serializers.SerializerMethodField()
+    orden_estado = serializers.SerializerMethodField()
     dies_iniciales = serializers.SerializerMethodField()
     dies_activos = serializers.SerializerMethodField()
 
@@ -688,6 +704,7 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
             "dies_activos",
             "orden",
             "orden_numero",
+            "orden_estado",
             "estado",
             "codigoQR",
             "etapas",
@@ -695,6 +712,13 @@ class DetailObleaConEtapasSerializer(serializers.ModelSerializer):
 
     def get_orden_numero(self, obj):
         return obj.orden.numero if obj.orden else None
+
+    def get_orden_estado(self, obj):
+        """Estado de la ORDEN (no del lote): la app móvil necesita saberlo
+        para bloquear "Completar etapa" cuando la orden completa está en
+        Hold o fue rechazada aunque este lote individual siga 'proce'
+        (ver client/produccion/views.py::_completar_etapa, mismo chequeo)."""
+        return obj.orden.estado_id if obj.orden else None
 
     def get_dies_iniciales(self, obj):
         """Fijo: cantidadDies del Tipo_Oblea de la orden. A diferencia de

@@ -35,7 +35,7 @@
   </form>
 </div>
 
-<div class="card" style="padding:0;">
+<div class="card-table">
   <div class="table-wrap">
     <table class="data-table">
       <thead>
@@ -61,9 +61,9 @@
           </td>
           <td>{{ cuenta.user.get_full_name|default:"—" }}</td>
           <td>
-            {% if cuenta.rol == 'admin' %}<span class="badge" style="background:#1A202C15;color:#1A202C;">Administrador</span>
-            {% elif cuenta.rol == 'supervisor' %}<span class="badge" style="background:#009EAF15;color:#007A89;">Supervisor</span>
-            {% else %}<span class="badge" style="background:#16A85E15;color:#0D7A45;">Operador</span>{% endif %}
+            {% if cuenta.rol == 'admin' %}<span class="badge" style="background:#F5A623;color:#1A202C;">Administrador</span>
+            {% elif cuenta.rol == 'supervisor' %}<span class="badge" style="background:#16A85E;color:#FFFFFF;">Supervisor</span>
+            {% else %}<span class="badge" style="background:#009EAF;color:#FFFFFF;">Operador</span>{% endif %}
           </td>
           <td>
             {% if cuenta.activo %}<span class="badge badge-activo">Activo</span>

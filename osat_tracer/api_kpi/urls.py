@@ -23,14 +23,17 @@ urlpatterns = [
     path('v1/list/alertas/', views.ListAlertaAPIView.as_view(), name='list_alerta'),
     path('v1/detail/alerta/<int:pk>/', views.DetailAlertaAPIView.as_view(), name='detail_alerta'),
     path('v1/update/alerta/<int:pk>/', views.UpdateAlertaAPIView.as_view(), name='update_alerta'),
+    path('v1/list/alertas_operador/', views.AlertasOperadorAPIView.as_view(), name='list_alertas_operador'),
 
     # Registro Kpi
     path('v1/create/registro_kpi/', views.CreateRegistroKpiAPIView.as_view(), name='create_registroKpi'),
     path('v1/list/registros_kpi/', views.ListRegistroKpiAPIView.as_view(), name='list_registroKpi'),
     path('v1/detail/registro_kpi/<int:pk>/', views.DetailRegistroKpiAPIView.as_view(), name='detail_registroKpi'),
 
-    # Historial alerta
-    path('v1/create/historial_alertas/', views.CreateHistorialAlertasAPIView.as_view(), name='create_historialAlerta'),
-    path('v1/list/historiales_alertas/', views.ListHistorialAlertasAPIView.as_view(), name='list_historialAlerta'),
-    path('v1/detail/historial_alertas/<int:registroKPI>/<int:alerta>/', views.DetailHistorialAlertaAPIView.as_view(), name='detail_historialAlerta'),
+    # KPI por línea (semáforo real)
+    path('v1/kpi/semaforo_por_linea/', views.KpiPorLineaAPIView.as_view(), name='kpi_semaforo_por_linea'),
+
+    # Registrar el KPI final de un lote (Yield/Throughput/OEE), una vez que
+    # queda en estado terminal (Terminada o Rechazada).
+    path('v1/kpi/registrar_por_lote/<int:oblea_pk>/', views.RegistrarKpiPorLoteAPIView.as_view(), name='kpi_registrar_por_lote'),
 ]

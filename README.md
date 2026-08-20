@@ -14,15 +14,17 @@ cd OSAT-TRACER\osat_tracer
 # PASO 1 — Genera los empleados con contraseña real primero
 python manage.py shell -c "exec(open('fixtures_v2/00_generar_empleados.py').read())"
 
-# PASO 2 — Carga en orden
+# PASO 2 — Carga los fixtures
 python manage.py loaddata fixtures_v2/01_catalogos_base.json
 python manage.py loaddata fixtures_v2/02_procesos_pasos.json
 python manage.py loaddata fixtures_v2/03_inventario.json
 python manage.py loaddata fixtures_v2/03_empleados_real.json
 python manage.py loaddata fixtures_v2/04_maquinaria.json
-python manage.py loaddata fixtures_v2/05_ordenes_lotes.json
-python manage.py loaddata fixtures_v2/06_alertas_kpi_trazabilidad.json
+
+# O en una sola línea --:
+python manage.py loaddata fixtures_v2/01_catalogos_base.json fixtures_v2/02_procesos_pasos.json fixtures_v2/03_empleados_real.json fixtures_v2/03_inventario.json fixtures_v2/04_maquinaria.json
 ```
+
 
 ## Credenciales de prueba
 

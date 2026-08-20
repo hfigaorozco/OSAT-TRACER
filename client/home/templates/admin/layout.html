@@ -7,13 +7,27 @@
   <div class="main-wrap">
     {% include "components/topbar.html" %}
     <main class="main-content">
-      {% if messages %}
-        {% for message in messages %}
-          <div class="banner banner-{{ message.tags }}" style="margin-bottom:1rem;">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>
 </div>
+{% if messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% for message in messages %}
+  {% if message.extra_tags %}
+    showReportNotification("{{ message|escapejs }}", "{{ message.extra_tags|escapejs }}", "{{ message.level_tag|escapejs }}");
+  {% elif message.level_tag == 'success' %}
+    showToast("{{ message|escapejs }}", "success");
+  {% elif message.level_tag == 'error' or message.level_tag == 'danger' %}
+    showToast("{{ message|escapejs }}", "error");
+  {% elif message.level_tag == 'warning' %}
+    showToast("{{ message|escapejs }}", "warning");
+  {% else %}
+    showToast("{{ message|escapejs }}", "info");
+  {% endif %}
+  {% endfor %}
+});
+</script>
+{% endif %}
 {% endblock %}

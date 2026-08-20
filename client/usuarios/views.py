@@ -1,40 +1,192 @@
 import re
+from datetime import date
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError as DjangoValidationError
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _FakeObj, _build_semaforo
+from produccion.views import _estado_orden_display, _calcular_yield_sp
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 
-PAGE_SIZE_PERSONAL = 9
+PAGE_SIZE_PERSONAL = 7
 
 _RFC_RE = re.compile(r'^[A-Z0-9]{13}$')
 _USERNAME_RE = re.compile(r'^[a-z0-9._-]+$')
 
+
+def _ordenes_activas_reales(ordenes_bd, obleas_bd, procesos_map, limit=5):
+    """Órdenes activas reales para el widget de dashboard (admin y
+    supervisor comparten este criterio para no divergir de lo que se ve
+    al entrar a Producción/Órdenes). Reusa _estado_orden_display —el mismo
+    cálculo de estado/progreso que ya usa esa página— en vez de tener una
+    segunda fórmula que se pueda desalinear con el tiempo.
+    'Activa' = la orden ya tiene trazado en curso: en proceso o en hold —
+    ni 'abierta' (creada pero sin ningún paso registrado todavía) ni
+    'cerrada'/'rechazado' (ya no admiten más cambios) cuentan como activas.
+    """
+    activas = []
+    for o in ordenes_bd:
+        num = o.get('numero')
+        obs = [ob for ob in obleas_bd if str(ob.get('orden')) == str(num)]
+        edo_str, comp, pct, _term, _rech = _estado_orden_display(o.get('estado'), obs)
+        if edo_str not in ('en_proceso', 'hold'):
+            continue
+        proceso_codigo = str(o.get('proceso', ''))
+        activas.append({
+            'pk': num,
+            'numero': f'ORD-{num:04d}' if isinstance(num, int) else str(num),
+            'proceso': procesos_map.get(proceso_codigo, {}).get('nombre') or proceso_codigo or '—',
+            'completados': comp,
+            'total': len(obs),
+            'pct': pct,
+            'estado': edo_str,
+        })
+    activas.sort(key=lambda x: x['pk'] if isinstance(x['pk'], int) else 0, reverse=True)
+    return activas[:limit]
+
+
+def _pasos_completados_hoy(pasos_realizados_bd):
+    """Cuenta los Paso_Realizado registrados HOY con resultado 'compl'.
+
+    Es la única cifra del dashboard que se mueve con cada paso individual
+    — el resto del semáforo KPI (Yield/Throughput/OEE por línea) lee de
+    Registro_Kpi, que a propósito solo se llena cuando un lote completo
+    termina (ver registrar_kpis_de_lote en osat_tracer/api_kpi/services.py),
+    para no mostrar esas cifras como "críticas" a medio proceso. Este
+    contador cubre esa brecha: da una señal visible de actividad en vivo
+    sin tocar la precisión de los KPIs finales.
+    """
+    hoy = date.today().isoformat()
+    return sum(
+        1 for pr in pasos_realizados_bd
+        if str(pr.get('estado', '')).lower() == 'compl' and str(pr.get('fecha', ''))[:10] == hoy
+    )
+
+
+def _kpi_produccion_reales(obleas_bd, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd):
+    """Yield/Throughput/OEE reales para las tarjetas de producción del
+    dashboard (hoy solo las usa supervisor, pero quedan disponibles para
+    admin también si se necesitan más adelante).
+
+    OEE es una aproximación: Calidad (yield global) x Disponibilidad
+    (fracción de lotes que NO cayeron en Hold). Este proyecto no rastrea
+    tiempos de paro de máquina en ningún modelo, así que el factor de
+    Rendimiento/Performance de la fórmula OEE clásica no se puede calcular
+    con datos reales — se omite en vez de inventar un número.
+    """
+    tipos_map = {str(t.get('codigo')): t for t in tipos_oblea_bd}
+    ordenes_map = {str(o.get('numero')): o for o in ordenes_bd}
+
+    dies_iniciales_total = 0
+    dies_activos_total = 0
+    lotes_hold_count = 0
+    for ob in obleas_bd:
+        orden = ordenes_map.get(str(ob.get('orden')))
+        tipo_pk = str(orden.get('tipoOblea')) if orden else None
+        cantidad_dies = tipos_map.get(tipo_pk, {}).get('cantidadDies') or ob.get('diesGenerados', 0)
+        dies_iniciales_total += cantidad_dies
+        dies_activos_total += ob.get('diesGenerados', 0)
+        if str(ob.get('estado', '')).lower() == 'enhol':
+            lotes_hold_count += 1
+
+    yield_pct = round(dies_activos_total / dies_iniciales_total * 100, 1) if dies_iniciales_total > 0 else 0
+    disponibilidad = 1 - (lotes_hold_count / len(obleas_bd)) if obleas_bd else 1
+    oee_pct = round(yield_pct * disponibilidad, 1)
+
+    throughput = _pasos_completados_hoy(pasos_realizados_bd)
+
+    return {'yield_pct': yield_pct, 'throughput': throughput, 'oee_pct': oee_pct}
+
+
+_CODIGO_SIN_RESOLVER = 'sinre'  # mismo valor que en home/alertas.py
+
 def admin_dashboard(request):
     ctx = _base_ctx('Administrador')
-    empleados, maquinas, kpis, obleas, ordenes_bd, alertas_bd = _get_many(
-        '/v1/list/empleados/', '/v1/list/maquinaria/', '/v1/list/kpis/',
-        '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/',
+    empleados, maquinas, obleas, ordenes_bd, alertas_bd, procesos_bd, estados_alerta_bd, pasos_realizados_bd = _get_many(
+        '/v1/list/empleados/', '/v1/list/maquinaria/',
+        '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/alertas/', '/v1/list/Proceso/',
+        '/v1/list/estados_alerta/', '/v1/list/PasoRealizado/',
     )
+    procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
+    estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
+
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    ordenes_activas = [{'numero': f"ORD-{o['numero']:04d}" if isinstance(o.get('numero'), int) else str(o.get('numero', '')),
-        'proceso': str(o.get('proceso', '—')), 'completados': 0, 'total': 1, 'pct': 0, 'estado': 'en_proceso'}
-        for o in ordenes_bd[:5]]
-    alertas_activas = [{'tipo': 'advertencia', 'descripcion': a.get('descripcion', ''),
-        'referencia': f"#{a.get('numero', '—')}", 'tiempo': '—'}
-        for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')][:5]
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
-    ctx = {'user_role': 'Administrador', 'unread_count': unread,
-        'recent_notifications': [{'titulo': a.get('descripcion', ''), 'tipo': 'alerta',
-            'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre')} for a in alertas_bd[:5]],
-        'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin-dash/'}]}
-    ctx.update({'kpi': {'cuentas': len(empleados), 'empleados': len(empleados), 'maquinas': len(maquinas),
-        'lotes_hold': lotes_hold, 'lotes_hold_delta': ''},
-        'semaforo_kpi': _build_semaforo(kpis), 'ordenes_activas': ordenes_activas,
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map, limit=20)
+
+    alertas_activas = [{
+        'numero': a.get('numero', '—'),
+        'descripcion': a.get('descripcion', ''),
+        'fecha': a.get('fecha', '—'),
+        'hora': str(a.get('hora', ''))[:5],
+        'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:20]
+
+    ctx.update({'breadcrumbs': [{'label': 'Dashboard', 'url': '/admin/dash/'}]})
+
+    semaforo_kpi, semaforo_columnas = _build_semaforo()
+    empleados_activos = sum(1 for e in empleados if str(e.get('estado', '')).lower() == 'activo')
+    maquinas_activas = sum(1 for m in maquinas if str(m.get('estado', '')).lower() == 'act')
+    pasos_hoy = _pasos_completados_hoy(pasos_realizados_bd)
+    ctx.update({'kpi': {'cuentas': empleados_activos, 'empleados': len(empleados), 'maquinas': maquinas_activas,
+        'lotes_hold': lotes_hold, 'lotes_hold_delta': '', 'pasos_hoy': pasos_hoy},
+        'semaforo_kpi': semaforo_kpi, 'semaforo_columnas': semaforo_columnas,
+        'ordenes_activas': ordenes_activas,
         'alertas_activas': alertas_activas})
     return render(request, 'admin/dashboard.html', ctx)
+
+
+def admin_pasos_hoy_detalle(request):
+    """Detalle detrás de la tarjeta 'Pasos completados hoy' del dashboard —
+    en vez de mandar a la pantalla general de Producción, la tarjeta abre un
+    modal con esta tabla: por cada Paso_Realizado de HOY con resultado
+    'compl', a qué lote/orden/línea pertenece y el yield actual de ese lote
+    (vía sp_calcularYieldLote, el mismo que usa el detalle de un lote — ver
+    _calcular_yield_sp en produccion/views.py). Se calcula bajo demanda
+    (fetch desde el modal) en vez de en cada carga del dashboard, siguiendo
+    el mismo patrón que 'Lotes posibles por stock' en Inventario."""
+    pasos_bd, obleas_bd, ordenes_bd, lineas_bd, catalogo_pasos = _get_many(
+        '/v1/list/PasoRealizado/', '/v1/list/Oblea/', '/v1/list/Orden/',
+        '/v1/list/Linea/', '/v1/list/pasos/',
+    )
+    hoy = date.today().isoformat()
+    obleas_map = {str(ob.get('numero')): ob for ob in obleas_bd}
+    ordenes_map = {str(o.get('numero')): o for o in ordenes_bd}
+    lineas_map = {str(l.get('codigo')): l for l in lineas_bd}
+    pasos_map = {str(p.get('codigo')): p for p in catalogo_pasos}
+
+    yield_cache = {}
+    filas = []
+    for pr in pasos_bd:
+        if str(pr.get('estado', '')).lower() != 'compl':
+            continue
+        if str(pr.get('fecha', ''))[:10] != hoy:
+            continue
+        oblea_pk = str(pr.get('oblea', ''))
+        oblea = obleas_map.get(oblea_pk)
+        if not oblea:
+            continue
+        orden_num = str(oblea.get('orden', ''))
+        orden = ordenes_map.get(orden_num, {})
+        linea_pk = str(orden.get('linea', '')) if orden.get('linea') else ''
+
+        if oblea_pk not in yield_cache:
+            yield_cache[oblea_pk] = _calcular_yield_sp(oblea_pk)
+
+        filas.append({
+            'hora': str(pr.get('hora', ''))[:5],
+            'paso': pasos_map.get(str(pr.get('paso', '')), {}).get('nombre', pr.get('paso', '—')),
+            'yield_pct': yield_cache[oblea_pk],
+            'lote': f'LOT-{int(oblea_pk):04d}' if oblea_pk.isdigit() else oblea_pk,
+            'lote_pk': oblea_pk,
+            'orden': f'ORD-{int(orden_num):04d}' if orden_num.isdigit() else orden_num,
+            'orden_pk': orden_num,
+            'linea': lineas_map.get(linea_pk, {}).get('nombre', '—') if linea_pk else '—',
+        })
+
+    filas.sort(key=lambda f: f['hora'], reverse=True)
+    return JsonResponse({'filas': filas})
 
 
 # ════════════════════════════════════════════════════════════════
@@ -74,10 +226,7 @@ def _build_empleados(empleados_bd):
 
 
 def admin_personal(request):
-    empleados_bd, alertas_bd = _get_many(
-        '/v1/list/empleados/',
-        '/v1/list/alertas/',
-    )
+    empleados_bd = _get('/v1/list/empleados/', [])
 
     # pk = código corto — es lo que espera el API al crear/editar un
     # empleado (Empleado.rol es FK a Rol, cuya PK es el código corto).
@@ -130,11 +279,10 @@ def admin_personal(request):
         filtros_activos['estado'] = estado_filtro
     personal_extra_params = (urlencode(filtros_activos) + '&') if filtros_activos else ''
 
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
     ctx = {
         'user_role': 'Administrador',
-        'unread_count': unread,
-        'recent_notifications': [],
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/admin-dash/'},
             {'label': 'Personal',  'url': '/admin/personal/'},
@@ -326,20 +474,38 @@ def admin_cuentas_crear(request):
 # ════════════════════════════════════════════════════════════════
 
 def supervisor_dashboard(request):
-    kpis, obleas, alertas_bd = _get_many(
-        '/v1/list/kpis/', '/v1/list/Oblea/', '/v1/list/alertas/',
+    obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd, alertas_bd, procesos_bd, estados_alerta_bd = _get_many(
+        '/v1/list/Oblea/', '/v1/list/Orden/', '/v1/list/TipoOblea/',
+        '/v1/list/PasoRealizado/', '/v1/list/alertas/', '/v1/list/Proceso/',
+        '/v1/list/estados_alerta/',
     )
+    procesos_map = {str(p.get('codigo')): p for p in procesos_bd}
+    estados_alerta_map = {str(e.get('codigo')): e.get('descripcion', '') for e in estados_alerta_bd}
+
     lotes_hold = sum(1 for o in obleas if str(o.get('estado', '')).lower() == 'enhol')
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    kpi_prod = _kpi_produccion_reales(obleas, ordenes_bd, tipos_oblea_bd, pasos_realizados_bd)
+    ordenes_activas = _ordenes_activas_reales(ordenes_bd, obleas, procesos_map, limit=20)
+
+    alertas_activas = [{
+        'numero': a.get('numero', '—'),
+        'descripcion': a.get('descripcion', ''),
+        'fecha': a.get('fecha', '—'),
+        'hora': str(a.get('hora', ''))[:5],
+        'estado': estados_alerta_map.get(str(a.get('estadoAlerta', '')), a.get('estadoAlerta', '—')),
+    } for a in alertas_bd if str(a.get('estadoAlerta', '')) == _CODIGO_SIN_RESOLVER][:20]
+
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app.
+    semaforo_kpi, semaforo_columnas = _build_semaforo()
     ctx = {
-        'user_role': 'Supervisor', 'unread_count': unread,
-        'recent_notifications': [],
+        'user_role': 'Supervisor',
         'breadcrumbs': [{'label': 'Dashboard', 'url': '/supervisor/'}],
-        'kpi': {'yield_pct': 94.2, 'yield_delta': '+2.5%', 'throughput': 498,
-                'throughput_delta': '-1.2%', 'oee_pct': 87.1, 'oee_delta': '+11%',
+        'kpi': {'yield_pct': kpi_prod['yield_pct'], 'yield_delta': '',
+                'throughput': kpi_prod['throughput'], 'throughput_delta': '',
+                'oee_pct': kpi_prod['oee_pct'], 'oee_delta': '',
                 'lotes_hold': lotes_hold, 'lotes_hold_delta': ''},
-        'semaforo_kpi': _build_semaforo(kpis),
-        'ordenes_activas': [], 'alertas_activas': [],
+        'semaforo_kpi': semaforo_kpi, 'semaforo_columnas': semaforo_columnas,
+        'ordenes_activas': ordenes_activas, 'alertas_activas': alertas_activas,
     }
     return render(request, 'supervisor/dashboard.html', ctx)
 

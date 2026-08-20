@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'core',
     'api_inventario',
     'api_kpi',
     'api_maquinaria',

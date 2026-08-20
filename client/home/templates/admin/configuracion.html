@@ -17,7 +17,7 @@
         <h3 style="font-size:19px;font-weight:700;color:#1A202C;margin:0;">{{ kpi_item.nombre }}</h3>
         <div style="display:flex;gap:6px;">
           <div style="width:16px;height:16px;border-radius:50%;background:#16A85E;"></div>
-          <div style="width:16px;height:16px;border-radius:50%;background:#F5A623;"></div>
+          <div style="width:16px;height:16px;border-radius:50%;background:#FFCA28;"></div>
           <div style="width:16px;height:16px;border-radius:50%;background:#EF5350;"></div>
         </div>
       </div>
@@ -28,18 +28,18 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:12px;height:12px;border-radius:50%;background:#16A85E;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="verde" value="{{ kpi_item.verde }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
         <div style="margin-bottom:18px;">
           <div style="font-size:14.5px;color:#718096;margin-bottom:8px;">Amarillo ({{ kpi_item.label_amarillo }})</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:12px;height:12px;border-radius:50%;background:#F5A623;flex-shrink:0;"></div>
+            <div style="width:12px;height:12px;border-radius:50%;background:#FFCA28;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="amarillo" value="{{ kpi_item.amarillo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
@@ -48,8 +48,8 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:12px;height:12px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
             <div style="position:relative;flex:1;">
-              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;">
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;">{{ kpi_item.unidad }}</span>
+              <input type="number" name="rojo" value="{{ kpi_item.rojo }}" class="form-control" style="height:44px;font-size:16px;padding-right:40px;" {% if kpi_item.unidad == '%' %}max="100"{% endif %}>
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;background:#2D3748;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;pointer-events:none;white-space:nowrap;">{{ kpi_item.unidad }}</span>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
     <div class="section-block-title" style="margin-bottom:0;border:none;padding:0;">Tipos de defecto</div>
     <button class="btn btn-outline btn-sm" onclick="openModal('modal-create-defecto')">+ Agregar tipo</button>
   </div>
-  <div class="card" style="padding:0;">
+  <div class="card-table">
     <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Código</th><th>Nombre</th><th>Pasos</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -129,6 +129,55 @@
   </div>
 </div>
 
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <!-- Horario de disponibilidad del sistema -->
+  <div class="section-block">
+    <div class="section-block-title">Horario de disponibilidad del sistema</div>
+    <p style="font-size:14px;color:#4A5568;margin-bottom:16px;">
+      Defina el rango horario en que los usuarios (no administradores) pueden usar el sistema.
+    </p>
+    <div class="card" style="padding:28px;max-width:480px;">
+      <form method="post" action="{% url 'admin_config_horario_save' %}">{% csrf_token %}
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Hora de inicio</label>
+            <input type="time" name="hora_inicio" class="form-control" style="height:44px;font-size:16px;"
+                   value="{{ horario_sistema.hora_inicio|time:'H:i' }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora de fin</label>
+            <input type="time" name="hora_fin" class="form-control" style="height:44px;font-size:16px;"
+                   value="{{ horario_sistema.hora_fin|time:'H:i' }}" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:15.5px;margin-top:8px;">
+          Guardar horario
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Configuración de la app móvil (independiente del horario laboral) -->
+  <div class="section-block">
+    <div class="section-block-title">Configuración de la app móvil</div>
+    <p style="font-size:14px;color:#4A5568;margin-bottom:16px;">
+      Minutos de inactividad antes de bloquear la sesión en la app móvil.
+    </p>
+    <div class="card" style="padding:28px;">
+      <form method="post" action="{% url 'admin_config_movil_save' %}">{% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Inactividad antes de bloquear sesión (minutos)</label>
+          <input type="number" name="inactividad_minutos" class="form-control" style="height:44px;font-size:16px;"
+                 value="{{ configuracion_movil.inactividad_minutos }}" min="1" max="480" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:15.5px;margin-top:8px;">
+          Guardar configuración móvil
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Modal defecto -->
 <div class="modal-overlay" id="modal-create-defecto" style="display:none;" onclick="if(event.target===this)closeModal('modal-create-defecto')">
   <div class="modal-card modal-md">
@@ -136,7 +185,7 @@
     <form method="post" action="{% url 'admin_config_defecto_crear' %}">{% csrf_token %}
       <div class="modal-body">
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" class="form-control" placeholder="def01" maxlength="5" required></div>
+          <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" class="form-control" placeholder="Máx. 5 caracteres, ej: def01" maxlength="5" required></div>
           <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" class="form-control" placeholder="Nombre del defecto" required></div>
         </div>
         <div class="form-group">

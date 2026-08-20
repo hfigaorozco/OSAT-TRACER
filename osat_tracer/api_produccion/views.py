@@ -314,12 +314,17 @@ class ListLineaProcesoAPIView(APIView):
     
 #DETAIL
 class DetailLineaProcesoAPIView(APIView):
-    
+
     def get(self, request, pk):
         LineaProceso = models.LineaProceso.objects.get(pk=pk)
         data = serializers.DetailLineaProcesoSerializer(LineaProceso, many=False).data
         return Response(data)
-    
+
+#DELETE (quita solo la relación línea-proceso, no borra la Línea ni el Proceso)
+class DeleteLineaProcesoAPIView(generics.DestroyAPIView):
+    queryset = models.LineaProceso.objects.all()
+    lookup_field = 'pk'
+
 #Vistas  PasoProceso
 #CREATE
 class CreatePasoProcesoAPIView(generics.CreateAPIView):
@@ -393,12 +398,17 @@ class CreateMaquinaPasoAPIView(generics.CreateAPIView):
 
 #LIST
 class ListMaquinaPasoAPIView(APIView):
-    
+
     def get(self, request):
         MaquinaPasos = models.MaquinaPaso.objects.all()
         data = serializers.ListMaquinaPasoSerializer(MaquinaPasos, many=True).data
         return Response(data)
-    
+
+#DELETE (quita solo la relación máquina-paso, no borra la Máquina ni el Paso)
+class DeleteMaquinaPasoAPIView(generics.DestroyAPIView):
+    queryset = models.MaquinaPaso.objects.all()
+    lookup_field = 'pk'
+
 #Vistas  PasoRealizado
 #CREATE
 class CreatePasoRealizadoAPIView(generics.CreateAPIView):

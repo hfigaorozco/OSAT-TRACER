@@ -47,10 +47,9 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <span style="font-size:14.5px;color:var(--text-muted);">{{ plantillas|length }} Plantillas Registradas</span>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div style="position:relative;">
-        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search..." id="search-plantillas" oninput="filterPlantillas(this.value)"
-          style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search..." id="search-plantillas" oninput="filterPlantillas(this.value)" class="form-control">
       </div>
     </div>
   </div>
@@ -80,13 +79,13 @@
 <!-- ═══ TAB LÍNEAS DE PRODUCCIÓN ═══ -->
 <div id="org-tab-lineas" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:20px;">
-    <div style="position:relative;">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search..." class="form-control">
     </div>
   </div>
 
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -119,13 +118,13 @@
 <!-- ═══ TAB TIPOS DE OBLEA ═══ -->
 <div id="org-tab-obleas" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:20px;">
-    <div style="position:relative;">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search..." class="form-control">
     </div>
   </div>
 
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -160,13 +159,13 @@
 <!-- ═══ TAB PASOS ═══ -->
 <div id="org-tab-pasos" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:20px;">
-    <div style="position:relative;">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Search..." style="height:38px;padding:0 12px 0 32px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search..." class="form-control">
     </div>
   </div>
 
-  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;margin-bottom:28px;">
     <table style="width:100%;border-collapse:collapse;font-size:14.5px;">
       <thead style="background:#F7FAFC;">
         <tr>
@@ -174,6 +173,7 @@
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Nombre</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Descripción</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Tiempo estimado</th>
+          <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Máquina(s)</th>
           <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
         </tr>
       </thead>
@@ -184,9 +184,12 @@
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ p.nombre }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#718096;">{{ p.descripcion|default:"—" }}</td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">{{ p.tiempo_estimado_min|default:0 }} min</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;color:#2D3748;">
+            {% if p.maquinas %}{% for m in p.maquinas %}{{ m.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}<span style="color:#EF5350;">Sin máquina</span>{% endif %}
+          </td>
           <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
             <button style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;"
-                    onclick="openEditarPaso('{{ p.pk|escapejs }}', '{{ p.nombre|escapejs }}', '{{ p.descripcion|default:''|escapejs }}', {{ p.tiempo_estimado_seg|default:0 }})">
+                    onclick="openEditarPaso('{{ p.pk|escapejs }}', '{{ p.nombre|escapejs }}', '{{ p.descripcion|default:''|escapejs }}', {{ p.tiempo_estimado_seg|default:0 }}, '{{ p.maquinas_json|escapejs }}')">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar
             </button>
@@ -203,103 +206,105 @@
 
 <!-- ═══ MODAL NUEVA / EDITAR PLANTILLA ═══ -->
 <div class="modal-overlay" id="modal-nueva-plantilla" style="display:none;" onclick="if(event.target===this)closeModal('modal-nueva-plantilla')">
-  <div class="modal-card modal-md" style="display:flex;flex-direction:column;max-height:85vh;">
+  <div class="modal-card" style="display:flex;flex-direction:column;max-height:90vh;width:92vw;max-width:1100px;">
     <div class="modal-header">
       <h2 id="plantilla-modal-title">Nueva plantilla</h2>
       <button class="modal-close" onclick="closeModal('modal-nueva-plantilla')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
     <div style="overflow-y:auto;flex:1;">
-      <!-- Form principal: solo campos propios de Proceso. Los bloques de pasos/piezas viven
-           FUERA de este <form> (los forms no pueden anidarse en HTML) y usan form="plantilla-form"
-           para que sus hidden inputs se envíen igual con el submit de abajo. -->
-      <form method="post" id="plantilla-form" action="{% url 'admin_organizacion_plantilla_crear' %}">{% csrf_token %}
-        <div class="modal-body" style="padding-bottom:0;">
+      <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:28px;padding:20px 24px;align-items:start;">
+        <!-- Form principal: solo campos propios de Proceso. Los bloques de pasos/piezas viven
+             FUERA de este <form> (los forms no pueden anidarse en HTML) y usan form="plantilla-form"
+             para que sus hidden inputs se envíen igual con el submit de abajo. -->
+        <form method="post" id="plantilla-form" action="{% url 'admin_organizacion_plantilla_crear' %}">{% csrf_token %}
           <div class="form-group">
             <label class="form-label">Código <span class="required">*</span></label>
-            <input type="text" name="codigo" id="plantilla-codigo-input" class="form-control" maxlength="5" required>
+            <input type="text" name="codigo" id="plantilla-codigo-input" class="form-control" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre <span class="required">*</span></label>
-            <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" required>
+            <input type="text" name="nombre" id="plantilla-nombre-input" class="form-control" maxlength="20" placeholder="Máx. 20 caracteres" required>
           </div>
           <div class="form-group">
             <label class="form-label">Descripción <span class="required">*</span></label>
             <textarea name="descripcion" id="plantilla-desc-input" class="form-control" rows="3" required></textarea>
           </div>
-        </div>
-      </form>
+        </form>
 
-      <div class="modal-body" style="padding-top:0;">
-        <!-- ── Pasos del proceso ── -->
         <div>
-          <label class="form-label" style="margin-bottom:10px;">Pasos del proceso</label>
+          <!-- ── Pasos del proceso ── -->
+          <div>
+            <label class="form-label" style="margin-bottom:10px;">Pasos del proceso</label>
 
-          <!-- Bloque modo CREACIÓN (staged en JS, sin persistir hasta guardar la plantilla) -->
-          <div id="plantilla-pasos-create-block">
-            <div id="plantilla-pasos-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-            <div style="display:flex;gap:8px;margin-bottom:6px;">
-              <select id="plantilla-paso-select-create" class="form-control" style="flex:1;">
-                <option value="">Seleccionar paso del banco...</option>
-                {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
-              </select>
-              <button type="button" class="btn btn-outline btn-sm" onclick="agregarPasoExistenteCreate()">Agregar</button>
+            <!-- Bloque modo CREACIÓN (staged en JS, sin persistir hasta guardar la plantilla) -->
+            <div id="plantilla-pasos-create-block">
+              <div style="font-size:12px;color:#718096;margin-bottom:8px;">Los 12 pasos estándar del proceso OSAT vienen marcados por defecto — desmarca los que no apliquen a esta plantilla.</div>
+              <div id="plantilla-pasos-estandar-checklist" style="display:flex;flex-direction:column;gap:2px;margin-bottom:10px;"></div>
+              <div id="plantilla-pasos-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:8px;margin-bottom:6px;">
+                <select id="plantilla-paso-select-create" class="form-control" style="flex:1;">
+                  <option value="">Agregar otro paso del banco...</option>
+                  {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" onclick="agregarPasoExistenteCreate()">Agregar</button>
+              </div>
+              <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
+                      style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Crear paso nuevo
+              </button>
+              <div id="plantilla-pasos-hidden-inputs"></div>
             </div>
-            <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
-                    style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Crear paso nuevo
-            </button>
-            <div id="plantilla-pasos-hidden-inputs"></div>
-          </div>
 
-          <!-- Bloque modo EDICIÓN (acciones reales e inmediatas contra el backend, form independiente) -->
-          <div id="plantilla-pasos-edit-block" style="display:none;">
-            <div id="plantilla-pasos-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-            <form method="post" id="form-plantilla-paso-agregar-edit" style="display:flex;gap:8px;margin-bottom:6px;">
-              {% csrf_token %}
-              <select name="paso" class="form-control" style="flex:1;">
-                <option value="">Seleccionar paso del banco...</option>
-                {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
-              </select>
-              <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
-            </form>
-            <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
-                    style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Crear paso nuevo
-            </button>
-          </div>
-        </div>
-
-        <!-- ── Piezas requeridas ── -->
-        <div style="margin-top:18px;">
-          <label class="form-label" style="margin-bottom:10px;">Piezas requeridas por die</label>
-
-          <div id="plantilla-piezas-create-block">
-            <div id="plantilla-piezas-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-            <div style="display:flex;gap:8px;">
-              <select id="plantilla-pieza-select-create" class="form-control" style="flex:2;">
-                <option value="">Seleccionar pieza del inventario...</option>
-                {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
-              </select>
-              <input type="number" id="plantilla-pieza-cantidad-create" class="form-control" placeholder="Cant." min="1" style="flex:1;">
-              <button type="button" class="btn btn-outline btn-sm" onclick="agregarPiezaCreate()">Agregar</button>
+            <!-- Bloque modo EDICIÓN (acciones reales e inmediatas contra el backend, form independiente) -->
+            <div id="plantilla-pasos-edit-block" style="display:none;">
+              <div id="plantilla-pasos-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+              <form method="post" id="form-plantilla-paso-agregar-edit" style="display:flex;gap:8px;margin-bottom:6px;">
+                {% csrf_token %}
+                <select name="paso" class="form-control" style="flex:1;">
+                  <option value="">Seleccionar paso del banco...</option>
+                  {% for p in pasos_activos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
+              </form>
+              <button type="button" onclick="openModal('modal-nuevo-paso-apilado')"
+                      style="background:none;border:none;color:#16A85E;font-size:14px;cursor:pointer;padding:8px 0;display:flex;align-items:center;gap:4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Crear paso nuevo
+              </button>
             </div>
-            <div id="plantilla-piezas-hidden-inputs"></div>
           </div>
 
-          <div id="plantilla-piezas-edit-block" style="display:none;">
-            <div id="plantilla-piezas-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
-            <form method="post" id="form-plantilla-pieza-agregar-edit" style="display:flex;gap:8px;">
-              {% csrf_token %}
-              <select name="pieza" class="form-control" style="flex:2;">
-                <option value="">Seleccionar pieza del inventario...</option>
-                {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
-              </select>
-              <input type="number" name="cantidad" class="form-control" placeholder="Cant." min="1" style="flex:1;">
-              <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
-            </form>
+          <!-- ── Piezas requeridas ── -->
+          <div style="margin-top:18px;">
+            <label class="form-label" style="margin-bottom:10px;">Piezas requeridas por die</label>
+
+            <div id="plantilla-piezas-create-block">
+              <div id="plantilla-piezas-create-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:8px;">
+                <select id="plantilla-pieza-select-create" class="form-control" style="flex:2;">
+                  <option value="">Seleccionar pieza del inventario...</option>
+                  {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
+                </select>
+                <input type="number" id="plantilla-pieza-cantidad-create" class="form-control" placeholder="Cant." min="1" style="flex:1;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="agregarPiezaCreate()">Agregar</button>
+              </div>
+              <div id="plantilla-piezas-hidden-inputs"></div>
+            </div>
+
+            <div id="plantilla-piezas-edit-block" style="display:none;">
+              <div id="plantilla-piezas-edit-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+              <form method="post" id="form-plantilla-pieza-agregar-edit" style="display:flex;gap:8px;">
+                {% csrf_token %}
+                <select name="pieza" class="form-control" style="flex:2;">
+                  <option value="">Seleccionar pieza del inventario...</option>
+                  {% for z in piezas_catalogo %}<option value="{{ z.pk }}">{{ z.nombre }}</option>{% endfor %}
+                </select>
+                <input type="number" name="cantidad" class="form-control" placeholder="Cant." min="1" style="flex:1;">
+                <button type="submit" class="btn btn-outline btn-sm">Agregar</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -333,8 +338,8 @@
         <textarea id="paso-apilado-descripcion" class="form-control" rows="2" required></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">Tiempo estimado (minutos)</label>
-        <input type="number" id="paso-apilado-tiempo" class="form-control" min="0">
+        <label class="form-label">Tiempo estimado (minutos) <span class="required">*</span></label>
+        <input type="number" id="paso-apilado-tiempo" class="form-control" min="1" required>
       </div>
     </div>
     <div class="modal-footer">
@@ -353,7 +358,7 @@
     </div>
     <form method="post" id="linea-form" action="{% url 'admin_organizacion_linea_crear' %}">{% csrf_token %}
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="linea-codigo-input" class="form-control" maxlength="5" required></div>
+        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="linea-codigo-input" class="form-control" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required></div>
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="linea-nombre-input" class="form-control" required></div>
         <div class="form-group">
           <label class="form-label" style="color:#16A85E;">Proceso asignado</label>
@@ -380,7 +385,7 @@
     </div>
     <form method="post" id="oblea-form" action="{% url 'admin_organizacion_oblea_crear' %}">{% csrf_token %}
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="oblea-codigo-input" class="form-control" maxlength="5" required></div>
+        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="oblea-codigo-input" class="form-control" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required></div>
         <div class="form-group"><label class="form-label">Nombre / Descripción <span class="required">*</span></label><input type="text" name="nombre" id="oblea-nombre-input" class="form-control" required></div>
         <div class="form-group">
           <label class="form-label">Cantidad de dies <span class="required">*</span></label>
@@ -407,14 +412,27 @@
     </div>
     <form method="post" id="paso-form" action="{% url 'admin_organizacion_paso_crear' %}">{% csrf_token %}
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="paso-codigo-input" class="form-control" maxlength="5" required></div>
+        <div class="form-group"><label class="form-label">Código <span class="required">*</span></label><input type="text" name="codigo" id="paso-codigo-input" class="form-control" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required></div>
         <div class="form-group"><label class="form-label">Nombre <span class="required">*</span></label><input type="text" name="nombre" id="paso-nombre-input" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Descripción <span class="required">*</span></label><textarea name="descripcion" id="paso-desc-input" class="form-control" rows="3" required></textarea></div>
-        <div class="form-group"><label class="form-label">Tiempo estimado (minutos)</label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="0"></div>
+        <div class="form-group"><label class="form-label">Tiempo estimado (minutos) <span class="required">*</span></label><input type="number" name="tiempo_estimado" id="paso-tiempo-input" class="form-control" min="1" required></div>
+        <div class="form-group">
+          <label class="form-label">Máquina(s) asignada(s) <span class="required">*</span></label>
+          <div id="paso-maquinas-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;">
+            <select id="paso-maquina-select" class="form-control" style="flex:1;">
+              <option value="">Seleccionar máquina...</option>
+              {% for m in maquinas_catalogo %}<option value="{{ m.pk }}">{{ m.nombre }}</option>{% endfor %}
+            </select>
+            <button type="button" class="btn btn-outline btn-sm" onclick="agregarMaquinaPaso()">Agregar</button>
+          </div>
+          <div id="paso-maquinas-hidden-inputs"></div>
+          <div id="paso-maquinas-error" style="display:none;color:#EF5350;font-size:12.5px;margin-top:6px;">Asigna al menos una máquina a este paso.</div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-nuevo-paso')">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="submit" class="btn btn-primary" onclick="return validarPasoMaquinas()">Guardar</button>
       </div>
     </form>
   </div>
@@ -480,6 +498,34 @@ var _plantillaEditPk = null;
 var _plantillaPasosCreate = [];
 var _plantillaPiezasCreate = [];
 
+// ── Checklist de los 12 pasos estándar del proceso OSAT ──
+// El orden es fijo (Wafer Backgriding -> ... -> Tape and Reel), igual al que
+// ya usan Ensamblado QFN Std / Ensamblado BGA HD. Los nombres se toman del
+// catálogo real (pasos_activos) para no duplicar texto que pueda cambiar.
+var _PASOS_ESTANDAR_ORDEN = ['bgr','dic','dia','wir','ovc','mol','mar','dtf','sin','plt','tst','pak'];
+var _pasosCatalogoMap = {
+  {% for p in pasos_activos %}'{{ p.codigo }}': '{{ p.nombre|escapejs }}',{% endfor %}
+};
+var _pasosEstandarChecked = {};
+
+function renderPasosEstandarChecklist() {
+  var wrap = document.getElementById('plantilla-pasos-estandar-checklist');
+  wrap.innerHTML = '';
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) {
+    var nombre = _pasosCatalogoMap[codigo];
+    if (!nombre) return; // el paso estándar no existe (o fue desactivado) en el catálogo
+    var label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:14px;color:#2D3748;cursor:pointer;';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = _pasosEstandarChecked[codigo] !== false;
+    cb.onchange = function() { _pasosEstandarChecked[codigo] = cb.checked; renderPlantillaPasosCreate(); };
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(nombre));
+    wrap.appendChild(label);
+  });
+}
+
 function openNuevaPlantilla() {
   _plantillaEditPk = null;
   document.getElementById('plantilla-modal-title').textContent = 'Nueva plantilla';
@@ -491,8 +537,19 @@ function openNuevaPlantilla() {
 
   _plantillaPasosCreate = [];
   _plantillaPiezasCreate = [];
+  _pasosEstandarChecked = {};
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) { _pasosEstandarChecked[codigo] = true; });
+  renderPasosEstandarChecklist();
   renderPlantillaPasosCreate();
   renderPlantillaPiezasCreate();
+
+  // El dropdown "Agregar otro paso del banco" es solo para pasos NO
+  // estándar — los 12 estándar ya se controlan con el checklist de arriba,
+  // así que se ocultan aquí para no poder agregarlos dos veces.
+  var selCreate = document.getElementById('plantilla-paso-select-create');
+  Array.prototype.forEach.call(selCreate.options, function(opt) {
+    if (_PASOS_ESTANDAR_ORDEN.indexOf(opt.value) !== -1) opt.style.display = 'none';
+  });
 
   document.getElementById('plantilla-pasos-create-block').style.display = '';
   document.getElementById('plantilla-pasos-edit-block').style.display = 'none';
@@ -547,6 +604,14 @@ function renderPlantillaPasosCreate() {
 
   var hiddenWrap = document.getElementById('plantilla-pasos-hidden-inputs');
   hiddenWrap.innerHTML = '';
+  // Los pasos estándar marcados van primero, en su orden fijo del proceso
+  // OSAT; los pasos extra agregados a mano van después, en el orden en que
+  // se agregaron.
+  _PASOS_ESTANDAR_ORDEN.forEach(function(codigo) {
+    if (_pasosEstandarChecked[codigo] !== false && _pasosCatalogoMap[codigo]) {
+      hiddenWrap.appendChild(_hidden('paso_orden_codigo', codigo, 'plantilla-form'));
+    }
+  });
   _plantillaPasosCreate.forEach(function(row) {
     hiddenWrap.appendChild(_hidden('paso_orden_codigo', row.codigo, 'plantilla-form'));
     if (row.nuevo) {
@@ -668,10 +733,14 @@ function guardarPasoApilado() {
   var codigo = document.getElementById('paso-apilado-codigo').value.trim();
   var nombre = document.getElementById('paso-apilado-nombre').value.trim();
   var descripcion = document.getElementById('paso-apilado-descripcion').value.trim();
-  var tiempo = document.getElementById('paso-apilado-tiempo').value || 0;
+  var tiempo = document.getElementById('paso-apilado-tiempo').value;
 
   if (!codigo || !nombre || !descripcion) {
     alert('Código, nombre y descripción del paso son obligatorios.');
+    return;
+  }
+  if (!tiempo || Number(tiempo) < 1) {
+    alert('El tiempo estimado es obligatorio y debe ser mayor a 0.');
     return;
   }
 
@@ -762,6 +831,49 @@ function openEditarOblea(pk, nombre, dies) {
 
 // ── PASOS ──
 
+// ── Máquinas asignadas al paso (staged en JS, se sincroniza completo al
+// guardar — el backend borra las que ya no vengan y crea las nuevas) ──
+var _pasoMaquinasStaged = [];
+
+function renderPasoMaquinasStaged() {
+  var list = document.getElementById('paso-maquinas-list');
+  list.innerHTML = _pasoMaquinasStaged.map(function (m, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#F7FAFC;border-radius:6px;font-size:13.5px;">' +
+      '<span>' + m.nombre + '</span>' +
+      '<button type="button" onclick="quitarMaquinaPasoStaged(' + i + ')" style="background:none;border:none;color:#EF5350;cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
+      '</div>';
+  }).join('');
+  document.getElementById('paso-maquinas-hidden-inputs').innerHTML = _pasoMaquinasStaged.map(function (m) {
+    return '<input type="hidden" name="maquina_codigo" value="' + m.pk + '">';
+  }).join('');
+  if (_pasoMaquinasStaged.length) {
+    document.getElementById('paso-maquinas-error').style.display = 'none';
+  }
+}
+
+function agregarMaquinaPaso() {
+  var sel = document.getElementById('paso-maquina-select');
+  var pk = sel.value;
+  if (!pk) return;
+  if (_pasoMaquinasStaged.some(function (m) { return m.pk === pk; })) { sel.value = ''; return; }
+  _pasoMaquinasStaged.push({ pk: pk, nombre: sel.options[sel.selectedIndex].text });
+  sel.value = '';
+  renderPasoMaquinasStaged();
+}
+
+function quitarMaquinaPasoStaged(i) {
+  _pasoMaquinasStaged.splice(i, 1);
+  renderPasoMaquinasStaged();
+}
+
+function validarPasoMaquinas() {
+  if (_pasoMaquinasStaged.length === 0) {
+    document.getElementById('paso-maquinas-error').style.display = 'block';
+    return false;
+  }
+  return true;
+}
+
 function openNuevoPaso() {
   document.getElementById('paso-modal-title').textContent = 'Nuevo paso';
   document.getElementById('paso-codigo-input').value = '';
@@ -770,10 +882,13 @@ function openNuevoPaso() {
   document.getElementById('paso-desc-input').value = '';
   document.getElementById('paso-tiempo-input').value = '';
   document.getElementById('paso-form').action = "{% url 'admin_organizacion_paso_crear' %}";
+  _pasoMaquinasStaged = [];
+  renderPasoMaquinasStaged();
+  document.getElementById('paso-maquinas-error').style.display = 'none';
   openModal('modal-nuevo-paso');
 }
 
-function openEditarPaso(pk, nombre, descripcion, tiempoSeg) {
+function openEditarPaso(pk, nombre, descripcion, tiempoSeg, maquinasJson) {
   document.getElementById('paso-modal-title').textContent = 'Editar: ' + nombre;
   document.getElementById('paso-codigo-input').value = pk;
   document.getElementById('paso-codigo-input').disabled = true;
@@ -781,6 +896,9 @@ function openEditarPaso(pk, nombre, descripcion, tiempoSeg) {
   document.getElementById('paso-desc-input').value = descripcion;
   document.getElementById('paso-tiempo-input').value = Math.round((tiempoSeg || 0) / 60);
   document.getElementById('paso-form').action = URL_PASO_EDITAR.replace('__PK__', pk);
+  _pasoMaquinasStaged = (JSON.parse(maquinasJson || '[]')).map(function (m) { return { pk: m.pk, nombre: m.nombre }; });
+  renderPasoMaquinasStaged();
+  document.getElementById('paso-maquinas-error').style.display = 'none';
   openModal('modal-nuevo-paso');
 }
 

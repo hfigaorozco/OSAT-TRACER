@@ -1,28 +1,47 @@
 import re
+from urllib.parse import urlencode
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import generic
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 from home.views import _base_ctx, _get, _get_many, _post, _patch, _post_file
 import requests
 
 _CODIGO_RE = re.compile(r'^[a-z0-9-]+$')
+PAGE_SIZE_INVENTARIO = 7
 
 
 # ADMIN — INVENTARIO
 
 class AdminInventario(generic.View):
     template_name = 'admin/inventario.html'
-    url_base = 'http://localhost:8001/api/v1/list/piezas/'
-    context = {}
-    response = None
-    
+
     def get(self, request):
-        self.request = requests.get(url=self.url_base).json()
-        self.context = {"piezas": self.request}
-        
-        return render(request, self.template_name, self.context)
+        piezas = _get('/v1/list/piezas/', [])
+        procesos_bd, tipos_oblea_bd = _get_many('/v1/list/Proceso/', '/v1/list/TipoOblea/')
+
+        q = request.GET.get('q', '').strip().lower()
+        if q:
+            piezas = [p for p in piezas if q in p.get('nombre', '').lower()]
+
+        # Mismo patrón de paginación server-side + componente numerado que
+        # el resto de la app (Personal/Maquinaria/Reportes/Organización/
+        # Inventario de supervisor) — antes esta vista mandaba la lista
+        # completa sin paginar y el "avance" era solo un pager de flechas
+        # en JS dentro del encabezado de la tabla.
+        piezas_page = Paginator(piezas, PAGE_SIZE_INVENTARIO).get_page(request.GET.get('page', 1))
+        inventario_extra_params = (urlencode({'q': q}) + '&') if q else ''
+
+        context = {
+            "piezas_page": piezas_page,
+            "inventario_extra_params": inventario_extra_params,
+            "procesos": procesos_bd,
+            "tipos_oblea": tipos_oblea_bd,
+        }
+
+        return render(request, self.template_name, context)
     
 
 class AdminInventarioDetail(generic.View):
@@ -123,6 +142,7 @@ def admin_inventario_movimiento(request):
             if not cantidad_minima_raw.isdigit():
                 errores.append('El nuevo stock mínimo debe ser un número mayor o igual a 0.')
 
+        pieza = None
         if tipo == 'salida' and not errores:
             piezas_bd = _get('/v1/list/piezas/', [])
             pieza = next((p for p in piezas_bd if str(p.get('codigo')) == pieza_id), None)
@@ -147,6 +167,13 @@ def admin_inventario_movimiento(request):
 
         if ok:
             messages.success(request, 'Movimiento registrado')
+            if tipo == 'salida' and pieza:
+                restante = int(pieza.get('stockActual', 0)) - int(cantidad_raw)
+                minimo = int(pieza.get('stockMinimo', 0))
+                if restante < minimo:
+                    messages.warning(request,
+                        f'"{pieza.get("nombre", pieza_id)}" quedará con {restante} unidades — '
+                        f'por debajo del mínimo ({minimo}), queda en estado crítico.')
         else:
             messages.error(request, f'Error: {resp}')
 
@@ -156,22 +183,15 @@ def admin_inventario_movimiento(request):
 # SUPERVISOR — INVENTARIO (solo entradas, sin crear piezas)
 
 def supervisor_inventario(request):
-    piezas_bd, alertas_bd = _get_many(
-        '/v1/list/piezas/',
-        '/v1/list/alertas/',
-    )
-    unread = sum(1 for a in alertas_bd if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    piezas_bd = _get('/v1/list/piezas/', [])
+    procesos_bd, tipos_oblea_bd = _get_many('/v1/list/Proceso/', '/v1/list/TipoOblea/')
+    # unread_count/recent_notifications los pone home.context_processors.
+    # notificaciones() para toda la app — no armarlos aquí a mano, porque
+    # el contexto explícito de esta vista gana sobre el del context
+    # processor y tapaba el valor correcto (icono/color/tipo reales) con
+    # una forma vieja que dejaba la campana rota en esta página.
     ctx = {
         'user_role': 'Supervisor',
-        'unread_count': unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo': 'alerta',
-                'leida': str(a.get('estadoAlerta', '')).lower() not in ('activo', 'sinre'),
-            }
-            for a in alertas_bd[:5]
-        ],
         'breadcrumbs': [],
     }
     piezas = [
@@ -190,8 +210,14 @@ def supervisor_inventario(request):
     if q:
         piezas = [p for p in piezas if q in p['nombre'].lower()]
 
+    piezas_page = Paginator(piezas, PAGE_SIZE_INVENTARIO).get_page(request.GET.get('page', 1))
+    inventario_extra_params = (urlencode({'q': q}) + '&') if q else ''
+
     ctx.update({
-        'piezas': piezas,
+        'piezas_page': piezas_page,
+        'inventario_extra_params': inventario_extra_params,
+        'procesos': procesos_bd,
+        'tipos_oblea': tipos_oblea_bd,
         'breadcrumbs': [
             {'label': 'Dashboard', 'url': '/supervisor/'},
             {'label': 'Inventario', 'url': '/supervisor/inventario/'},
@@ -224,6 +250,49 @@ def supervisor_inventario_entrada(request):
         })
         if ok:
             messages.success(request, 'Entrada registrada')
+        else:
+            messages.error(request, f'Error: {resp}')
+    return redirect('supervisor_inventario')
+
+
+def supervisor_inventario_salida(request):
+    if request.method == 'POST':
+        pieza_id = request.POST.get('pieza_id', '').strip()
+        cantidad_raw = request.POST.get('cantidad', '').strip()
+
+        errores = []
+        if not pieza_id:
+            errores.append('Selecciona una pieza.')
+        if not cantidad_raw.isdigit() or int(cantidad_raw) < 1:
+            errores.append('La cantidad debe ser un número mayor a 0.')
+
+        pieza = None
+        if not errores:
+            piezas_bd = _get('/v1/list/piezas/', [])
+            pieza = next((p for p in piezas_bd if str(p.get('codigo')) == pieza_id), None)
+            if pieza and int(cantidad_raw) > int(pieza.get('stockActual', 0)):
+                errores.append(f'No hay suficiente stock: disponible {pieza.get("stockActual", 0)}.')
+
+        if errores:
+            for e in errores:
+                messages.error(request, e)
+            return redirect('supervisor_inventario')
+
+        ok, resp = _post('/v1/create/movimiento_inventario/', {
+            'pieza': pieza_id,
+            'tipo': 'salida',
+            'cantidad': int(cantidad_raw),
+            'usuario': request.session.get('user_name', ''),
+        })
+        if ok:
+            messages.success(request, 'Salida registrada')
+            if pieza:
+                restante = int(pieza.get('stockActual', 0)) - int(cantidad_raw)
+                minimo = int(pieza.get('stockMinimo', 0))
+                if restante < minimo:
+                    messages.warning(request,
+                        f'"{pieza.get("nombre", pieza_id)}" quedará con {restante} unidades — '
+                        f'por debajo del mínimo ({minimo}), queda en estado crítico.')
         else:
             messages.error(request, f'Error: {resp}')
     return redirect('supervisor_inventario')

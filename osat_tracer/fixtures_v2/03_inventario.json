@@ -5,8 +5,8 @@
     "fields": {
       "nombre": "Sustrato cerámico",
       "descripcion": "Base de montaje para el die",
-      "stockMinimo": 200,
-      "stockActual": 1500,
+      "stockMinimo": 25000,
+      "stockActual": 130000,
       "imagen": "piezas/sustrato ceramico.jpg"
     }
   },
@@ -14,10 +14,10 @@
     "model": "api_inventario.pieza",
     "pk": "hloro",
     "fields": {
-      "nombre": "Hilo oro 25",
-      "descripcion": "Hilo conductor de oro 25μm para el wire bonding",
-      "stockMinimo": 450,
-      "stockActual": 1750,
+      "nombre": "Hilo de oro 25μm",
+      "descripcion": "Hilo conductor para el wire bonding",
+      "stockMinimo": 40000,
+      "stockActual": 210000,
       "imagen": "piezas/hilo de oro.jpg"
     }
   },
@@ -26,9 +26,9 @@
     "pk": "resep",
     "fields": {
       "nombre": "Resina epóxica",
-      "descripcion": "Compuesto epóxico para encapsulado del die",
-      "stockMinimo": 80,
-      "stockActual": 320,
+      "descripcion": "Compuesto para encapsulado del die",
+      "stockMinimo": 30000,
+      "stockActual": 140000,
       "imagen": "piezas/resina epoxica.jpg"
     }
   },
@@ -37,7 +37,7 @@
     "fields": {
       "proceso": "ens-1",
       "pieza": "strce",
-      "cantPiezas": 200
+      "cantPiezas": 1
     }
   },
   {
@@ -45,7 +45,7 @@
     "fields": {
       "proceso": "ens-1",
       "pieza": "hloro",
-      "cantPiezas": 500
+      "cantPiezas": 4
     }
   },
   {
@@ -53,7 +53,7 @@
     "fields": {
       "proceso": "ens-1",
       "pieza": "resep",
-      "cantPiezas": 150
+      "cantPiezas": 2
     }
   },
   {
@@ -61,7 +61,23 @@
     "fields": {
       "proceso": "ens-2",
       "pieza": "strce",
-      "cantPiezas": 300
+      "cantPiezas": 2
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-2",
+      "pieza": "hloro",
+      "cantPiezas": 8
+    }
+  },
+  {
+    "model": "api_produccion.procesoPieza",
+    "fields": {
+      "proceso": "ens-2",
+      "pieza": "resep",
+      "cantPiezas": 4
     }
   }
 ]

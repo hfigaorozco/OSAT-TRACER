@@ -73,14 +73,11 @@ class Proceso(models.Model):
 
 class Linea(models.Model):
     codigo = models.CharField(primary_key=True, max_length=5)
-    nombre = models.CharField(unique=True, max_length=20)
-    proceso = models.ForeignKey(Proceso, null=True, blank=True, on_delete=models.SET_NULL, related_name='lineas')
+    nombre = models.CharField(max_length=50)
 
     class Meta:
         db_table = 'linea'
-
-    def __str__(self):
-        return self.nombre
+        ordering = ['codigo']   # ← agregar esto
 
 
 class Paso(models.Model):
@@ -229,7 +226,7 @@ class Paso_Realizado(models.Model):
     paso = models.ForeignKey(Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     estado = models.ForeignKey(Estado_Paso, on_delete=models.RESTRICT, related_name='paso_realizado')
     oblea = models.ForeignKey(Oblea, on_delete=models.RESTRICT, related_name='paso_realizado')
-    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='paso_realizado', null=True)
 
     class Meta:
         db_table = 'paso_realizado' 

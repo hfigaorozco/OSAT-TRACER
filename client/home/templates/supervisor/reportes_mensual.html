@@ -1,0 +1,72 @@
+{% extends "supervisor/layout.html" %}
+{% load static %}
+{% block page_title %}Reportes Mensuales{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Reportes Mensuales</h1>
+    <p class="page-subtitle">Un reporte por mes que junta producción, inventario y KPI — se genera solo al terminar el mes si no lo generaste antes</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'supervisor_reportes' %}" class="btn btn-outline">← Reportes</a>
+    <button class="btn btn-primary" onclick="openModal('modal-generar-mensual')">+ Generar reporte del mes</button>
+  </div>
+</div>
+
+<div class="card-table">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Periodo</th><th>Fecha generado</th><th>Tipo</th><th>Generado por</th><th>Órdenes</th><th>Yield</th><th>Bajo mínimo</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for r in reportes_mensuales_page %}
+        <tr>
+          <td style="font-weight:600;">{{ r.periodo }}</td>
+          <td>{{ r.fecha_generado }}</td>
+          <td>{{ r.tipo }}</td>
+          <td>{{ r.generado_por }}</td>
+          <td>{{ r.ordenes_count }}</td>
+          <td>{{ r.yield_pct }}%</td>
+          <td style="color:#EF5350;font-weight:600;">{{ r.bajo_minimo }}</td>
+          <td>
+            <a class="action-btn" title="Ver / imprimir PDF" href="{{ backend_url }}/v1/reporte_mensual/{{ r.numero }}/pdf/" target="_blank">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:32px;color:#718096;">Aún no hay reportes mensuales generados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "components/pagination.html" with page_obj=reportes_mensuales_page page_param="page" %}
+
+<!-- Modal generar reporte mensual -->
+<div class="modal-overlay" id="modal-generar-mensual" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-mensual')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte mensual</h2><button class="modal-close" onclick="closeModal('modal-generar-mensual')">&times;</button></div>
+    <form method="post" action="{% url 'supervisor_reportes_mensual' %}">{% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Mes</label>
+          <select name="mes" class="form-control">
+            {% for num, nombre in meses.items %}
+            <option value="{{ num }}" {% if num == mes_actual %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Año</label>
+          <input type="number" name="anio" class="form-control" value="{{ anio_actual }}">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-mensual')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

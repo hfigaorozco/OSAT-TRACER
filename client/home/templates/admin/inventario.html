@@ -10,16 +10,27 @@
 </div>
 
 <!-- Filtros + chips + botón -->
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+<div class="filter-bar">
   <!-- Search -->
-  <div style="position:relative;">
-    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#A0AEC0;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="inv-search" placeholder="Buscar por nombre" oninput="filterInventario()"
-      style="height:38px;padding:0 12px 0 34px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;background:#fff;color:#1A202C;width:200px;outline:none;">
-  </div>
+  <form method="get" style="display:flex;gap:10px;align-items:center;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" placeholder="Buscar por nombre" value="{{ request.GET.q }}" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-outline btn-sm">Buscar</button>
+    {% if request.GET.q %}<a href="{% url 'admin_inventario' %}" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
+  </form>
 
   <!-- Botón -->
-  <div style="margin-left:auto;">
+  <div style="margin-left:auto;display:flex;gap:10px;">
+    <button class="btn btn-outline" onclick="_abrirModalLotesPosibles()" title="Consultar cuántos lotes se pueden crear con el stock actual">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="12" y1="16" x2="12" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/></svg>
+      Lotes posibles por stock
+    </button>
+    <button class="btn btn-primary" onclick="openModal('modal-generar-reporte-inv')" title="Generar reporte de inventario">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      Generar reporte
+    </button>
     <button class="btn btn-primary" onclick="openModal('modal-nueva-pieza')">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nueva Pieza
@@ -27,8 +38,61 @@
   </div>
 </div>
 
+<!-- Modal generar reporte de inventario -->
+<div class="modal-overlay" id="modal-generar-reporte-inv" style="display:none;" onclick="if(event.target===this)closeModal('modal-generar-reporte-inv')">
+  <div class="modal-card modal-md">
+    <div class="modal-header"><h2>Generar reporte de inventario</h2><button class="modal-close" onclick="closeModal('modal-generar-reporte-inv')">&times;</button></div>
+    <form method="post" action="{% url 'admin_reportes_generar' %}">{% csrf_token %}
+      <input type="hidden" name="tipo" value="inventario">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Fecha inicial <span class="required">*</span></label>
+          <input type="date" name="fecha_inicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha final <span class="required">*</span></label>
+          <input type="date" name="fecha_fin" class="form-control" required>
+        </div>
+        <p style="font-size:13px;color:#718096;">El reporte quedará guardado en la página de Reportes, listo para ver e imprimir.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-generar-reporte-inv')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Generar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Lotes posibles por stock -->
+<div class="modal-overlay" id="modal-lotes-posibles" style="display:none;" onclick="if(event.target===this)closeModal('modal-lotes-posibles')">
+  <div class="modal-card modal-sm">
+    <div class="modal-header"><h2>Lotes posibles según stock</h2><button class="modal-close" onclick="closeModal('modal-lotes-posibles')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Proceso <span class="required">*</span></label>
+        <select id="lp-proceso" class="form-control" onchange="_ocultarResultadoLotesPosibles()">
+          <option value="">Seleccionar…</option>
+          {% for p in procesos %}<option value="{{ p.codigo }}">{{ p.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Tipo de oblea <span class="required">*</span></label>
+        <select id="lp-tipo-oblea" class="form-control" onchange="_ocultarResultadoLotesPosibles()">
+          <option value="">Seleccionar…</option>
+          {% for t in tipos_oblea %}<option value="{{ t.codigo }}">{{ t.descripcion }}</option>{% endfor %}
+        </select>
+      </div>
+      <div id="lp-resultado" style="display:none;margin-top:16px;padding:14px 16px;border-radius:8px;font-size:15px;font-weight:600;text-align:center;"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-lotes-posibles')">Cerrar</button>
+      <button type="button" class="btn btn-primary" onclick="_consultarLotesPosibles()">Consultar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Tabla -->
-<div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+<div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;">
   <table style="width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;" id="inv-table">
     <colgroup>
       <col style="width:20%;">
@@ -45,14 +109,12 @@
         <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock mínimo</th>
         <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Stock actual</th>
         <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Estado</th>
-        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Detalle</th>
+        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#4A5568;border-bottom:1px solid #E2E8F0;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
       </tr>
     </thead>
     <tbody id="inv-tbody">
-      {% for pieza in piezas %}
-      <tr class="inv-row" data-nombre="{{ pieza.nombre|lower }}" data-codigo="{{ pieza.codigo|lower }}"
-          data-estado="{% if pieza.stockActual == 0 %}critico{% elif pieza.stockActual <= pieza.stockMinimo %}bajo{% else %}ok{% endif %}"
-          style="cursor:pointer;transition:background .12s;{% if pieza.stockActual <= pieza.stockMinimo %}background:rgba(239,83,80,.08);{% endif %}"
+      {% for pieza in piezas_page %}
+      <tr style="cursor:pointer;transition:background .12s;{% if pieza.stockActual <= pieza.stockMinimo %}background:rgba(239,83,80,.08);{% endif %}"
           onclick="openDetalle('{{ pieza.codigo }}')"
           onmouseover="this.style.background='{% if pieza.stockActual <= pieza.stockMinimo %}rgba(239,83,80,.14){% else %}#F0FBF6{% endif %}'"
           onmouseout="this.style.background='{% if pieza.stockActual <= pieza.stockMinimo %}rgba(239,83,80,.08){% endif %}'">
@@ -76,8 +138,15 @@
           <span class="badge badge-ok">Suficiente stock</span>
           {% endif %}
         </td>
-        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;">
-          <button onclick="event.stopPropagation();openDetalle('{{ pieza.codigo }}')"
+        <td style="padding:12px 16px;border-bottom:1px solid #EDF2F7;white-space:nowrap;">
+          <button class="btn-entrada-rapida" title="Registrar entrada"
+            data-codigo="{{ pieza.codigo }}" data-nombre="{{ pieza.nombre }}" data-stock="{{ pieza.stockActual }}"
+            onclick="event.stopPropagation();abrirEntradaDirecta(this)"
+            onmouseover="this.style.background='#b5bec7'" onmouseout="this.style.background='none'"
+            style="color:#16A85E;background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
+          <button onclick="event.stopPropagation();openDetalle('{{ pieza.codigo }}')" title="Ver detalle"
             onmouseover="this.style.background='#b5bec7'" onmouseout="this.style.background='none'"
             style="color:#718096;background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -94,6 +163,7 @@
     </tbody>
   </table>
 </div>
+{% include "components/pagination.html" with page_obj=piezas_page extra_params=inventario_extra_params %}
 
 
 <!-- ═══════════════════════════════════════════
@@ -113,7 +183,7 @@
     <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;">
       <div style="display:flex;align-items:flex-start;gap:16px;">
         <!-- Ícono -->
-        <div style="width:48px;height:48px;border-radius:10px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:48px;height:48px;border-radius:14px;background:#F0FBF6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A85E" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         </div>
         <!-- Info -->
@@ -163,7 +233,7 @@
               height:220px;
               object-fit:contain;
               border:1px solid #E2E8F0;
-              border-radius:10px;
+              border-radius:14px;
               background:#FAFAFA;
               padding:10px;
           ">
@@ -250,7 +320,7 @@
         <div style="margin-bottom:14px;">
           <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Cantidad <span style="color:#EF5350;">*</span></label>
           <div style="position:relative;">
-            <input type="number" name="cantidad" min="1" required
+            <input type="number" name="cantidad" id="sal-cantidad-input" min="1" required
               style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
             <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:20px;height:20px;background:#2D3748;border-radius:3px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
@@ -333,7 +403,7 @@
       <div style="padding:20px 24px;">
         <div style="margin-bottom:14px;">
           <label style="display:block;font-size:14px;font-weight:500;color:#2D3748;margin-bottom:6px;">Código <span style="color:#EF5350;">*</span></label>
-          <input type="text" name="codigo" maxlength="5" required
+          <input type="text" name="codigo" maxlength="5" placeholder="Máx. 5 caracteres, ej: def01" required
             style="width:100%;height:38px;padding:0 12px;border:1.5px solid #CBD5E0;border-radius:7px;font-size:14.5px;color:#1A202C;background:#fff;outline:none;">
         </div>
         <div style="margin-bottom:14px;">
@@ -348,12 +418,20 @@
         </div>
         <!-- Imagen opcional -->
         <div style="margin-bottom:14px;">
-          <div style="border:1.5px dashed #CBD5E0;border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
+          <div id="img-upload-prompt" style="border:1.5px dashed #CBD5E0;border-radius:8px;padding:16px;text-align:center;cursor:pointer;"
                onclick="document.getElementById('img-upload').click()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2" style="margin:0 auto 4px;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span style="font-size:13.5px;color:#A0AEC0;">Imagen (opcional) · </span>
             <span style="font-size:13.5px;color:#16A85E;font-weight:500;">Seleccionar</span>
-            <input type="file" id="img-upload" name="imagen" accept="image/*" style="display:none;">
+            <input type="file" id="img-upload" name="imagen" accept="image/*" style="display:none;" onchange="_previewImagenPieza(this)">
+          </div>
+          <div id="img-upload-preview" style="display:none;border:1.5px solid #E2E8F0;border-radius:8px;padding:10px;align-items:center;gap:10px;">
+            <img id="img-upload-thumb" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #E2E8F0;">
+            <span id="img-upload-filename" style="flex:1;font-size:13px;color:#4A5568;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button type="button" onclick="_quitarImagenPieza()"
+                    style="width:24px;height:24px;color:#718096;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -392,6 +470,48 @@
 
 {% block extra_js %}
 <script>
+// ── Lotes posibles por stock ──
+function _abrirModalLotesPosibles() {
+  document.getElementById('lp-proceso').value = '';
+  document.getElementById('lp-tipo-oblea').value = '';
+  _ocultarResultadoLotesPosibles();
+  openModal('modal-lotes-posibles');
+}
+function _ocultarResultadoLotesPosibles() {
+  document.getElementById('lp-resultado').style.display = 'none';
+}
+function _consultarLotesPosibles() {
+  var proceso = document.getElementById('lp-proceso').value;
+  var tipoOblea = document.getElementById('lp-tipo-oblea').value;
+  var res = document.getElementById('lp-resultado');
+  if (!proceso || !tipoOblea) {
+    res.style.display = '';
+    res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+    res.textContent = 'Selecciona un proceso y un tipo de oblea.';
+    return;
+  }
+  res.style.display = '';
+  res.style.background = '#F7FAFC'; res.style.color = '#4A5568';
+  res.textContent = 'Consultando…';
+  fetch("{% url 'admin_lotes_max_stock' %}?proceso=" + encodeURIComponent(proceso) + '&tipo_oblea=' + encodeURIComponent(tipoOblea))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.lotes_max === null || data.lotes_max === undefined) {
+        res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+        res.textContent = 'No se pudo calcular.';
+        return;
+      }
+      var ok = data.lotes_max > 0;
+      res.style.background = ok ? '#E7F8EF' : '#FEECEB';
+      res.style.color = ok ? '#16A85E' : '#EF5350';
+      res.textContent = 'El stock actual alcanza para ' + data.lotes_max + ' lote(s).';
+    })
+    .catch(function () {
+      res.style.background = '#FEECEB'; res.style.color = '#EF5350';
+      res.textContent = 'Ocurrió un error al consultar.';
+    });
+}
+
 // ── Estado global de la pieza seleccionada ──
 var _pieza = { pk: null, nombre: '', desc: '', stock: 0, minimo: 0, estado: 'OK' };
 
@@ -456,6 +576,7 @@ function openFromDetalle(tipo) {
     document.getElementById('sal-pieza-id').value = _pieza.pk;
     document.getElementById('sal-material-name').textContent = _pieza.nombre;
     document.getElementById('sal-stock-actual').textContent = _pieza.stock;
+    document.getElementById('sal-cantidad-input').max = _pieza.stock;
     document.getElementById('modal-salida').style.display = 'flex';
   } else {
     document.getElementById('aj-pieza-id').value = _pieza.pk;
@@ -463,6 +584,14 @@ function openFromDetalle(tipo) {
     document.getElementById('aj-stock-actual').textContent = _pieza.stock;
     document.getElementById('modal-ajuste').style.display = 'flex';
   }
+}
+
+function abrirEntradaDirecta(btn) {
+  _pieza = { pk: btn.dataset.codigo, nombre: btn.dataset.nombre, desc: '', stock: btn.dataset.stock, minimo: 0 };
+  document.getElementById('ent-pieza-id').value = _pieza.pk;
+  document.getElementById('ent-material-name').textContent = _pieza.nombre;
+  document.getElementById('ent-stock-actual').textContent = _pieza.stock;
+  document.getElementById('modal-entrada').style.display = 'flex';
 }
 
 function closeEntrada() {
@@ -487,17 +616,25 @@ function closeAjuste() {
   });
 });
 
-// Filtro de tabla
-function filterInventario() {
-    const q = document.getElementById("inv-search").value.toLowerCase();
-    document.querySelectorAll(".inv-row").forEach(function(row){
-        const nombre = row.dataset.nombre || "";
-        const codigo = row.dataset.codigo || "";
-        const mostrar =
-            nombre.includes(q) ||
-            codigo.includes(q);
-        row.style.display = mostrar ? "" : "none";
-    });
+// Preview de la imagen elegida en "Nueva pieza"
+function _previewImagenPieza(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('img-upload-thumb').src = e.target.result;
+    document.getElementById('img-upload-filename').textContent = file.name;
+    document.getElementById('img-upload-prompt').style.display = 'none';
+    document.getElementById('img-upload-preview').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function _quitarImagenPieza() {
+  const input = document.getElementById('img-upload');
+  input.value = '';
+  document.getElementById('img-upload-preview').style.display = 'none';
+  document.getElementById('img-upload-prompt').style.display = 'block';
 }
 
 // Chips de categoría

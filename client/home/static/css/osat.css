@@ -1,10 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@400;500;600&display=swap');
-
 :root {
   --bg-app:          #1C2433;
-  --bg-topbar:       #243040;
+  --bg-topbar:        #1C2433;
   --bg-sidebar:      #243040;
-  --nav-item-bg:     #2E3D52;
+/* --nav-item-bg:     #2E3D52;*/
   --nav-item-active: #16A85E;
 
   /* Cards y tablas — blancas */
@@ -38,10 +36,10 @@
   --topbar-h:        72px;
 
   --font-main:  'Montserrat', sans-serif;
-  --font-nav:   'Poppins', sans-serif;
-  --radius:     7px;
-  --radius-lg:  10px;
-  --radius-xl:  12px;
+  --font-nav:   'Montserrat', sans-serif;
+  --radius:     20px;
+  --radius-lg:  25px;
+  --radius-xl:  30px;
 }
 
 /* ── Reset ── */
@@ -95,7 +93,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   position: absolute; top: 3px; right: 3px;
   width: 16px; height: 16px;
   background: var(--red); color: #fff;
-  font-size: 9px; font-weight: 700;
+  font-size: 10px; font-weight: 800;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
@@ -112,24 +110,22 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
   transition: width .22s ease;
   overflow: hidden;
-  border-right: 1px solid #1a2838;
 }
 .sidebar.open { width: var(--sidebar-open); }
 
-/* Botón hamburguesa/flecha */
+/* Botón hamburguesa/flecha — mismo centrado que .nav-icon para que quede
+   alineado con los íconos del sidebar debajo */
 .sidebar-toggle-btn {
   width: 100%;
   height: var(--topbar-h);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 22px;
+  justify-content: center;
   color: #FEFDFD;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
   transition: background .15s;
 }
-.sidebar-toggle-btn:hover { background: rgba(255,255,255,.06); }
+.sidebar.open .sidebar-toggle-btn { justify-content: flex-start; padding-left: 18px; }
 
 /* Íconos: CSS controla cuál se muestra */
 .icon-menu, .icon-arrow { width: 22px; height: 22px; }
@@ -147,6 +143,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
+  border-right: 1px solid #1a2838;
 }
 
 /* Items de nav */
@@ -185,11 +182,14 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .sidebar.open .nav-label {
   opacity: 1;
   max-width: 180px;
+  font-weight: 100;
+
 }
 
 /* Activo */
 .nav-item.active { background: var(--nav-item-active); color: #fff; }
-.nav-item:hover:not(.active) { background: #374e67; color: #fff; }
+.sidebar-toggle-btn:hover,
+.nav-item:hover:not(.active) { background: transparent; color: #fff; }
 
 /* Badge */
 .nav-badge {
@@ -206,6 +206,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .sidebar-footer {
   padding: 8px 6px;
   border-top: 1px solid rgba(255,255,255,.05);
+  border-right: 1px solid #1a2838;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -242,11 +243,20 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    CARDS — BLANCAS con texto oscuro
 ══════════════════════════════════════ */
 .card {
+  position: relative;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 20px;
   color: #1A202C;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 6px 16px rgba(16,24,40,.06);
+}
+.card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+  pointer-events: none;
 }
 
 /* Todos los textos dentro de .card son oscuros por defecto */
@@ -262,6 +272,38 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .kpi-card { padding: 20px; }
 .kpi-value { font-size: 30px; font-weight: 700; color: #1A202C; line-height: 1; margin-bottom: 4px; }
 .kpi-label { font-size: 13px; color: #718096; }
+
+/* KPI resumen sin card — solo texto sobre el fondo oscuro de la página.
+   El grupo entero se pega a la derecha (justify-content:flex-end en el
+   contenedor); cada tile es icono + texto bien pegados, sin espacio de
+   columna de por medio. */
+.kpi-plain-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.kpi-plain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.kpi-plain-icon { width: 22px; height: 22px; flex-shrink: 0; }
+.kpi-plain-label {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+.kpi-plain-value {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-white);
+  line-height: 1;
+  white-space: nowrap;
+}
+.kpi-plain-delta { font-size: 12px; white-space: nowrap; }
 
 /* ══════════════════════════════════════
    TABLAS — BLANCAS con texto oscuro
@@ -311,13 +353,37 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .action-btn:hover { background: #E2E8F0; color: #1A202C; }
 .action-btn svg { width: 16px; height: 16px; }
 
+/* Flechas de paginación compacta (< >) — chevrons finos sin "palito",
+   para tablas de widgets (dashboard, semáforo) donde una paginación
+   numerada tradicional no cabe. */
+.pager-controls { display: flex; align-items: center; gap: 2px; }
+.pager-btn {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  color: #718096; background: none; border: none; cursor: pointer;
+  transition: background .15s, color .15s, opacity .15s;
+}
+.pager-btn svg { width: 15px; height: 15px; }
+.pager-btn:hover:not(:disabled) { background: #E2E8F0; color: #1A202C; }
+.pager-btn:disabled { opacity: .3; cursor: default; }
+
 /* Card que contiene tabla — sin padding para que la tabla llegue a los bordes */
 .card-table {
+  position: relative;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 0;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 6px 16px rgba(16,24,40,.06);
+}
+.card-table::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ══════════════════════════════════════
@@ -351,20 +417,35 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
    BADGES — visibles sobre fondo blanco
 ══════════════════════════════════════ */
 .badge {
-  display: inline-flex; align-items: center;
-  padding: 3px 11px; border-radius: 999px;
+  /* width fijo (no min-width): con min-width, un texto largo como
+     "Administrador" (114.8px reales) se salía del piso de 96px y quedaba
+     más ancho que el resto — width fijo + nowrap hace que TODOS midan
+     exactamente lo mismo sin importar el largo del texto. 120px es el
+     texto más largo que usa esta clase ("Administrador") + margen. */
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 120px; flex-shrink: 0; white-space: nowrap; text-align: center;
+  padding: 3px 11px; border-radius: 4px;
   font-size: 12.5px; font-weight: 600;
 }
-.badge-activo    { background: #D4EDDA; color: #155724; }
-.badge-inactivo  { background: #E9ECEF; color: #495057; }
-.badge-aprobado  { background: #D4EDDA; color: #155724; }
-.badge-rechazado { background: #F8D7DA; color: #721C24; }
-.badge-en-proceso{ background: #FFF3CD; color: #856404; }
-.badge-pendiente { background: #E9ECEF; color: #856404; }
-.badge-hold      { background: #FFF3CD; color: #856404; }
-.badge-ok        { background: #D4EDDA; color: #155724; }
-.badge-bajo      { background: #FFF3CD; color: #856404; }
-.badge-critico   { background: #F8D7DA; color: #721C24; }
+.badge-activo    { background: #16A85E; color: #FFFFFF; }
+.badge-inactivo  { background: #4A5568; color: #FFFFFF; }
+.badge-aprobado  { background: #16A85E; color: #FFFFFF; }
+.badge-rechazado { background: #EF5350; color: #FFFFFF; }
+/* En proceso tiene que seguir siendo amarillo (no turquesa) — pero un
+   amarillo con más separación de matiz respecto al naranja de Hold
+   (--gold, #F5A623, tono ~37°) que el amarillo anterior (#FFCA28, tono
+   ~45° — a solo 8° de diferencia, muy parecidos a simple vista). #FFEB3B
+   tiene un tono ~54°, casi 20° más lejos del naranja, y se distingue
+   claramente sin dejar de leerse como "amarillo". */
+.badge-en-proceso{ background: #FFEB3B; color: #1A202C; }
+.badge-pendiente { background: #FFCA28; color: #1A202C; }
+/* Abierta = todavía no arranca ningún lote — no es una advertencia (no
+   amarillo), es un estado neutro: gris claro. */
+.badge-abierta   { background: #CBD5E0; color: #2D3748; }
+.badge-hold      { background: var(--gold); color: #FFFFFF; }
+.badge-ok        { background: #16A85E; color: #FFFFFF; }
+.badge-bajo      { background: #FFCA28; color: #1A202C; }
+.badge-critico   { background: #EF5350; color: #FFFFFF; }
 
 /* ══════════════════════════════════════
    FORMULARIOS — dentro de cards/modales blancos
@@ -395,6 +476,13 @@ select.form-control {
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
   background-color: #FFFFFF; color: #1A202C;
 }
+/* Selects de filtro sobre fondo oscuro (.filter-bar vive directo sobre
+   --bg-app, no dentro de una card blanca) — mismo look que personal.html,
+   usando background-color (no el shorthand) para no tapar la flecha. */
+.filter-bar select.form-control {
+  background-color: var(--bg-app);
+  color: var(--text-subtle);
+}
 .form-hint { font-size: 11.5px; margin-top: 5px; color: #718096; }
 .form-hint.error { color: var(--red); }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -416,7 +504,7 @@ select.form-control {
 }
 .modal-sm  { max-width: 400px; }
 .modal-md  { max-width: 520px; }
-.modal-lg  { max-width: 720px; }
+.modal-lg  { max-width: 720px; width: 90%; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 24px; border-bottom: 1px solid #E2E8F0;
@@ -471,6 +559,69 @@ select.form-control {
 ══════════════════════════════════════ */
 .progress-bar { flex: 1; height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width .3s; }
+
+/* ══════════════════════════════════════
+   LOTE DETALLE — datos a la izquierda (sin card, texto sobre fondo
+   oscuro), trazabilidad a la derecha con scroll propio e independiente
+   del resto de la página.
+══════════════════════════════════════ */
+.lote-detalle-page { height: 100%; display: flex; flex-direction: column; }
+.lote-detalle-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+}
+.lote-detalle-left { flex: 0 0 40%; min-width: 0; }
+.lote-detalle-right { flex: 1; min-width: 0; }
+
+.lote-stats-row { display: flex; flex-wrap: wrap; gap: 20px 24px; margin: 20px 0; }
+.lote-stat-label { font-size: 12px; font-weight: 600; color: var(--text-subtle); margin-bottom: 4px; }
+.lote-stat-value { font-size: 24px; font-weight: 700; color: var(--text-white); line-height: 1; }
+
+.lote-proceso-piezas { font-size: 14px; color: var(--text-subtle); margin-bottom: 8px; line-height: 1.6; }
+.lote-proceso-piezas strong { color: var(--text-white); font-weight: 600; }
+
+.lote-piezas-details { margin-bottom: 22px; }
+.lote-piezas-details summary {
+  font-size: 13px; font-weight: 600; color: var(--text-subtle);
+  cursor: pointer; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.lote-piezas-details summary::-webkit-details-marker { display: none; }
+.lote-piezas-details summary::before {
+  content: ""; width: 7px; height: 7px;
+  border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle);
+  transform: rotate(-45deg); transition: transform .15s; flex-shrink: 0;
+}
+.lote-piezas-details[open] summary::before { transform: rotate(45deg); }
+.lote-piezas-list {
+  list-style: disc; margin: 8px 0 0 18px; padding: 0;
+  font-size: 13.5px; color: var(--text-subtle); line-height: 1.8;
+}
+.lote-piezas-list li { color: var(--text-white); }
+.lote-piezas-cant { color: var(--text-subtle); font-weight: 400; }
+
+.lote-progreso-general { margin-bottom: 16px; }
+.lote-progreso-general-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12.5px; color: #718096; margin-bottom: 6px;
+}
+.lote-progreso-general .progress-bar { height: 8px; }
+
+.lote-etapas-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.lote-etapas-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  padding-right: 4px;
+}
 
 /* ══════════════════════════════════════
    BANNERS — dentro de contenido oscuro
@@ -552,6 +703,23 @@ select.form-control {
 .notif-time  { font-size: 11px; color: #718096; margin-top: 2px; }
 .notif-item.unread { background: #F0FBF6; }
 .notif-item.unread .notif-title { font-weight: 600; color: #1A202C; }
+
+/* ── Notificación flotante de reporte generado (misma familia visual que .notif-item) ── */
+.report-notif-stack {
+  position: fixed; top: 76px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 10px; width: 340px;
+}
+.report-notif {
+  background: #FFFFFF; border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg, 10px); box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start;
+  animation: reportNotifIn .2s ease-out;
+}
+@keyframes reportNotifIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.report-notif-ver {
+  display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600;
+  color: #fff; background: #16A85E; padding: 5px 14px; border-radius: 6px; text-decoration: none;
+}
 
 /* ══════════════════════════════════════
    SECTION BLOCKS — sobre fondo oscuro

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Now
 
 # Create your models here.
 
@@ -43,6 +44,14 @@ class Kpi(models.Model):
 class Alerta(models.Model):
     numero = models.AutoField(primary_key=True)
     descripcion = models.CharField(unique=False, max_length=255)
+    # auto_now_add cubre los INSERT hechos por el ORM de Django; db_default
+    # cubre los INSERT crudos que hacen los triggers de MySQL (ej.
+    # t_alerta_stock_critico, que inserta en esta tabla sin mandar fecha/hora)
+    # — sin el db_default, esos triggers truenan con "Field 'fecha' doesn't
+    # have a default value" (pasó una vez ya, migración 0011; la migración
+    # 0012 lo volvió a quitar sin querer al redefinir el campo).
+    fecha = models.DateField(auto_now=False, auto_now_add=True, db_default=Now())
+    hora = models.TimeField(auto_now=False, auto_now_add=True, db_default=Now())
     estadoAlerta = models.ForeignKey(EstadoAlerta, on_delete=models.RESTRICT, related_name='alerta')
     
     class Meta:
@@ -54,34 +63,16 @@ class Alerta(models.Model):
 
 class Registro_Kpi(models.Model):
     numero = models.AutoField(primary_key=True)
-    fecha = models.DateField(auto_now=True, auto_now_add=False)
-    hora = models.TimeField(auto_now=True, auto_now_add=False)
+    fecha = models.DateField(auto_now=False, auto_now_add=True)
+    hora = models.TimeField(auto_now=False, auto_now_add=True)
     valor = models.IntegerField()
     oblea = models.ForeignKey("api_produccion.Oblea", on_delete=models.RESTRICT, related_name='registro_kpi')
     kpi = models.ForeignKey(Kpi, on_delete=models.RESTRICT, related_name='registro_kpi')
     semaforo = models.ForeignKey(Semaforo, on_delete=models.RESTRICT, related_name='registro_kpi')
+    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='registro_kpi', null=True)
     
     class Meta:
         db_table = 'registro_kpi'
         
     def __str__(self):
         return str(self.numero)
-
-
-class Historial_Alertas(models.Model):
-    registroKPI = models.ForeignKey(Registro_Kpi, on_delete=models.RESTRICT, related_name='historial_alertas')
-    alerta = models.ForeignKey(Alerta, on_delete=models.RESTRICT, related_name='historial_alertas')
-    fecha = models.DateField(auto_now=True, auto_now_add=False)
-    hora = models.TimeField(auto_now=True, auto_now_add=False)
-    
-    class Meta:
-        db_table = 'historial_alertas'
-        constraints = [
-            models.UniqueConstraint(
-                fields = ['registroKPI', 'alerta'],
-                name='uk_historial_alertas'
-            )
-        ]
-        
-    def __str__(self):
-        return f"{str(self.registroKPI)} - {str(self.alerta)}"

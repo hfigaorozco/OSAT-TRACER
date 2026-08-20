@@ -21,12 +21,13 @@ class Migration(migrations.Migration):
                     set diesGenerados = diesGenerados - new.scrap
                     where numero = new.oblea_id;
                 end if;
-                
+
             END;
-            '''
+            ''',
+            reverse_sql='DROP TRIGGER IF EXISTS t_actualizar_dies_por_paso;'
         ),
         migrations.RunSQL(
-            sql = '''CREATE OR REPLACE TRIGGER t_scrap_excedente_del_permitido
+            sql='''CREATE OR REPLACE TRIGGER t_scrap_excedente_del_permitido
 AFTER UPDATE ON oblea
 FOR EACH ROW
 BEGIN
@@ -43,35 +44,39 @@ BEGIN
         WHERE numero = NEW.orden_id;
     END IF;
 END;
-'''
+''',
+            reverse_sql='DROP TRIGGER IF EXISTS t_scrap_excedente_del_permitido;'
         ),
-         migrations.RunSQL(
-                    sql = '''
+        migrations.RunSQL(
+            sql='''
 CREATE OR REPLACE TRIGGER t_alerta_stock_critico
 AFTER INSERT ON orden
 FOR EACH ROW
 BEGIN
 
-    INSERT INTO alerta (`descripcion`,`estadoAlerta_id`) 
-    SELECT 
-        'Stock Insuficiente',
-        'sinre'
+    INSERT INTO alerta (`descripcion`, `estadoAlerta_id`, `fecha`, `hora`)
+    SELECT
+        CONCAT('Stock de la pieza ', p.nombre, ' insuficiente.'),
+        'sinre',
+        CURDATE(),
+        CURTIME()
     FROM `proceso-pieza` pp
     JOIN pieza p ON p.codigo = pp.pieza_id
     WHERE pp.proceso_id = NEW.proceso_id
       AND p.stockActual < p.stockMinimo;
 
 END;
-'''
-                ),
-          migrations.RunSQL(
-                     sql = '''
+''',
+            reverse_sql='DROP TRIGGER IF EXISTS t_alerta_stock_critico;'
+        ),
+        migrations.RunSQL(
+            sql='''
 CREATE OR REPLACE TRIGGER t_alerta_stock_insuficiente
 BEFORE INSERT ON orden
 FOR EACH ROW
 BEGIN
     DECLARE v_pieza_sin_stock VARCHAR(100);
-    
+
     SELECT p.nombre INTO v_pieza_sin_stock
     FROM `proceso-pieza` pp
     JOIN tipo_oblea tob ON tob.codigo = NEW.tipoOblea_id
@@ -81,7 +86,7 @@ BEGIN
     LIMIT 1;
 
     IF v_pieza_sin_stock IS NOT NULL THEN
-        SIGNAL SQLSTATE '45000' 
+        SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Stock insuficiente de algunas de las piezas';
     END IF;
 
@@ -92,9 +97,27 @@ BEGIN
     WHERE pp.proceso_id = NEW.proceso_id;
 
 END;
-'''
-                 ),
-           migrations.RunSQL(
-                      sql = ''''''
-                  ),
+''',
+            reverse_sql='DROP TRIGGER IF EXISTS t_alerta_stock_insuficiente;'
+        ),
+        migrations.RunSQL(
+            sql='''
+CREATE OR REPLACE TRIGGER t_alerta_inventario
+AFTER UPDATE ON pieza
+FOR EACH ROW
+BEGIN
+
+    DECLARE msg VARCHAR(100);
+
+    IF (NEW.stockActual <= NEW.stockMinimo) THEN
+        SET msg = CONCAT('Stock de la pieza ', NEW.nombre, ' insuficiente.');
+
+        INSERT INTO alerta (descripcion, estadoAlerta_id, fecha, hora)
+        VALUES (msg, 'sinre', CURDATE(), CURTIME());
+    END IF;
+
+END;
+''',
+            reverse_sql='DROP TRIGGER IF EXISTS t_alerta_inventario;'
+        ),
     ]

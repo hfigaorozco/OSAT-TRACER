@@ -1,15 +1,19 @@
 import requests
+from datetime import date, timedelta
+from urllib.parse import urlencode
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
+from django.urls import reverse
+from django.utils import timezone
+from client.middleware import obtener_horario
 import requests
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.contrib import messages
+
+
 BACKEND_URL = 'http://localhost:8001/api'
 
 
@@ -127,21 +131,11 @@ class _FakeObj:
 # ── Contexto base ─────────────────────────────────────────────────────────────
 
 def _base_ctx(role='Administrador'):
-    alertas = _get('/v1/list/alertas/', [])
-    unread  = sum(1 for a in alertas
-                  if str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre'))
+    # recent_notifications/unread_count del topbar los pone el context
+    # processor home.context_processors.notificaciones para toda la app —
+    # ya no hace falta que cada vista los arme por su cuenta.
     return {
-        'user_role':            role,
-        'unread_count':         unread,
-        'recent_notifications': [
-            {
-                'titulo': a.get('descripcion', ''),
-                'tipo':   'alerta',
-                'leida':  str(a.get('estadoAlerta', '')).lower()
-                          not in ('activo', 'sinre'),
-            }
-            for a in alertas[:5]
-        ],
+        'user_role':   role,
         'breadcrumbs': [],
     }
 
@@ -162,22 +156,40 @@ def _semaforo_color(valor, kpi_dict, unidad='%'):
     return {'bg': bg, 'color': color, 'valor': val_str, 'unidad': unidad}
 
 
-def _build_semaforo(kpi_list):
-    kpi_map = {k.get('nombre', '').lower(): k for k in kpi_list}
-    ky = kpi_map.get('yield')
-    kt = kpi_map.get('throughput')
-    ko = kpi_map.get('oee')
-    return [
-        {'nombre': 'Yield',
-         'celdas': [_semaforo_color(94.2, ky), _semaforo_color(91.5, ky),
-                    _semaforo_color(88.3, ky), _semaforo_color(91.3, ky)]},
-        {'nombre': 'Throughput',
-         'celdas': [_semaforo_color(210, kt, ''), _semaforo_color(185, kt, ''),
-                    _semaforo_color(95,  kt, ''), _semaforo_color(163, kt, '')]},
-        {'nombre': 'OEE',
-         'celdas': [_semaforo_color(88.1, ko), _semaforo_color(82.4, ko),
-                    _semaforo_color(71.2, ko), _semaforo_color(80.6, ko)]},
-    ]
+def _build_semaforo(fecha_inicio=None, fecha_fin=None):
+    """Trae el KPI real por línea (join Registro_Kpi->Oblea->Orden->Linea,
+    calculado en el backend) y lo acomoda en la forma que ya consume la
+    plantilla del dashboard: una fila por KPI, una celda por línea + Global,
+    coloreada según los umbrales reales de cada KPI. Si no se pasan fechas,
+    usa "desde hace 30 días" sin límite superior (ventana "reciente" para el
+    dashboard en vivo, sin fecha_fin para no ocultar registros con fecha de
+    hoy/futura por diferencias de reloj entre servidor y datos de prueba; los
+    reportes de KPI sí pasan su propio rango explícito con fecha_fin).
+
+    Devuelve (filas, columnas) — columnas es la lista de nombres de línea
+    (+ 'Global' al final) para pintar el encabezado de la tabla dinámicamente,
+    ya que el número real de líneas no es fijo (hoy son 2, antes se asumían 3).
+    """
+    if not fecha_inicio and not fecha_fin:
+        fecha_inicio = (date.today() - timedelta(days=30)).isoformat()
+    params = {k: v for k, v in {'fecha_inicio': fecha_inicio, 'fecha_fin': fecha_fin}.items() if v}
+    endpoint = '/v1/kpi/semaforo_por_linea/'
+    if params:
+        endpoint += '?' + urlencode(params)
+    datos = _get(endpoint, [])
+
+    columnas = [c.get('linea_nombre', '—') for c in datos[0]['celdas']] if datos else []
+
+    filas = []
+    for kpi_row in datos:
+        celdas = []
+        for c in kpi_row.get('celdas', []):
+            if c.get('valor') is None:
+                celdas.append({'bg': '#E9ECEF', 'color': '#495057', 'valor': '—', 'unidad': ''})
+            else:
+                celdas.append(_semaforo_color(c['valor'], kpi_row, kpi_row.get('unidad', '%')))
+        filas.append({'nombre': kpi_row.get('kpi_nombre', ''), 'celdas': celdas})
+    return filas, columnas
 
 
 # ════════════════════════════════════════════════════════════════
@@ -226,7 +238,6 @@ def login_view(request):
                         cookie_name,
                         cookie_value,
                         httponly=True,
-                        domain='127.0.0.1'
                     )
                 return response_redirect
             elif response.status_code == 401:
@@ -243,9 +254,42 @@ def logout_view(request):
     request.session.flush()
     response_redirect = redirect('login')
 
-    response_redirect.delete_cookie('sesionid', domain='127.0.0.1')
+    response_redirect.delete_cookie('sesionid')
 
     return response_redirect
+
+
+def api_alertas_recientes(request):
+    """Polling ligero para el toast de notificaciones nuevas del topbar:
+    devuelve las alertas sin resolver con numero > ?desde=, más recientes
+    primero. El topbar (topbar.html) lo consulta cada cierto tiempo y
+    guarda en localStorage el numero más alto que ya mostró, para no
+    repetir el toast en cada poll ni al navegar entre páginas."""
+    from django.http import JsonResponse
+
+    if not request.session.get('user_id'):
+        return JsonResponse({'alertas': []}, status=401)
+
+    try:
+        desde = int(request.GET.get('desde', 0))
+    except (TypeError, ValueError):
+        desde = 0
+
+    alertas = _get('/v1/list/alertas/', [])
+    nuevas = sorted(
+        (
+            a for a in alertas
+            if (a.get('numero') or 0) > desde
+            and str(a.get('estadoAlerta', '')).lower() in ('activo', 'sinre')
+        ),
+        key=lambda a: a.get('numero') or 0,
+    )
+    return JsonResponse({
+        'alertas': [
+            {'numero': a.get('numero'), 'titulo': a.get('descripcion', '')}
+            for a in nuevas
+        ],
+    })
 
 
 def errorview404(request, exception = None):
@@ -366,5 +410,25 @@ def registro_view(request):
     return render(request, 'base/registro.html')
 
 
+# Verificaciones de horario
+def _dashboard_por_rol(rol):
+    rol = rol or ''
+    if 'administrador' in rol:
+        return reverse('admin_dashboard')
+    if 'supervisor' in rol:
+        return reverse('supervisor_dashboard')
+    return reverse('login')
+
+
 def horario_laboral(request):
-    return render(request, '404pages/horario_laboral.html', status=503)
+    destino = _dashboard_por_rol(request.session.get('user_rol'))
+    return render(request, '404pages/horario_laboral.html', {
+        'destino_dashboard': destino,
+    }, status=503)
+
+
+def verificar_horario(request):
+    horario = obtener_horario()
+    hora_actual = timezone.localtime(timezone.now()).time()
+    disponible = horario['inicio'] <= hora_actual <= horario['fin']
+    return JsonResponse({'disponible': disponible})
