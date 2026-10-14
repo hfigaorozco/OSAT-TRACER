@@ -6,32 +6,41 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Alertas</h1>
-    <p class="page-subtitle">Centro de notificaciones del sistema</p>
+    <p class="page-subtitle">Centro de notificaciones del sistema — más recientes primero</p>
   </div>
   <div class="page-actions">
     <form id="form-marcar-todas" method="post" action="{% url 'supervisor_alertas_marcar_todas_leidas' %}">
       {% csrf_token %}
       <button type="submit" class="btn btn-outline btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Marcar todas como resueltas
+        Marcar todas resueltas
       </button>
     </form>
   </div>
 </div>
 
-<!-- Tabs -->
+<!-- Buscador + tabs -->
+<div class="filter-bar" style="margin-bottom:10px;">
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A0AEC0" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="buscador-alertas" class="form-control" placeholder="Buscar por texto, folio o línea…" oninput="filtrarAlertas()">
+  </div>
+  <span id="conteo-resultados" style="font-size:12.5px;color:#A0AEC0;"></span>
+</div>
+
 <div class="tab-bar" style="margin-bottom:0;">
-  <button class="tab-btn active" onclick="filterAlertas('todas', this)">
+  <button class="tab-btn active" data-tipo="todas" onclick="setTab('todas', this)">
     Todas
     {% if total_count %}<span style="background:#4A5568;color:#FFFFFF;padding:0 7px;border-radius:4px;font-size:12px;margin-left:6px;">{{ total_count }}</span>{% endif %}
   </button>
-  <button class="tab-btn" onclick="filterAlertas('no-leidas', this)">
+  <button class="tab-btn" data-tipo="no-leidas" onclick="setTab('no-leidas', this)">
     Sin resolver
     {% if unread_count %}<span style="background:#EF5350;color:#FFFFFF;padding:0 7px;border-radius:4px;font-size:12px;margin-left:6px;">{{ unread_count }}</span>{% endif %}
   </button>
-  <button class="tab-btn" onclick="filterAlertas('stock', this)">Stock</button>
-  <button class="tab-btn" onclick="filterAlertas('produccion', this)">Producción</button>
-  <button class="tab-btn" onclick="filterAlertas('kpi', this)">KPI</button>
+  <button class="tab-btn" data-tipo="hold" onclick="setTab('hold', this)">Hold</button>
+  <button class="tab-btn" data-tipo="produccion" onclick="setTab('produccion', this)">Producción</button>
+  <button class="tab-btn" data-tipo="kpi" onclick="setTab('kpi', this)">KPI</button>
+  <button class="tab-btn" data-tipo="stock" onclick="setTab('stock', this)">Stock</button>
 </div>
 
 <!-- Formulario oculto reutilizable para marcar UNA alerta como leída -->
@@ -40,16 +49,17 @@
 </form>
 
 <!-- Layout: lista + detalle -->
-<div style="display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px;align-items:flex-start;">
+<div style="display:grid;grid-template-columns:360px 1fr;gap:16px;margin-top:16px;align-items:flex-start;">
 
   <!-- Lista de alertas -->
-  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;max-height:calc(100vh - 280px);overflow-y:auto;">
+  <div class="card-table" style="background:#fff;border:1px solid #E2E8F0;border-radius:18px;overflow:hidden;max-height:calc(100vh - 320px);overflow-y:auto;">
     {% for alerta in alertas %}
     <div class="alerta-item" id="item-{{ alerta.pk }}"
          data-tipo="{{ alerta.tipo }}"
          data-leida="{{ alerta.leida|yesno:'true,false' }}"
+         data-buscar="{{ alerta.titulo|lower }} {{ alerta.folio_lote|default:''|lower }} {{ alerta.folio_orden|default:''|lower }} {{ alerta.linea_nombre|default:''|lower }}"
          onclick="mostrarDetalle({{ alerta.pk }})"
-         style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid #EDF2F7;cursor:pointer;transition:background .12s;position:relative;{% if not alerta.leida %}border-left:3px solid {{ alerta.color_borde }};{% endif %}">
+         style="display:flex;align-items:flex-start;gap:10px;padding:13px 16px;border-bottom:1px solid #EDF2F7;cursor:pointer;transition:background .12s;position:relative;{% if not alerta.leida %}background:#FAFCFF;{% endif %}">
 
       <!-- Ícono según tipo -->
       <div style="width:36px;height:36px;border-radius:8px;background:{{ alerta.color_bg }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -57,15 +67,22 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         {% elif alerta.tipo == 'kpi' %}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        {% elif alerta.tipo == 'hold' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="9" x2="10" y2="15"/><line x1="14" y1="9" x2="14" y2="15"/></svg>
         {% else %}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ alerta.color_icon }}" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         {% endif %}
       </div>
 
       <!-- Texto -->
       <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:{% if not alerta.leida %}600{% else %}400{% endif %};color:#1A202C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ alerta.titulo }}</div>
-        <div style="font-size:12.5px;color:#718096;margin-top:2px;">{{ alerta.tiempo }}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+          <span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:{{ alerta.color_icon }};">{{ alerta.tipo_label }}</span>
+          {% if alerta.folio_lote %}<span style="font-size:11px;color:#A0AEC0;font-family:monospace;">· {{ alerta.folio_lote }}</span>
+          {% elif alerta.folio_orden %}<span style="font-size:11px;color:#A0AEC0;font-family:monospace;">· {{ alerta.folio_orden }}</span>{% endif %}
+        </div>
+        <div style="font-size:13.5px;font-weight:{% if not alerta.leida %}600{% else %}400{% endif %};color:#1A202C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ alerta.titulo }}</div>
+        <div style="font-size:12px;color:#718096;margin-top:2px;">{{ alerta.tiempo }}</div>
       </div>
 
       <!-- Punto no leída -->
@@ -79,6 +96,9 @@
       <p style="font-size:14px;color:#718096;">Sin alertas</p>
     </div>
     {% endfor %}
+    <div id="sin-resultados" style="display:none;padding:40px;text-align:center;">
+      <p style="font-size:13.5px;color:#A0AEC0;">Ninguna alerta coincide con la búsqueda/filtro.</p>
+    </div>
   </div>
 
   <!-- Panel detalle -->
@@ -89,33 +109,34 @@
     </div>
 
     <div id="detalle-contenido" style="display:none;background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:28px;">
-      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;">
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;">
         <div id="det-icono-wrap" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
         <div style="flex:1;">
-          <div id="det-badge" style="font-size:13px;font-weight:600;margin-bottom:6px;"></div>
-          <h2 id="det-titulo" style="font-size:20px;font-weight:700;color:#1A202C;margin:0 0 4px;"></h2>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span id="det-tipo-badge" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:3px 9px;border-radius:4px;"></span>
+            <span id="det-badge" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:4px;"></span>
+          </div>
+          <h2 id="det-titulo" style="font-size:19px;font-weight:700;color:#1A202C;margin:0 0 4px;"></h2>
           <div id="det-tiempo" style="font-size:13px;color:#718096;"></div>
         </div>
       </div>
 
-      <p id="det-cuerpo" style="font-size:15px;color:#4A5568;line-height:1.6;margin-bottom:20px;"></p>
+      <!-- Info grid: folios, línea, operador -->
+      <div id="det-info-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:16px;"></div>
 
-      <div id="det-ref-wrap" style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='#EDF2F7'" onmouseout="this.style.background='#F7FAFC'">
-        <div>
-          <div id="det-ref-label" style="font-size:12px;color:#718096;margin-bottom:4px;"></div>
-          <div id="det-ref-valor" style="font-size:16px;font-weight:700;color:#1A202C;font-family:monospace;"></div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
+      <!-- Bloque específico: KPI (umbral) o Producción (paso + defectos) -->
+      <div id="det-extra" style="margin-bottom:16px;"></div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button id="det-btn-accion" class="btn btn-primary" onclick="accionDetalle()" style="min-width:120px;justify-content:center;"></button>
+        <a id="det-btn-accion" href="#" class="btn btn-primary" style="min-width:130px;justify-content:center;text-decoration:none;">Ver detalle</a>
         <button id="det-btn-leida" class="btn btn-outline" onclick="marcarLeidaActual()">Marcar como resuelta</button>
       </div>
     </div>
   </div>
 
 </div>
+
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -124,31 +145,48 @@ var _alertasData = {
   {{ a.pk }}: {
     pk: {{ a.pk }},
     tipo: "{{ a.tipo }}",
+    tipoLabel: "{{ a.tipo_label|escapejs }}",
     titulo: "{{ a.titulo|escapejs }}",
-    cuerpo: "{{ a.cuerpo|escapejs }}",
     tiempo: "{{ a.tiempo }}",
-    color_bg: "{{ a.color_bg }}",
-    color_borde: "{{ a.color_borde }}",
-    color_icon: "{{ a.color_icon }}",
-    ref_label: "{{ a.ref_label|default:''|escapejs }}",
-    ref_valor: "{{ a.ref_valor|default:''|escapejs }}",
-    accion_label: "{{ a.accion_label|default:''|escapejs }}",
-    accion_url: "{{ a.accion_url|default:'' }}",
-    marcar_url: "{{ a.marcar_url|default:'' }}",
+    colorBg: "{{ a.color_bg }}",
+    colorIcon: "{{ a.color_icon }}",
+    folioLote: {% if a.folio_lote %}"{{ a.folio_lote }}"{% else %}null{% endif %},
+    folioOrden: {% if a.folio_orden %}"{{ a.folio_orden }}"{% else %}null{% endif %},
+    lineaNombre: {% if a.linea_nombre %}"{{ a.linea_nombre|escapejs }}"{% else %}null{% endif %},
+    empleadoNombre: {% if a.empleado_nombre %}"{{ a.empleado_nombre|escapejs }}"{% else %}null{% endif %},
+    kpiNombre: {% if a.kpi_nombre %}"{{ a.kpi_nombre|escapejs }}"{% else %}null{% endif %},
+    kpiValor: {% if a.kpi_valor is not None %}{{ a.kpi_valor }}{% else %}null{% endif %},
+    kpiUmbralVerde: {% if a.kpi_umbral_verde is not None %}{{ a.kpi_umbral_verde }}{% else %}null{% endif %},
+    kpiUmbralAmarillo: {% if a.kpi_umbral_amarillo is not None %}{{ a.kpi_umbral_amarillo }}{% else %}null{% endif %},
+    kpiUmbralRojo: {% if a.kpi_umbral_rojo is not None %}{{ a.kpi_umbral_rojo }}{% else %}null{% endif %},
+    kpiSemaforo: {% if a.kpi_semaforo %}"{{ a.kpi_semaforo|escapejs }}"{% else %}null{% endif %},
+    pasoNombre: {% if a.paso_nombre %}"{{ a.paso_nombre|escapejs }}"{% else %}null{% endif %},
+    pasoScrap: {% if a.paso_scrap is not None %}{{ a.paso_scrap }}{% else %}null{% endif %},
+    defectos: [{% for d in a.defectos %}"{{ d|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+    tieneDetalle: {{ a.tiene_detalle|yesno:"true,false" }},
+    detalleUrl: "{{ a.detalle_url|default:'#' }}",
+    marcarUrl: "{{ a.marcar_url|default:'' }}",
     leida: {{ a.leida|yesno:"true,false" }},
-    badge_label: "{{ a.badge_label|escapejs }}",
-    badge_color: "{{ a.badge_color }}"
+    badgeLabel: "{{ a.badge_label|escapejs }}",
+    badgeColor: "{{ a.badge_color }}"
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
 };
 
 var _alertaActual = null;
+var _tabActual = 'todas';
 
 var _iconosSVG = {
   stock: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
   kpi:   '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  produccion: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+  hold:  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="9" x2="10" y2="15"/><line x1="14" y1="9" x2="14" y2="15"/></svg>',
+  produccion: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>'
 };
+
+function _infoRow(label, valor) {
+  return '<div><div style="font-size:11px;color:#A0AEC0;margin-bottom:2px;">' + label + '</div>' +
+         '<div style="font-size:13.5px;font-weight:600;color:#1A202C;">' + valor + '</div></div>';
+}
 
 function mostrarDetalle(pk) {
   var a = _alertasData[pk];
@@ -160,23 +198,63 @@ function mostrarDetalle(pk) {
   if (item) item.style.background = '#F0FBF6';
 
   var iconoWrap = document.getElementById('det-icono-wrap');
-  iconoWrap.style.background = a.color_bg;
-  iconoWrap.style.color = a.color_icon;
+  iconoWrap.style.background = a.colorBg;
+  iconoWrap.style.color = a.colorIcon;
   iconoWrap.innerHTML = _iconosSVG[a.tipo] || _iconosSVG.produccion;
 
+  var tipoBadge = document.getElementById('det-tipo-badge');
+  tipoBadge.textContent = a.tipoLabel;
+  tipoBadge.style.background = a.colorBg;
+  tipoBadge.style.color = a.colorIcon;
+
   var badge = document.getElementById('det-badge');
-  badge.textContent = a.badge_label;
-  badge.style.color = a.badge_color;
+  badge.textContent = a.badgeLabel;
+  badge.style.background = a.leida ? '#D4EDDA' : '#F8D7DA';
+  badge.style.color = a.badgeColor;
 
   document.getElementById('det-titulo').textContent = a.titulo;
   document.getElementById('det-tiempo').textContent = a.tiempo;
-  document.getElementById('det-cuerpo').textContent = a.cuerpo;
-  document.getElementById('det-ref-label').textContent = a.ref_label || 'Referencia';
-  document.getElementById('det-ref-valor').textContent = a.ref_valor || '—';
+
+  // Info grid: folios, línea, operador — solo lo que exista
+  var filas = [];
+  if (a.folioLote) filas.push(_infoRow('Lote', a.folioLote));
+  if (a.folioOrden) filas.push(_infoRow('Orden', a.folioOrden));
+  if (a.lineaNombre) filas.push(_infoRow('Línea', a.lineaNombre));
+  if (a.empleadoNombre) filas.push(_infoRow('Operador asignado', a.empleadoNombre));
+  var grid = document.getElementById('det-info-grid');
+  if (filas.length) {
+    grid.innerHTML = filas.join('');
+    grid.style.display = 'grid';
+  } else {
+    grid.style.display = 'none';
+  }
+
+  // Bloque extra por tipo
+  var extraHtml = '';
+  if (a.tipo === 'kpi' && a.kpiNombre) {
+    var semColor = {verde:'#16A85E', amarillo:'#F5A623', rojo:'#EF5350'}[a.kpiSemaforo] || '#718096';
+    extraHtml = '<div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<span style="font-size:13.5px;font-weight:700;color:#1A202C;">' + a.kpiNombre + '</span>' +
+        '<span style="font-size:16px;font-weight:800;color:' + semColor + ';">' + a.kpiValor + '</span>' +
+      '</div>' +
+      '<div style="font-size:11.5px;color:#A0AEC0;">Umbrales — verde ≥ ' + a.kpiUmbralVerde +
+        ' · amarillo ≥ ' + a.kpiUmbralAmarillo + ' · rojo &lt; ' + a.kpiUmbralRojo + '</div>' +
+    '</div>';
+  } else if (a.tipo === 'produccion' && a.pasoNombre) {
+    extraHtml = '<div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;">' +
+      '<div style="font-size:13.5px;font-weight:700;color:#1A202C;margin-bottom:4px;">Paso: ' + a.pasoNombre + '</div>' +
+      '<div style="font-size:12.5px;color:#718096;margin-bottom:' + (a.defectos.length ? '8px' : '0') + ';">Scrap registrado: ' + (a.pasoScrap != null ? a.pasoScrap : 0) + ' unidad(es)</div>' +
+      (a.defectos.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+        a.defectos.map(function(d){ return '<span style="background:#FFEBEE;color:#B71C1C;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;">' + d + '</span>'; }).join('') +
+      '</div>' : '') +
+    '</div>';
+  }
+  document.getElementById('det-extra').innerHTML = extraHtml;
 
   var btnAccion = document.getElementById('det-btn-accion');
-  if (a.accion_label) {
-    btnAccion.textContent = a.accion_label;
+  if (a.tieneDetalle) {
+    btnAccion.href = a.detalleUrl;
     btnAccion.style.display = '';
   } else {
     btnAccion.style.display = 'none';
@@ -189,30 +267,39 @@ function mostrarDetalle(pk) {
   document.getElementById('detalle-contenido').style.display = 'block';
 }
 
-function accionDetalle() {
-  if (!_alertaActual) return;
-  var a = _alertasData[_alertaActual];
-  if (a && a.accion_url) window.location.href = a.accion_url;
-}
-
 function marcarLeidaActual() {
   if (!_alertaActual) return;
   var a = _alertasData[_alertaActual];
-  if (!a || !a.marcar_url) return;
+  if (!a || !a.marcarUrl) return;
   var form = document.getElementById('form-marcar-leida');
-  form.action = a.marcar_url;
+  form.action = a.marcarUrl;
   form.submit();
 }
 
-function filterAlertas(tipo, btn) {
+function setTab(tipo, btn) {
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
+  _tabActual = tipo;
+  filtrarAlertas();
+}
+
+function filtrarAlertas() {
+  var texto = document.getElementById('buscador-alertas').value.trim().toLowerCase();
+  var visibles = 0;
   document.querySelectorAll('.alerta-item').forEach(function(el){
-    var show = true;
-    if (tipo === 'no-leidas') show = el.dataset.leida === 'false';
-    else if (tipo !== 'todas') show = el.dataset.tipo === tipo;
+    var pasaTab = true;
+    if (_tabActual === 'no-leidas') pasaTab = el.dataset.leida === 'false';
+    else if (_tabActual !== 'todas') pasaTab = el.dataset.tipo === _tabActual;
+    var pasaTexto = !texto || el.dataset.buscar.indexOf(texto) !== -1;
+    var show = pasaTab && pasaTexto;
     el.style.display = show ? '' : 'none';
+    if (show) visibles++;
   });
+  var sinResultados = document.getElementById('sin-resultados');
+  var totalItems = document.querySelectorAll('.alerta-item').length;
+  sinResultados.style.display = (totalItems > 0 && visibles === 0) ? 'block' : 'none';
+  var conteo = document.getElementById('conteo-resultados');
+  conteo.textContent = texto ? (visibles + ' resultado(s)') : '';
 }
 
 // ── Abrir directamente una alerta específica (?alerta=N), p.ej. desde
@@ -227,5 +314,4 @@ document.addEventListener('DOMContentLoaded', function () {
   if (item) item.scrollIntoView({ block: 'center' });
 });
 </script>
-{% endblock %}
 {% endblock %}
